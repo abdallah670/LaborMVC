@@ -1,0 +1,26 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "_Layout";
+}
+
+<div class="auth-container">
+    <div class="auth-card fade-in">
+        <div class="card shadow">
+            <div class="card-body py-5 text-center">
+                <div class="mb-4">
+                    <i class="bi bi-shield-exclamation text-danger" style="font-size: 5rem;"></i>
+                </div>
+                <h1 class="display-5 mb-3">Access Denied</h1>
+                <p class="text-muted mb-4">You don't have permission to access this page. Please contact an administrator if you believe this is an error.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a asp-action="Login" asp-controller="Account" class="btn btn-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login with Different Account
+                    </a>
+                    <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-house me-2"></i>Go Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

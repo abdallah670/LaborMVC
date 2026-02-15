@@ -1,0 +1,217 @@
+@model LaborBLL.ModelVM.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_Layout";
+}
+
+<div class="auth-container">
+    <div class="auth-card fade-in">
+        <div class="card shadow">
+            <div class="card-header bg-primary-gradient text-white text-center">
+                <h3 class="mb-0">Create an Account</h3>
+                <p class="mb-0 mt-2 opacity-75">Join Labor Marketplace today</p>
+            </div>
+            <div class="card-body">
+                <form asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                    <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Enter your first name" />
+                            <span asp-validation-for="FirstName" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Enter your last name" />
+                            <span asp-validation-for="LastName" class="field-validation-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                        </div>
+                        <span asp-validation-for="Email" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Enter your phone number" />
+                        </div>
+                        <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input asp-for="Password" class="form-control" placeholder="Create a password" />
+                            </div>
+                            <span asp-validation-for="Password" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm your password" />
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="UserRole" class="form-label"></label>
+                        <select asp-for="UserRole" class="form-select">
+                            <option value="Worker">🔧 I want to work (Worker)</option>
+                            <option value="Poster">📋 I want to hire (Poster)</option>
+                            <option value="Both">⚡ Both work and hire</option>
+                        </select>
+                        <span asp-validation-for="UserRole" class="field-validation-error"></span>
+                    </div>
+
+                    <!-- Location Section with Map Picker -->
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-geo-alt me-1"></i>Location (Optional)</label>
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" id="detectLocationBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-crosshair"></i> Auto-Detect
+                            </button>
+                            <span id="locationStatus" class="text-muted small align-self-center"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-map me-1"></i>Select on Map</label>
+                        <div id="mapPicker" class="map-picker-container" style="height: 200px;"></div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Location" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input asp-for="Location" class="form-control" placeholder="Your address" />
+                            </div>
+                            <span asp-validation-for="Location" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Country" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                                <input asp-for="Country" class="form-control" placeholder="Your country" />
+                            </div>
+                            <span asp-validation-for="Country" class="field-validation-error"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden fields for coordinates -->
+                    <input type="hidden" asp-for="Latitude" id="latitudeInput" />
+                    <input type="hidden" asp-for="Longitude" id="longitudeInput" />
+                    <input type="hidden" asp-for="LocationUrl" id="locationUrlInput" />
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                    </div>
+
+                    <div class="auth-links">
+                        <p class="mb-0">
+                            Already have an account? 
+                            <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">Login here</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    
+    <!-- Location Service -->
+    <script src="~/js/locationService.js"></script>
+    <!-- Map Picker -->
+    <script src="~/js/mapPicker.js"></script>
+    
+    <script>
+        let mapPicker;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map picker with default location (Cairo)
+            mapPicker = new MapPicker('mapPicker', {
+                defaultLat: 30.0444,
+                defaultLng: 31.2357,
+                defaultZoom: 12,
+                onLocationChange: function(data) {
+                    // Update hidden fields
+                    document.getElementById('latitudeInput').value = data.latitude;
+                    document.getElementById('longitudeInput').value = data.longitude;
+                    document.getElementById('locationUrlInput').value = data.locationUrl;
+                }
+            });
+            
+            // Auto-detect button handler
+            document.getElementById('detectLocationBtn').addEventListener('click', async function() {
+                const btn = this;
+                const statusEl = document.getElementById('locationStatus');
+                
+                // Disable button and show loading
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Detecting...';
+                statusEl.innerHTML = '<span class="text-muted"><i class="bi bi-arrow-repeat spin"></i> Getting your location...</span>';
+                
+                try {
+                    // Check if geolocation is available
+                    if (!LocationService.isGeolocationAvailable()) {
+                        throw new Error('Geolocation is not supported by your browser.');
+                    }
+                    
+                    // Check if secure context
+                    if (!LocationService.isSecureContext()) {
+                        throw new Error('Location detection requires HTTPS.');
+                    }
+                    
+                    // Get current position
+                    const position = await LocationService.getCurrentPosition();
+                    
+                    // Update map
+                    mapPicker.setLocation(position.latitude, position.longitude);
+                    
+                    // Get address from coordinates
+                    const address = await LocationService.reverseGeocode(position.latitude, position.longitude);
+                    
+                    if (address.success) {
+                        document.getElementById('Location').value = address.address;
+                        document.getElementById('Country').value = address.country || '';
+                    }
+                    
+                    statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Location detected!</span>';
+                    
+                } catch (error) {
+                    statusEl.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> ${error.message}</span>`;
+                } finally {
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-crosshair"></i> Auto-Detect';
+                }
+            });
+        });
+    </script>
+}

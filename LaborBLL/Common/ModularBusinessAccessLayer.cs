@@ -1,0 +1,26 @@
+
+using LaborBLL.Mapping;
+using LaborBLL.Service;
+using LaborBLL.Service.Abstract;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace LaborBLL.Common
+{
+    public static class ModularBusinessAccessLayer
+    {
+        public static IServiceCollection AddModularBusinessLogicLayer(this IServiceCollection services)
+        {
+            services.AddAutoMapper(x => x.AddProfile(new AutoMapperProfile()));
+
+            // Register services
+            services.AddScoped<IUserService, UserService>();
+            
+            
+          //  services.AddScoped<IEmailService, EmailService>();
+           
+         //   services.AddScoped<IStripePaymentService, StripePaymentService>();
+
+            return services;
+        }
+    }
+}

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LaborDAL.DB
+namespace LaborDAL.Entities
 {
-    internal class LaborDbContext
+    internal class Booking
     {
     }
 }
