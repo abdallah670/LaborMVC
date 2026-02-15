@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace LaborDAL.Enums
 {
-    internal class Enums
+    public enum BookingStatus
     {
+            Scheduled,
+            InProgress,
+            Completed,
+            Cancelled,
+            Disputed
+
     }
 }
