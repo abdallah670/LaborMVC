@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LaborDAL.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,21 @@ using System.Threading.Tasks;
 
 namespace LaborDAL.Entities
 {
-    internal class Booking
+    public class Booking
     {
+        public int Id { get; private set; }
+        public decimal AgreedRate { get; private set; }
+        public DateTime? StartTime { get; private set; }
+        public DateTime? EndTime { get; private set; }
+        public BookingStatus Status { get; private set; }
+        public int TaskId { get; private set; }
+        public int WorkerId { get; private set; }
+        public byte[] RowVersion { get; set; }
+        public DateTime CreatedAt { get; private set; }
+
+
+
+
+
     }
 }
