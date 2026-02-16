@@ -46,18 +46,7 @@ namespace LaborBLL.Service
                 var user = _mapper.Map<AppUser>(model);
 
                 // Set user role based on selection
-                user.Role = model.UserRole switch
-                {
-                    "Worker" => ClientRole.Worker,
-                    "Poster" => ClientRole.Poster,
-                    "Both" => ClientRole.Worker | ClientRole.Poster,
-                    "Admin" => ClientRole.Admin,
-                    "AdminWorker" => ClientRole.Admin | ClientRole.Worker,
-                    "AdminPoster" => ClientRole.Admin | ClientRole.Poster,
-                    "AdminBoth" => ClientRole.Admin | ClientRole.Worker | ClientRole.Poster,
-                    _ => ClientRole.Worker
-                };
-
+               
                 // Create user
                 var result = await _userManager.CreateAsync(user, model.Password);
 

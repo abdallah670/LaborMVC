@@ -1,11 +1,3 @@
-using LaborBLL.ModelVM;
-using LaborBLL.Response;
-using LaborBLL.Service.Abstract;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-
 namespace LaborPL.Controllers
 {
     public class AccountController : Controller
