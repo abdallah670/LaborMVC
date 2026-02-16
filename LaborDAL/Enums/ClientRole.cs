@@ -3,7 +3,15 @@ using System;
 namespace LaborDAL.Enums
 {
     /// <summary>
-    /// Defines the role of a client user (can be combined using flags)
+    /// Defines the role of a user (can be combined using flags)
+    /// Examples: 
+    /// - Worker only: ClientRole.Worker
+    /// - Poster only: ClientRole.Poster
+    /// - Both Worker and Poster: ClientRole.Worker | ClientRole.Poster
+    /// - Admin only: ClientRole.Admin
+    /// - Admin + Worker: ClientRole.Admin | ClientRole.Worker
+    /// - Admin + Poster: ClientRole.Admin | ClientRole.Poster
+    /// - Admin + Worker + Poster: ClientRole.Admin | ClientRole.Worker | ClientRole.Poster
     /// </summary>
     [Flags]
     public enum ClientRole
@@ -24,8 +32,8 @@ namespace LaborDAL.Enums
         Poster = 2,
 
         /// <summary>
-        /// Both Worker and Poster roles
+        /// Administrator with full system access
         /// </summary>
-        Both = Worker | Poster
+        Admin = 4
     }
 }

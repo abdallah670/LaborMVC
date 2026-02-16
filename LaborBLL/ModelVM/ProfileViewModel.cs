@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using LaborDAL.Enums;
 
 namespace LaborBLL.ModelVM
 {
@@ -64,5 +65,26 @@ namespace LaborBLL.ModelVM
 
         [Display(Name = "Member Since")]
         public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// User role (Admin, Worker, Poster, or combinations)
+        /// </summary>
+        [Display(Name = "Role")]
+        public ClientRole Role { get; set; }
+
+        /// <summary>
+        /// Returns true if user has Admin role
+        /// </summary>
+        public bool IsAdmin => Role.HasFlag(ClientRole.Admin);
+
+        /// <summary>
+        /// Returns true if user has Worker role
+        /// </summary>
+        public bool IsWorker => Role.HasFlag(ClientRole.Worker);
+
+        /// <summary>
+        /// Returns true if user has Poster role
+        /// </summary>
+        public bool IsPoster => Role.HasFlag(ClientRole.Poster);
     }
 }

@@ -70,14 +70,10 @@ namespace LaborDAL.Entities
         public string? Skills { get; set; }
 
         /// <summary>
-        /// User type (Admin, Client)
+        /// User role (Admin, Worker, Poster, or combinations using flags)
+        /// Examples: Admin, Worker, Poster, Admin|Worker, Admin|Poster, Worker|Poster, Admin|Worker|Poster
         /// </summary>
-        public UserType UserType { get; set; } = UserType.Client;
-
-        /// <summary>
-        /// Client role type (Worker, Poster, Both) - only applicable when UserType is Client
-        /// </summary>
-        public ClientRole ClientRole { get; set; } = ClientRole.Worker;
+        public ClientRole Role { get; set; } = ClientRole.Worker;
 
         /// <summary>
         /// Account creation timestamp

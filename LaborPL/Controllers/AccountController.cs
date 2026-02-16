@@ -197,9 +197,24 @@ namespace LaborPL.Controllers
                 new Claim(ClaimTypes.NameIdentifier, profile.Id),
                 new Claim(ClaimTypes.Name, $"{profile.FirstName} {profile.LastName}"),
                 new Claim(ClaimTypes.Email, profile.Email),
-                // Add more claims as needed, e.g., roles
-
+                // Add role claims based on ClientRole flags
+                new Claim("Role", profile.Role.ToString())
             };
+            
+            // Add individual role claims for authorization
+            if (profile.IsAdmin)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
+            if (profile.IsWorker)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Worker"));
+            }
+            if (profile.IsPoster)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Poster"));
+            }
+            
             var claimsIdentity = new ClaimsIdentity(claims, "Login");
             var authProperties = new AuthenticationProperties
             {
