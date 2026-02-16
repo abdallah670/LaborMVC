@@ -10,6 +10,7 @@ namespace LaborBLL.Common
 
             // Register services
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
 
             // Booking service
             services.AddScoped<IBookingService, BookingService>();
