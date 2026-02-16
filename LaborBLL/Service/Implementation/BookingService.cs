@@ -1,14 +1,4 @@
-﻿using AutoMapper;
-using LaborBLL.ModelVM;
-using LaborBLL.Response;
-using LaborBLL.Service.Abstract;
-using LaborDAL.Entities;
-using LaborDAL.Repo.Abstract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace LaborBLL.Service.Implementation
 {

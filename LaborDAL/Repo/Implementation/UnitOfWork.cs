@@ -1,10 +1,4 @@
-using AutoMapper;
-using LaborDAL.Repo.Abstract;
-using LaborDAL.DB;
-using LaborDAL.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
+
 
 namespace LaborDAL.Repo.Implementation
 {

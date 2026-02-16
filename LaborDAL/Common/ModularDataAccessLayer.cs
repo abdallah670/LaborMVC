@@ -1,7 +1,5 @@
 ﻿
-using LaborDAL.Repo.Abstract;
-using LaborDAL.Repo.Implementation;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace LaborDAL.Common
 {

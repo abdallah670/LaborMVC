@@ -1,11 +1,6 @@
 using System.Linq;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using LaborDAL.DB;
-using LaborDAL.Entities;
-using LaborDAL.Repo.Abstract;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+
+
 
 namespace LaborDAL.Repo.Implementation
 {

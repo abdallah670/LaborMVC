@@ -1,9 +1,4 @@
 
-using LaborBLL.Mapping;
-using LaborBLL.Service;
-using LaborBLL.Service.Abstract;
-using LaborBLL.Service.Implementation;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LaborBLL.Common
 {

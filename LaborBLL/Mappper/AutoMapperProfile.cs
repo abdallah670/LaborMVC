@@ -1,6 +1,3 @@
-using AutoMapper;
-using LaborBLL.ModelVM;
-using LaborDAL.Entities;
 
 namespace LaborBLL.Mapping
 {

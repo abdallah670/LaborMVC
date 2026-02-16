@@ -1,7 +1,4 @@
 
-using LaborBLL.ModelVM;
-using LaborBLL.Response;
-
 namespace LaborBLL.Service.Abstract
 {
     /// <summary>

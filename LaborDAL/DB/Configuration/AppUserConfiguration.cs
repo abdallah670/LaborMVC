@@ -1,6 +1,4 @@
-using LaborDAL.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 
 namespace LaborDAL.DB.Configuration
 {
