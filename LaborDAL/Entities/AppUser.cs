@@ -23,6 +23,41 @@ namespace LaborDAL.Entities
         public bool IDVerified { get; set; } = false;
 
         /// <summary>
+        /// Current verification tier level
+        /// </summary>
+        public VerificationTier VerificationTier { get; set; } = VerificationTier.Unverified;
+
+        /// <summary>
+        /// URL to ID document (for verification)
+        /// </summary>
+        public string? IDDocumentUrl { get; set; }
+
+        /// <summary>
+        /// Date when ID document was submitted
+        /// </summary>
+        public DateTime? IDDocumentSubmittedAt { get; set; }
+
+        /// <summary>
+        /// Phone verification code
+        /// </summary>
+        public string? PhoneVerificationCode { get; set; }
+
+        /// <summary>
+        /// Phone verification code expiry
+        /// </summary>
+        public DateTime? PhoneVerificationExpiry { get; set; }
+
+        /// <summary>
+        /// Email verification token
+        /// </summary>
+        public string? EmailVerificationToken { get; set; }
+
+        /// <summary>
+        /// Email verification token expiry
+        /// </summary>
+        public DateTime? EmailVerificationExpiry { get; set; }
+
+        /// <summary>
         /// User's average rating from reviews
         /// </summary>
         public decimal? AverageRating { get; set; }
