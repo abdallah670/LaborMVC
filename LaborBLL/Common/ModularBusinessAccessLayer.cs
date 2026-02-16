@@ -2,6 +2,7 @@
 using LaborBLL.Mapping;
 using LaborBLL.Service;
 using LaborBLL.Service.Abstract;
+using LaborBLL.Service.Implementation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LaborBLL.Common
@@ -14,11 +15,14 @@ namespace LaborBLL.Common
 
             // Register services
             services.AddScoped<IUserService, UserService>();
-            
-            
-          //  services.AddScoped<IEmailService, EmailService>();
-           
-         //   services.AddScoped<IStripePaymentService, StripePaymentService>();
+
+            // Booking service
+            services.AddScoped<IBookingService, BookingService>();
+
+
+            //  services.AddScoped<IEmailService, EmailService>();
+
+            //   services.AddScoped<IStripePaymentService, StripePaymentService>();
 
             return services;
         }

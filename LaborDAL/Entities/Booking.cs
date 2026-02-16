@@ -10,12 +10,8 @@ namespace LaborDAL.Entities
     public class Booking
     {
 
-                public Booking() { }
-        public Booking(decimal agreedRate,
-                 DateTime startTime,
-                 DateTime endTime,
-                 int taskId,
-                 int workerId)
+                protected Booking() { }
+        public Booking(decimal agreedRate,DateTime? startTime,DateTime? endTime,int taskId,int workerId)
         {
             AgreedRate = agreedRate;
             StartTime = startTime;
@@ -25,7 +21,14 @@ namespace LaborDAL.Entities
             Status = BookingStatus.Cancelled;
             CreatedAt = DateTime.UtcNow;
         }
+        public void Update(DateTime start, DateTime end,decimal rate)
+        {
+            StartTime = start;
+            EndTime = end;
+            AgreedRate = rate;
+        }
 
+       
         public int Id { get; private set; }
         public decimal AgreedRate { get; private set; }
         public DateTime? StartTime { get; private set; }

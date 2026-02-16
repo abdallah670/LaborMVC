@@ -1,4 +1,5 @@
 ﻿using LaborDAL.Entities;
+using LaborDAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace LaborDAL.DB.Configuration
                  .HasPrecision(18, 2)
                  .IsRequired();
              builder.Property(b => b.StartTime)
+
                  .IsRequired(false);
              builder.Property(b => b.EndTime)
                  .IsRequired(false);
@@ -28,7 +30,15 @@ namespace LaborDAL.DB.Configuration
              builder.Property(b => b.RowVersion)
                  .IsRowVersion()
                  .IsConcurrencyToken();
+
+            builder.HasIndex(b => b.CreatedAt);
+            builder.HasIndex(b => b.TaskId);
+            builder.HasIndex(b => b.WorkerId);
+            builder.HasIndex(b => b.Status);
+
+            // Global query filter for soft delete
+            builder.HasQueryFilter(b => b.Status != BookingStatus.Cancelled);
         }
-    
+
     }
 }
