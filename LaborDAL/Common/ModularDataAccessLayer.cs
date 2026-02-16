@@ -18,12 +18,13 @@ namespace LaborDAL.Common
         {
          
             services.AddScoped<IAppUserRepository, AppUserRepository>();
-          
-           
-         
+
+            // Booking Repository
+            services.AddScoped<IBookingRepo, BookingRepo>();
+
 
             // Add Unit of Work if you have it
-             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
             return services;

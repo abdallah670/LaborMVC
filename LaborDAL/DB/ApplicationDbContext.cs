@@ -18,6 +18,8 @@ namespace LaborDAL.DB
             : base(options)
         {
         }
+        public DbSet<Booking> Bookings { get; set; }
+        
 
         /// <summary>
         /// Override SaveChanges to implement soft delete and audit functionality
