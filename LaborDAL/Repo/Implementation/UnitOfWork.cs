@@ -1,10 +1,4 @@
-using AutoMapper;
-using LaborDAL.Repo.Abstract;
-using LaborDAL.DB;
-using LaborDAL.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
+
 
 namespace LaborDAL.Repo.Implementation
 {
@@ -16,19 +10,25 @@ namespace LaborDAL.Repo.Implementation
         private readonly IMapper _mapper;
         private readonly ILoggerFactory _loggerFactory;
 
+
         // Repositories
         public IAppUserRepository AppUsers { get; private set; }
+
+        public IBookingRepo Bookings { get; private set; }
 
         public UnitOfWork(
             ApplicationDbContext context,
             UserManager<AppUser> userManager,
             IMapper mapper,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IBookingRepo bookingRepo
+            )
         {
             _context = context;
             _userManager = userManager;
             _mapper = mapper;
             _loggerFactory = loggerFactory;
+            Bookings = bookingRepo;
 
             // Initialize repositories
             InitializeRepositories();

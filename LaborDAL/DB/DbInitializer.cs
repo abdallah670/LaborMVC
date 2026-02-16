@@ -1,9 +1,4 @@
-using LaborDAL.Entities;
-using LaborDAL.Enums;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 
 namespace LaborDAL.DB
 {

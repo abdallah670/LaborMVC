@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using LaborDAL.Enums;
 
 namespace LaborBLL.ModelVM
 {

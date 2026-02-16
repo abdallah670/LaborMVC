@@ -1,14 +1,4 @@
-using System.Net;
-using AutoMapper;
-using LaborBLL.ModelVM;
-using LaborBLL.Response;
-using LaborBLL.Service.Abstract;
-using LaborDAL.Entities;
-using LaborDAL.Enums;
-using LaborDAL.Repo.Abstract;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+
 
 namespace LaborBLL.Service
 {

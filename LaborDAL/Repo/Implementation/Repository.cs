@@ -1,9 +1,4 @@
-﻿using LaborDAL.Repo.Abstract;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore.Query;
-using LaborDAL.DB;
-using AutoMapper;
+﻿
 
 namespace LaborDAL.Repo.Implementation
 {

@@ -1,11 +1,4 @@
-using LaborDAL.DB.Configuration;
-using LaborDAL.Entities;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace LaborDAL.DB
 {
@@ -18,6 +11,8 @@ namespace LaborDAL.DB
             : base(options)
         {
         }
+        public DbSet<Booking> Bookings { get; set; }
+        
 
         /// <summary>
         /// Override SaveChanges to implement soft delete and audit functionality

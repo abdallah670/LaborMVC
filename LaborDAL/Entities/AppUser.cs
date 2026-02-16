@@ -1,6 +1,4 @@
-using LaborDAL.Enums;
-using Microsoft.AspNetCore.Identity;
-using System;
+
 
 namespace LaborDAL.Entities
 {

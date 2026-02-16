@@ -1,15 +1,6 @@
 ﻿
 
 
-
-
-
-
-
-using LaborDAL.Repo.Abstract;
-using LaborDAL.Repo.Implementation;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace LaborDAL.Common
 {
     public static class ModularDataAccessLayer
@@ -18,12 +9,13 @@ namespace LaborDAL.Common
         {
          
             services.AddScoped<IAppUserRepository, AppUserRepository>();
-          
-           
-         
+
+            // Booking Repository
+            services.AddScoped<IBookingRepo, BookingRepo>();
+
 
             // Add Unit of Work if you have it
-             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
             return services;

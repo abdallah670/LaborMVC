@@ -1,6 +1,3 @@
-using AutoMapper;
-using LaborBLL.ModelVM;
-using LaborDAL.Entities;
 
 namespace LaborBLL.Mapping
 {
@@ -55,6 +52,14 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.Skills, opt => opt.MapFrom(src => src.Skills))
                 .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+            CreateMap<Booking, BookingDetailsViewModel>()
+                .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
+                .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.TaskId, opt => opt.MapFrom(src => src.TaskId))
+                .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
         }
     }
 }

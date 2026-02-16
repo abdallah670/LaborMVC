@@ -1,4 +1,3 @@
-using LaborDAL.Entities;
 
 namespace LaborDAL.Repo.Abstract
 {

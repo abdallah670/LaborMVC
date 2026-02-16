@@ -1,4 +1,3 @@
-using LaborDAL.Entities;
 
 namespace LaborDAL.Repo.Abstract
 {
@@ -9,5 +8,6 @@ namespace LaborDAL.Repo.Abstract
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
         IAppUserRepository AppUsers { get; }
+        IBookingRepo Bookings { get; }
     }
 }
