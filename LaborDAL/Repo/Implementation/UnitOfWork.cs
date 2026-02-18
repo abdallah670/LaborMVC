@@ -16,6 +16,8 @@ namespace LaborDAL.Repo.Implementation
 
         public IBookingRepo Bookings { get; private set; }
 
+        public ITaskRepository Tasks { get; private set; }
+
         public UnitOfWork(
             ApplicationDbContext context,
             UserManager<AppUser> userManager,
@@ -41,6 +43,8 @@ namespace LaborDAL.Repo.Implementation
                 _userManager, 
                 _mapper, 
                 _loggerFactory.CreateLogger<AppUserRepository>());
+
+            Tasks = new TaskRepository(_context);
         }
 
         public async Task<int> SaveAsync()

@@ -11,8 +11,22 @@ namespace LaborDAL.DB
             : base(options)
         {
         }
+
+        /// <summary>
+        /// Bookings DbSet
+        /// </summary>
         public DbSet<Booking> Bookings { get; set; }
-        
+
+        /// <summary>
+        /// Tasks DbSet
+        /// </summary>
+        public DbSet<TaskItem> Tasks { get; set; }
+
+        /// <summary>
+        /// Task applications DbSet
+        /// </summary>
+        public DbSet<TaskApplication> TaskApplications { get; set; }
+
 
         /// <summary>
         /// Override SaveChanges to implement soft delete and audit functionality
@@ -103,6 +117,32 @@ namespace LaborDAL.DB
             modelBuilder.Entity<AppUser>()
                 .Property(u => u.Longitude)
                 .HasPrecision(11, 8);
+
+            // Configure decimal precision for TaskItem coordinates
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.Latitude)
+                .HasPrecision(10, 8);
+
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.Longitude)
+                .HasPrecision(11, 8);
+
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.Budget)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.EstimatedHours)
+                .HasPrecision(10, 2);
+
+            // Configure decimal precision for TaskApplication
+            modelBuilder.Entity<TaskApplication>()
+                .Property(ta => ta.ProposedBudget)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<TaskApplication>()
+                .Property(ta => ta.EstimatedHours)
+                .HasPrecision(10, 2);
 
             // Additional Identity configurations can be added here
         }

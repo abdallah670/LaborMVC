@@ -7,6 +7,7 @@ global using LaborDAL.Enums;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.Extensions.Logging;
 
+global using Microsoft.EntityFrameworkCore;
 
 global using AutoMapper;
 global using System.ComponentModel.DataAnnotations;

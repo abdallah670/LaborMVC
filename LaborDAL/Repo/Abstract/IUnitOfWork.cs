@@ -9,5 +9,6 @@ namespace LaborDAL.Repo.Abstract
         Task RollbackTransactionAsync();
         IAppUserRepository AppUsers { get; }
         IBookingRepo Bookings { get; }
+        ITaskRepository Tasks { get; }
     }
 }

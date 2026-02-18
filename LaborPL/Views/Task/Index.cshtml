@@ -1,0 +1,290 @@
+@model LaborBLL.ModelVM.TaskSearchViewModel
+@using LaborDAL.Enums
+@{
+    ViewData["Title"] = "Browse Tasks";
+}
+
+<div class="task-search-container fade-in">
+    <!-- Search Header -->
+    <div class="search-header mb-4">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="mb-3"><i class="bi bi-search me-2"></i>Find Tasks</h2>
+                <form asp-action="Index" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" name="Keyword" class="form-control" placeholder="Search tasks..." value="@Model.Keyword">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="Category" class="form-select">
+                            <option value="">All Categories</option>
+                            @foreach (TaskCategory category in Enum.GetValues(typeof(TaskCategory)))
+                            {
+                                <option value="@((int)category)" selected="@(Model.Category == category ? "selected" : null)">
+                                    @category.ToString()
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="SortBy" class="form-select">
+                            <option value="">Sort By</option>
+                            <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Newest First</option>
+                            <option value="budget_high" selected="@(Model.SortBy == "budget_high" ? "selected" : null)">Highest Budget</option>
+                            <option value="budget_low" selected="@(Model.SortBy == "budget_low" ? "selected" : null)">Lowest Budget</option>
+                            <option value="distance" selected="@(Model.SortBy == "distance" ? "selected" : null)">Nearest First</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-filter me-1"></i>Filter
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Advanced Filters -->
+                <div class="row g-3 mt-2">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Min Budget ($)</label>
+                        <input type="number" name="MinBudget" class="form-control" placeholder="0" value="@Model.MinBudget">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Max Budget ($)</label>
+                        <input type="number" name="MaxBudget" class="form-control" placeholder="Any" value="@Model.MaxBudget">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Location</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                            <input type="text" name="Location" class="form-control" placeholder="City or Address" value="@Model.Location">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Radius (km)</label>
+                        <input type="number" name="RadiusKm" class="form-control" placeholder="Any distance" value="@Model.RadiusKm">
+                    </div>
+                </div>
+                
+                <!-- Filter Tags -->
+                <div class="filter-tags mt-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="IsRemote" id="remoteCheck" value="true" @(Model.IsRemote == true ? "checked" : "")>
+                        <label class="form-check-label" for="remoteCheck">
+                            <span class="badge bg-info"><i class="bi bi-wifi me-1"></i>Remote</span>
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="IsUrgent" id="urgentCheck" value="true" @(Model.IsUrgent == true ? "checked" : "")>
+                        <label class="form-check-label" for="urgentCheck">
+                            <span class="badge bg-danger"><i class="bi bi-lightning me-1"></i>Urgent</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="text-muted mb-0">
+            <i class="bi bi-list-ul me-1"></i>
+            @Model.TotalCount @(Model.TotalCount == 1 ? "task" : "tasks") found
+        </p>
+        @if (User.IsInRole("Poster") || User.IsInRole("Both"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Post a Task
+            </a>
+        }
+    </div>
+
+    <!-- Task Grid -->
+    @if (Model.Results.Any())
+    {
+        <div class="row g-4">
+            @foreach (var task in Model.Results)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="task-card card h-100 shadow-sm">
+                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary">@task.CategoryDisplay</span>
+                            @if (task.IsUrgent)
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i> Urgent</span>
+                            }
+                            @if (task.IsRemote)
+                            {
+                                <span class="badge bg-info"><i class="bi bi-wifi"></i> Remote</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">@task.Title</h5>
+                            <p class="card-text text-muted small">
+                                @(task.Description?.Length > 100 ? task.Description[..100] + "..." : task.Description)
+                            </p>
+                            
+                            <div class="task-meta mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-geo-alt text-muted me-2"></i>
+                                    <span class="small">
+                                        @if (!string.IsNullOrEmpty(task.City))
+                                        {
+                                            @task.City
+                                            @if (task.Distance.HasValue)
+                                            {
+                                                <span class="text-muted"> (@task.Distance.Value.ToString("0.0") km away)</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Location not specified</span>
+                                        }
+                                    </span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-cash text-muted me-2"></i>
+                                    <span class="small">
+                                        <strong>@task.BudgetTypeDisplay:</strong> $@task.Budget.ToString("N2")
+                                    </span>
+                                </div>
+                                @if (task.DueDate.HasValue)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar text-muted me-2"></i>
+                                        <span class="small">Due @task.DueDate.Value.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="task-footer d-flex justify-content-between align-items-center">
+                                <div class="poster-info d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(task.PosterProfilePicture))
+                                    {
+                                        <img src="@task.PosterProfilePicture" alt="" class="poster-avatar me-2">
+                                    }
+                                    else
+                                    {
+                                        <div class="poster-avatar-placeholder me-2">
+                                            @(task.PosterName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                        </div>
+                                    }
+                                    <div>
+                                        <p class="poster-name mb-0 small">@task.PosterName</p>
+                                        @if (task.PosterRating.HasValue)
+                                        {
+                                            <div class="poster-rating">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="bi bi-star-fill star @(i <= Math.Round(task.PosterRating.Value) ? "filled" : "empty")" style="font-size: 0.7rem;"></i>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="badge bg-secondary">@task.ApplicationCount applications</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @if (Model.HasPreviousPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                Keyword = Model.Keyword, 
+                                Category = Model.Category, 
+                                MinBudget = Model.MinBudget,
+                                MaxBudget = Model.MaxBudget,
+                                Location = Model.Location,
+                                RadiusKm = Model.RadiusKm,
+                                IsRemote = Model.IsRemote,
+                                IsUrgent = Model.IsUrgent,
+                                SortBy = Model.SortBy,
+                                Page = Model.Page - 1 
+                            })">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                        </li>
+                    }
+                    
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                Keyword = Model.Keyword, 
+                                Category = Model.Category, 
+                                MinBudget = Model.MinBudget,
+                                MaxBudget = Model.MaxBudget,
+                                Location = Model.Location,
+                                RadiusKm = Model.RadiusKm,
+                                IsRemote = Model.IsRemote,
+                                IsUrgent = Model.IsUrgent,
+                                SortBy = Model.SortBy,
+                                Page = i 
+                            })">@i</a>
+                        </li>
+                    }
+                    
+                    @if (Model.HasNextPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                Keyword = Model.Keyword, 
+                                Category = Model.Category, 
+                                MinBudget = Model.MinBudget,
+                                MaxBudget = Model.MaxBudget,
+                                Location = Model.Location,
+                                RadiusKm = Model.RadiusKm,
+                                IsRemote = Model.IsRemote,
+                                IsUrgent = Model.IsUrgent,
+                                SortBy = Model.SortBy,
+                                Page = Model.Page + 1 
+                            })">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="empty-state text-center py-5">
+            <div class="empty-state-icon mb-3">
+                <i class="bi bi-search" style="font-size: 4rem; color: var(--muted-text);"></i>
+            </div>
+            <h4>No tasks found</h4>
+            <p class="text-muted">Try adjusting your search filters or check back later for new tasks.</p>
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Clear Filters
+            </a>
+        </div>
+    }
+</div>

@@ -23,6 +23,41 @@ namespace LaborDAL.Entities
         public bool IDVerified { get; set; } = false;
 
         /// <summary>
+        /// Current verification tier level
+        /// </summary>
+        public VerificationTier VerificationTier { get; set; } = VerificationTier.Unverified;
+
+        /// <summary>
+        /// URL to ID document (for verification)
+        /// </summary>
+        public string? IDDocumentUrl { get; set; }
+
+        /// <summary>
+        /// Date when ID document was submitted
+        /// </summary>
+        public DateTime? IDDocumentSubmittedAt { get; set; }
+
+        /// <summary>
+        /// Phone verification code
+        /// </summary>
+        public string? PhoneVerificationCode { get; set; }
+
+        /// <summary>
+        /// Phone verification code expiry
+        /// </summary>
+        public DateTime? PhoneVerificationExpiry { get; set; }
+
+        /// <summary>
+        /// Email verification token
+        /// </summary>
+        public string? EmailVerificationToken { get; set; }
+
+        /// <summary>
+        /// Email verification token expiry
+        /// </summary>
+        public DateTime? EmailVerificationExpiry { get; set; }
+
+        /// <summary>
         /// User's average rating from reviews
         /// </summary>
         public decimal? AverageRating { get; set; }
@@ -68,14 +103,10 @@ namespace LaborDAL.Entities
         public string? Skills { get; set; }
 
         /// <summary>
-        /// User type (Admin, Client)
+        /// User role (Admin, Worker, Poster, or combinations using flags)
+        /// Examples: Admin, Worker, Poster, Admin|Worker, Admin|Poster, Worker|Poster, Admin|Worker|Poster
         /// </summary>
-        public UserType UserType { get; set; } = UserType.Client;
-
-        /// <summary>
-        /// Client role type (Worker, Poster, Both) - only applicable when UserType is Client
-        /// </summary>
-        public ClientRole ClientRole { get; set; } = ClientRole.Worker;
+        public ClientRole Role { get; set; } = ClientRole.Worker;
 
         /// <summary>
         /// Account creation timestamp
@@ -112,8 +143,21 @@ namespace LaborDAL.Entities
         /// </summary>
         public string? CreatedBy { get; set; }
 
-        // Navigation properties will be added when Task and TaskApplication entities are created
-        // public virtual ICollection<Task> PostedTasks { get; set; } = new List<Task>();
-        // public virtual ICollection<TaskApplication> Applications { get; set; } = new List<TaskApplication>();
+        // Navigation properties
+
+        /// <summary>
+        /// Tasks posted by this user
+        /// </summary>
+        public virtual ICollection<TaskItem> PostedTasks { get; set; } = new List<TaskItem>();
+
+        /// <summary>
+        /// Tasks assigned to this user (as worker)
+        /// </summary>
+        public virtual ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
+
+        /// <summary>
+        /// Task applications submitted by this user
+        /// </summary>
+        public virtual ICollection<TaskApplication> Applications { get; set; } = new List<TaskApplication>();
     }
 }

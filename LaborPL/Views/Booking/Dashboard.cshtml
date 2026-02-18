@@ -1,3 +1,172 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+@model IEnumerable<LaborBLL.ModelVM.BookingDetailsViewModel>
+@{
+    ViewData["Title"] = "My Bookings";
+    var currentFilter = ViewBag.CurrentFilter as string ?? "all";
+}
+
+<div class="booking-dashboard-container fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-calendar3 me-2"></i>My Bookings</h2>
+            <p class="text-muted mb-0">Manage your scheduled tasks and appointments</p>
+        </div>
+        @if (User.IsInRole("Worker") || User.IsInRole("Both"))
+        {
+            <a asp-controller="Task" asp-action="Index" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>Find More Tasks
+            </a>
+        }
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.TotalBookings</h3>
+                    <small>Total Bookings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.UpcomingCount</h3>
+                    <small>Upcoming</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.InProgressCount</h3>
+                    <small>In Progress</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.CompletedCount</h3>
+                    <small>Completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card shadow">
+        <div class="card-header bg-transparent">
+            <ul class="nav nav-pills card-header-pills">
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "all" ? "active" : "")" asp-action="Dashboard" asp-route-filter="all">
+                        <i class="bi bi-grid me-1"></i>All
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "upcoming" ? "active" : "")" asp-action="Dashboard" asp-route-filter="upcoming">
+                        <i class="bi bi-calendar-event me-1"></i>Upcoming
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "inprogress" ? "active" : "")" asp-action="Dashboard" asp-route-filter="inprogress">
+                        <i class="bi bi-hourglass-split me-1"></i>In Progress
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "completed" ? "active" : "")" asp-action="Dashboard" asp-route-filter="completed">
+                        <i class="bi bi-check-circle me-1"></i>Completed
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="bookings-list">
+                    @foreach (var booking in Model)
+                    {
+                        <div class="booking-card card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-2">
+                                            <a asp-action="Details" asp-route-id="@booking.Id" class="text-decoration-none">
+                                                Booking #@booking.Id
+                                            </a>
+                                        </h5>
+                                        <span class="badge @GetStatusBadgeClass(booking.Status)">@booking.Status</span>
+                                        @if (booking.StartTime.HasValue)
+                                        {
+                                            <p class="text-muted mb-0 mt-2">
+                                                <i class="bi bi-calendar me-1"></i>
+                                                @booking.StartTime.Value.ToString("MMM dd, yyyy HH:mm")
+                                            </p>
+                                        }
+                                    </div>
+                                    <div class="col-md-3 text-md-center">
+                                        <h4 class="text-primary mb-0">$@booking.AgreedRate.ToString("N2")</h4>
+                                        <small class="text-muted">Agreed Rate</small>
+                                    </div>
+                                    <div class="col-md-3 text-md-end">
+                                        <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye me-1"></i>View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-3">
+                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: var(--muted-text);"></i>
+                    </div>
+                    <h5>No bookings found</h5>
+                    <p class="text-muted mb-3">
+                        @if (currentFilter == "all")
+                        {
+                            <span>You don't have any bookings yet.</span>
+                        }
+                        else
+                        {
+                            <span>No @currentFilter bookings found.</span>
+                        }
+                    </p>
+                    @if (User.IsInRole("Worker") || User.IsInRole("Both"))
+                    {
+                        <a asp-controller="Task" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i>Browse Tasks
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(LaborDAL.Enums.BookingStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.BookingStatus.Scheduled => "bg-warning",
+            LaborDAL.Enums.BookingStatus.InProgress => "bg-info",
+            LaborDAL.Enums.BookingStatus.Completed => "bg-success",
+            LaborDAL.Enums.BookingStatus.Cancelled => "bg-danger",
+            LaborDAL.Enums.BookingStatus.Disputed => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+}
+=======
+>>>>>>> a6db0b0
 ﻿@model List<LaborBLL.ModelVM.BookingDashboardViewModel>
 
 @{
@@ -48,3 +217,7 @@
         <li>Disputed: @Model.Sum(b => b.DisputedCount)</li>
     </ul>
 </div>
+<<<<<<< HEAD
+=======
+>>>>>>> 1bc9c57 (dashboard in controll)
+>>>>>>> a6db0b0

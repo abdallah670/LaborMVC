@@ -4,6 +4,7 @@ using LaborDAL.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LaborDAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260218055506_SyncUserModel")]
+    partial class SyncUserModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,9 +247,8 @@ namespace LaborDAL.Migrations
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
 
-                    b.Property<string>("WorkerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("WorkerId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -259,8 +261,6 @@ namespace LaborDAL.Migrations
                     b.HasIndex("WorkerId");
 
                     b.ToTable("Bookings", (string)null);
-
-
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
@@ -489,7 +489,6 @@ namespace LaborDAL.Migrations
                     b.HasIndex("Status", "Category");
 
                     b.ToTable("Tasks", (string)null);
-
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -625,9 +624,6 @@ namespace LaborDAL.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
             modelBuilder.Entity("AppUserTaskItem", b =>
                 {
                     b.HasOne("LaborDAL.Entities.TaskItem", null)
@@ -658,15 +654,6 @@ namespace LaborDAL.Migrations
 
                     b.Navigation("Task");
 
-            modelBuilder.Entity("LaborDAL.Entities.Booking", b =>
-                {
-                    b.HasOne("LaborDAL.Entities.AppUser", "Worker")
-                        .WithMany()
-                        .HasForeignKey("WorkerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-
                     b.Navigation("Worker");
                 });
 
@@ -680,7 +667,6 @@ namespace LaborDAL.Migrations
 
                     b.Navigation("Poster");
                 });
-
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {

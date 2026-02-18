@@ -1,0 +1,442 @@
+@model LaborBLL.ModelVM.TaskDetailsViewModel
+@using LaborDAL.Enums
+@using TaskStatus = LaborDAL.Enums.TaskStatus
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="task-details-container fade-in">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary">@Model.CategoryDisplay</span>
+                        @if (Model.IsUrgent)
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i> Urgent</span>
+                        }
+                        @if (Model.IsRemote)
+                        {
+                            <span class="badge bg-info"><i class="bi bi-wifi"></i> Remote</span>
+                        }
+                        <span class="badge @GetStatusBadgeClass(Model.Status)">@Model.StatusDisplay</span>
+                    </div>
+                    <div class="task-actions">
+                        @if (Model.CanEdit)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil me-1"></i>Edit
+                            </a>
+                        }
+                        @if (Model.CanDelete)
+                        {
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash me-1"></i>Delete
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h2 class="task-title mb-3">@Model.Title</h2>
+                    
+                    <!-- Poster Info -->
+                    <div class="poster-card d-flex align-items-center p-3 bg-light rounded mb-4">
+                        @if (!string.IsNullOrEmpty(Model.PosterProfilePicture))
+                        {
+                            <img src="@Model.PosterProfilePicture" alt="" class="poster-avatar-lg me-3">
+                        }
+                        else
+                        {
+                            <div class="poster-avatar-lg-placeholder me-3">
+                                @(Model.PosterName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                            </div>
+                        }
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Posted by @Model.PosterName</h6>
+                            @if (Model.PosterRating.HasValue)
+                            {
+                                <div class="poster-rating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi bi-star-fill star @(i <= Math.Round(Model.PosterRating.Value) ? "filled" : "empty")" style="font-size: 0.8rem;"></i>
+                                    }
+                                    <span class="ms-1 text-muted">(@Model.PosterRating.Value.ToString("0.0"))</span>
+                                </div>
+                            }
+                            <p class="mb-0 text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>Posted @Model.CreatedAt.ToString("MMM dd, yyyy")
+                                <span class="mx-2">|</span>
+                                <i class="bi bi-eye me-1"></i>@Model.ViewCount views
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="task-description mb-4">
+                        <h5 class="section-title"><i class="bi bi-file-text me-2"></i>Description</h5>
+                        <p class="text-muted">@Html.Raw(Model.Description?.Replace("\n", "<br/>"))</p>
+                    </div>
+
+                    <!-- Task Details Grid -->
+                    <div class="task-details-grid mb-4">
+                        <h5 class="section-title"><i class="bi bi-list-check me-2"></i>Task Details</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <i class="bi bi-cash text-primary"></i>
+                                    <div>
+                                        <label>Budget</label>
+                                        <p>@Model.BudgetTypeDisplay: $@Model.Budget.ToString("N2")</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <i class="bi bi-people text-primary"></i>
+                                    <div>
+                                        <label>Workers Needed</label>
+                                        <p>@Model.WorkersNeeded</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (Model.StartDate.HasValue)
+                            {
+                                <div class="col-md-6">
+                                    <div class="detail-item">
+                                        <i class="bi bi-calendar text-primary"></i>
+                                        <div>
+                                            <label>Start Date</label>
+                                            <p>@Model.StartDate.Value.ToString("MMM dd, yyyy HH:mm")</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.DueDate.HasValue)
+                            {
+                                <div class="col-md-6">
+                                    <div class="detail-item">
+                                        <i class="bi bi-calendar-check text-primary"></i>
+                                        <div>
+                                            <label>Due Date</label>
+                                            <p>@Model.DueDate.Value.ToString("MMM dd, yyyy HH:mm")</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!Model.IsRemote)
+                            {
+                                <div class="col-md-6">
+                                    <div class="detail-item">
+                                        <i class="bi bi-geo-alt text-primary"></i>
+                                        <div>
+                                            <label>Location</label>
+                                            <p>@Model.Location</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-item">
+                                        <i class="bi bi-globe text-primary"></i>
+                                        <div>
+                                            <label>City/Country</label>
+                                            <p>@Model.City, @Model.Country</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.RequiredSkills))
+                            {
+                                <div class="col-12">
+                                    <div class="detail-item">
+                                        <i class="bi bi-tools text-primary"></i>
+                                        <div>
+                                            <label>Required Skills</label>
+                                            <p>@Model.RequiredSkills</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Map -->
+                    @if (!Model.IsRemote && Model.Latitude.HasValue && Model.Longitude.HasValue)
+                    {
+                        <div class="task-map mb-4">
+                            <h5 class="section-title"><i class="bi bi-map me-2"></i>Location on Map</h5>
+                            <div id="taskMap" class="map-container" style="height: 300px;"></div>
+                        </div>
+                    }
+
+                    <!-- Apply Button (for workers) -->
+                    @if (Model.CanApply && Model.Status == TaskStatus.Open)
+                    {
+                        <div class="apply-section mt-4 p-4 bg-light rounded">
+                            <h5><i class="bi bi-send me-2"></i>Interested in this task?</h5>
+                            <p class="text-muted">Submit your proposal to the task poster.</p>
+                            <a asp-controller="Application" asp-action="Create" asp-route-taskId="@Model.Id" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send me-2"></i>Apply Now
+                            </a>
+                        </div>
+                    }
+                    @if (Model.HasApplied)
+                    {
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle-fill me-2"></i>You have already applied to this task.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Applications Section (for poster) -->
+            @if (Model.Applications.Any())
+            {
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Applications (@Model.Applications.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="applications-list">
+                            @foreach (var app in Model.Applications)
+                            {
+                                <div class="application-item p-3 border rounded mb-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(app.WorkerProfilePicture))
+                                            {
+                                                <img src="@app.WorkerProfilePicture" alt="" class="worker-avatar me-3">
+                                            }
+                                            else
+                                            {
+                                                <div class="worker-avatar-placeholder me-3">
+                                                    @(app.WorkerName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                                </div>
+                                            }
+                                            <div>
+                                                <h6 class="mb-1">@app.WorkerName</h6>
+                                                @if (app.WorkerRating.HasValue)
+                                                {
+                                                    <div class="worker-rating">
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            <i class="bi bi-star-fill star @(i <= Math.Round(app.WorkerRating.Value) ? "filled" : "empty")" style="font-size: 0.7rem;"></i>
+                                                        }
+                                                        <span class="ms-1 text-muted small">(@app.WorkerRating.Value.ToString("0.0"))</span>
+                                                    </div>
+                                                }
+                                                <span class="badge @GetApplicationStatusBadgeClass(app.Status)">@app.StatusDisplay</span>
+                                            </div>
+                                        </div>
+                                        <div class="application-budget text-end">
+                                            <h5 class="text-primary mb-0">$@app.ProposedBudget.ToString("N2")</h5>
+                                            @if (app.EstimatedHours.HasValue)
+                                            {
+                                                <small class="text-muted">@app.EstimatedHours.Value hrs</small>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(app.Message))
+                                    {
+                                        <div class="application-message mt-3 p-3 bg-light rounded">
+                                            <p class="mb-0 small">@app.Message</p>
+                                        </div>
+                                    }
+                                    @if (app.Status == ApplicationStatus.Pending && Model.Status == TaskStatus.Open)
+                                    {
+                                        <div class="application-actions mt-3 d-flex gap-2">
+                                            <form asp-controller="Application" asp-action="Accept" asp-route-id="@app.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="bi bi-check-circle me-1"></i>Accept
+                                                </button>
+                                            </form>
+                                            <form asp-controller="Application" asp-action="Reject" asp-route-id="@app.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-x-circle me-1"></i>Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Action Card -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    @if (Model.CanApply && Model.Status == TaskStatus.Open)
+                    {
+                        <a asp-controller="Application" asp-action="Create" asp-route-taskId="@Model.Id" class="btn btn-primary w-100 mb-3">
+                            <i class="bi bi-send me-2"></i>Apply for Task
+                        </a>
+                    }
+                    @if (Model.Status == TaskStatus.Assigned && !string.IsNullOrEmpty(Model.AssignedWorkerName))
+                    {
+                        <div class="assigned-worker">
+                            <h6 class="mb-3"><i class="bi bi-person-check me-2"></i>Assigned Worker</h6>
+                            <div class="d-flex align-items-center">
+                                @if (!string.IsNullOrEmpty(Model.AssignedWorkerProfilePicture))
+                                {
+                                    <img src="@Model.AssignedWorkerProfilePicture" alt="" class="worker-avatar me-3">
+                                }
+                                else
+                                {
+                                    <div class="worker-avatar-placeholder me-3">
+                                        @(Model.AssignedWorkerName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                    </div>
+                                }
+                                <div>
+                                    <p class="mb-0 fw-bold">@Model.AssignedWorkerName</p>
+                                    @if (Model.AssignedWorkerRating.HasValue)
+                                    {
+                                        <div class="worker-rating">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star-fill star @(i <= Math.Round(Model.AssignedWorkerRating.Value) ? "filled" : "empty")" style="font-size: 0.7rem;"></i>
+                                            }
+                                            <span class="ms-1 text-muted small">(@Model.AssignedWorkerRating.Value.ToString("0.0"))</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">
+                                <i class="bi bi-calendar-check me-1"></i>Assigned @Model.AssignedAt?.ToString("MMM dd, yyyy")
+                            </p>
+                        </div>
+                    }
+                    <div class="task-stats mt-3 pt-3 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="bi bi-eye me-1"></i>Views</span>
+                            <span class="fw-bold">@Model.ViewCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="bi bi-person-lines-fill me-1"></i>Applications</span>
+                            <span class="fw-bold">@Model.ApplicationCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-calendar3 me-1"></i>Posted</span>
+                            <span class="fw-bold">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Similar Tasks -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Similar Tasks</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted text-center mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Similar tasks will appear here
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+@if (Model.CanDelete)
+{
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this task? This action cannot be undone.</p>
+                    <p class="fw-bold">@Model.Title</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Delete Task
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (!Model.IsRemote && Model.Latitude.HasValue && Model.Longitude.HasValue)
+    {
+        <!-- Leaflet CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <!-- Leaflet JS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const lat = @Model.Latitude.Value;
+                const lng = @Model.Longitude.Value;
+                
+                const map = L.map('taskMap').setView([lat, lng], 15);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup('@Model.Location')
+                    .openPopup();
+            });
+        </script>
+    }
+}
+
+@functions {
+    string GetStatusBadgeClass(TaskStatus status)
+    {
+        return status switch
+        {
+            TaskStatus.Open => "bg-success",
+            TaskStatus.Assigned => "bg-info",
+            TaskStatus.InProgress => "bg-warning",
+            TaskStatus.Completed => "bg-primary",
+            TaskStatus.Cancelled => "bg-secondary",
+            TaskStatus.Expired => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetApplicationStatusBadgeClass(ApplicationStatus status)
+    {
+        return status switch
+        {
+            ApplicationStatus.Pending => "bg-warning",
+            ApplicationStatus.Viewed => "bg-info",
+            ApplicationStatus.Accepted => "bg-success",
+            ApplicationStatus.Rejected => "bg-danger",
+            ApplicationStatus.Withdrawn => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+}

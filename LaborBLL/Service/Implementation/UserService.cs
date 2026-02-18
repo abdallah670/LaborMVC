@@ -34,33 +34,49 @@ namespace LaborBLL.Service
         {
             try
             {
+
                 // Check if email already exists
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null)
                 {
                     return new Response<bool>(false, false, "Email is already registered.");
                 }
-
+                var isfirstuser = (await _userManager.Users.CountAsync()) == 0;
                 // Map ViewModel to Entity
                 var user = _mapper.Map<AppUser>(model);
 
                 // Set user role based on selection
-                user.ClientRole = model.UserRole switch
-                {
-                    "Worker" => ClientRole.Worker,
-                    "Poster" => ClientRole.Poster,
-                    "Both" => ClientRole.Both,
-                    _ => ClientRole.Worker
-                };
-
+               
                 // Create user
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    // Assign role
-                    await _userManager.AddToRoleAsync(user, user.ClientRole.ToString());
-
+                    // Assign Identity roles based on ClientRole flags
+                    if (user.Role.HasFlag(ClientRole.Admin))
+                    {
+                        await _userManager.AddToRoleAsync(user, "Admin");
+                    }
+                    if (user.Role.HasFlag(ClientRole.Worker))
+                    {
+                        await _userManager.AddToRoleAsync(user, "Worker");
+                    }
+                    if (user.Role.HasFlag(ClientRole.Poster))
+                    {
+                        await _userManager.AddToRoleAsync(user, "Poster");
+                    }
+                    
+                    //if this is the first user, assign them the Admin role as well
+                    if (isfirstuser)
+                    {
+                        user.Role = ClientRole.Admin | user.Role;
+                        await _userManager.UpdateAsync(user);
+                        if (!await _userManager.IsInRoleAsync(user, "Admin"))
+                        {
+                            await _userManager.AddToRoleAsync(user, "Admin");
+                        }
+                        _logger.LogInformation("First user registered, assigned Admin role: {Email}", model.Email);
+                    }
                     _logger.LogInformation("User registered successfully: {Email}", model.Email);
                     return new Response<bool>(true, true, null);
                 }

@@ -1,11 +1,3 @@
-using LaborBLL.ModelVM;
-using LaborBLL.Response;
-using LaborBLL.Service.Abstract;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-
 namespace LaborPL.Controllers
 {
     public class AccountController : Controller
@@ -197,9 +189,24 @@ namespace LaborPL.Controllers
                 new Claim(ClaimTypes.NameIdentifier, profile.Id),
                 new Claim(ClaimTypes.Name, $"{profile.FirstName} {profile.LastName}"),
                 new Claim(ClaimTypes.Email, profile.Email),
-                // Add more claims as needed, e.g., roles
-
+                // Add role claims based on ClientRole flags
+                new Claim("Role", profile.Role.ToString())
             };
+            
+            // Add individual role claims for authorization
+            if (profile.IsAdmin)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
+            if (profile.IsWorker)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Worker"));
+            }
+            if (profile.IsPoster)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Poster"));
+            }
+            
             var claimsIdentity = new ClaimsIdentity(claims, "Login");
             var authProperties = new AuthenticationProperties
             {

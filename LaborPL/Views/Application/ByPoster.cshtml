@@ -1,0 +1,170 @@
+@model IEnumerable<LaborBLL.ModelVM.TaskApplicationViewModel>
+@{
+    ViewData["Title"] = "Applications Received";
+    var currentFilter = ViewBag.CurrentFilter as string ?? "all";
+}
+
+<div class="applications-poster-container fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-person-lines-fill me-2"></i>Applications Received</h2>
+            <p class="text-muted mb-0">Review and manage applications for your tasks</p>
+        </div>
+        <a asp-controller="Task" asp-action="MyTasks" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Back to My Tasks
+        </a>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-transparent">
+            <ul class="nav nav-pills card-header-pills">
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "all" ? "active" : "")" asp-action="ByPoster" asp-route-filter="all">
+                        <i class="bi bi-grid me-1"></i>All
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "pending" ? "active" : "")" asp-action="ByPoster" asp-route-filter="pending">
+                        <i class="bi bi-hourglass me-1"></i>Pending
+                        <span class="badge bg-warning ms-1">@ViewBag.PendingCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "accepted" ? "active" : "")" asp-action="ByPoster" asp-route-filter="accepted">
+                        <i class="bi bi-check-circle me-1"></i>Accepted
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "rejected" ? "active" : "")" asp-action="ByPoster" asp-route-filter="rejected">
+                        <i class="bi bi-x-circle me-1"></i>Rejected
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="applications-list">
+                    @foreach (var app in Model)
+                    {
+                        <div class="application-card card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(app.WorkerProfilePicture))
+                                        {
+                                            <img src="@app.WorkerProfilePicture" alt="" class="worker-avatar-lg me-3">
+                                        }
+                                        else
+                                        {
+                                            <div class="worker-avatar-lg-placeholder me-3">
+                                                @(app.WorkerName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                            </div>
+                                        }
+                                        <div>
+                                            <h5 class="mb-1">@app.WorkerName</h5>
+                                            @if (app.WorkerRating.HasValue)
+                                            {
+                                                <div class="worker-rating mb-1">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        <i class="bi bi-star-fill star @(i <= Math.Round(app.WorkerRating.Value) ? "filled" : "empty")" style="font-size: 0.8rem;"></i>
+                                                    }
+                                                    <span class="ms-1 text-muted small">(@app.WorkerRating.Value.ToString("0.0"))</span>
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(app.WorkerSkills))
+                                            {
+                                                <p class="mb-0 small text-muted">
+                                                    <i class="bi bi-tools me-1"></i>@app.WorkerSkills
+                                                </p>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge @GetStatusBadgeClass(app.Status)">@app.StatusDisplay</span>
+                                        <h4 class="text-primary mb-0 mt-2">$@app.ProposedBudget.ToString("N2")</h4>
+                                        @if (app.EstimatedHours.HasValue)
+                                        {
+                                            <small class="text-muted">@app.EstimatedHours.Value hrs</small>
+                                        }
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(app.Message))
+                                {
+                                    <div class="application-message mt-3 p-3 bg-light rounded">
+                                        <h6 class="mb-2"><i class="bi bi-chat-text me-1"></i>Message</h6>
+                                        <p class="mb-0">@app.Message</p>
+                                    </div>
+                                }
+
+                                <div class="application-meta mt-3 d-flex justify-content-between align-items-center">
+                                    <div class="text-muted small">
+                                        <i class="bi bi-clock me-1"></i>Applied @app.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                        @if (app.ViewedAt.HasValue)
+                                        {
+                                            <span class="mx-2">|</span>
+                                            <i class="bi bi-eye me-1"></i><text>Viewed </text>@app.ViewedAt.Value.ToString("MMM dd, yyyy")
+                                        }
+                                    </div>
+                                    
+                                    @if (app.Status == LaborDAL.Enums.ApplicationStatus.Pending)
+                                    {
+                                        <div class="application-actions">
+                                            <form asp-action="Accept" asp-route-id="@app.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-success btn-sm me-1">
+                                                    <i class="bi bi-check-circle me-1"></i>Accept
+                                                </button>
+                                            </form>
+                                            <form asp-action="Reject" asp-route-id="@app.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-x-circle me-1"></i>Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-3">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--muted-text);"></i>
+                    </div>
+                    <h5>No applications found</h5>
+                    <p class="text-muted">
+                        @if (currentFilter == "all")
+                        {
+                            <span>You haven't received any applications yet.</span>
+                        }
+                        else
+                        {
+                            <span>No @currentFilter applications found.</span>
+                        }
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(LaborDAL.Enums.ApplicationStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.ApplicationStatus.Pending => "bg-warning",
+            LaborDAL.Enums.ApplicationStatus.Viewed => "bg-info",
+            LaborDAL.Enums.ApplicationStatus.Accepted => "bg-success",
+            LaborDAL.Enums.ApplicationStatus.Rejected => "bg-danger",
+            LaborDAL.Enums.ApplicationStatus.Withdrawn => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+}
