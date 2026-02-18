@@ -6,7 +6,7 @@ namespace LaborDAL.Entities
     {
 
                 protected Booking() { }
-        public Booking(decimal agreedRate,DateTime? startTime,DateTime? endTime,int taskId,int workerId)
+        public Booking(decimal agreedRate,DateTime? startTime,DateTime? endTime,int taskId,string workerId)
         {
             AgreedRate = agreedRate;
             StartTime = startTime;
@@ -28,12 +28,13 @@ namespace LaborDAL.Entities
         public decimal AgreedRate { get; private set; }
         public DateTime? StartTime { get; private set; }
         public DateTime? EndTime { get; private set; }
-        public BookingStatus Status { get; private set; }
-        public int TaskId { get; private set; }
-        public int WorkerId { get; private set; }
+        public BookingStatus Status { get;  set; }
+        public int TaskId { get;  set; }
+        public string WorkerId { get;  set; }
         public byte[] RowVersion { get; set; }
-        public DateTime CreatedAt { get; private set; }
+        public DateTime CreatedAt { get; set; }
 
+        public AppUser Worker { get; set; }
 
 
 

@@ -94,7 +94,10 @@ namespace LaborPL.Controllers
             ViewBag.VerifiedCount = allUsers.Count(u => u.IDVerified);
             ViewBag.RejectedCount = 0; // TODO: Track rejected verifications
 
-            return View(users);
+            // Map AppUser entities to ProfileViewModel
+            var userViewModels = _mapper.Map<IEnumerable<ProfileViewModel>>(users);
+
+            return View(userViewModels);
         }
 
         // POST: /Admin/ApproveVerification

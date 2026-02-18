@@ -204,7 +204,7 @@
   - AgreedRate (decimal)
   - StartTime, EndTime (nullable for actual times)
   - Status (enum: Scheduled, InProgress, Completed, Cancelled, Disputed)
-  - Version (rowversion) - concurrency token
+  - Version (rowversion) - concurrency token  
   - CreatedAt timestamp
 
 - [ ] **T4.1.2** Create BookingRepository
