@@ -13,13 +13,13 @@
                     <div class="hero-buttons">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            @if (User.IsInRole("Poster") || User.IsInRole("Both"))
+                            @if (User.IsInRole("Poster"))
                             {
                                 <a asp-controller="Task" asp-action="Create" class="btn btn-primary btn-lg me-3">
                                     <i class="bi bi-plus-circle me-2"></i>Post a Task
                                 </a>
                             }
-                            @if (User.IsInRole("Worker") || User.IsInRole("Both"))
+                            @if (User.IsInRole("Worker"))
                             {
                                 <a asp-controller="Task" asp-action="Index" class="btn btn-outline-primary btn-lg">
                                     <i class="bi bi-search me-2"></i>Find Work
@@ -290,7 +290,13 @@
             }
             else
             {
-                <a asp-controller="Task" asp-action="Index" class="btn btn-light btn-lg">
+                @if (User.IsInRole("Poster"))
+                {
+                    <a asp-controller="Task" asp-action="Create" class="btn btn-light btn-lg me-3">
+                        <i class="bi bi-plus-circle me-2"></i>Post a Task
+                    </a>
+                }
+                <a asp-controller="Task" asp-action="Index" class="btn btn-outline-light btn-lg">
                     <i class="bi bi-search me-2"></i>Browse Tasks
                 </a>
             }
