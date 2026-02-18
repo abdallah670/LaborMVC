@@ -52,19 +52,29 @@ namespace LaborBLL.Service
 
                 if (result.Succeeded)
                 {
-                    // Assign Identity roles based on ClientRole flags
-                    if (user.Role.HasFlag(ClientRole.Admin))
+                    if(model.UserRole == "Worker")
                     {
-                        await _userManager.AddToRoleAsync(user, "Admin");
+                        user.Role = ClientRole.Worker;
                     }
-                    if (user.Role.HasFlag(ClientRole.Worker))
+                    else if(model.UserRole == "Poster")
+                    {
+                        user.Role = ClientRole.Poster;
+                    }
+                    if(model.UserRole == "Both")
+                    {
+                       await _userManager.AddToRoleAsync(user, "Worker");
+                       await _userManager.AddToRoleAsync(user, "Poster");
+                       user.Role = ClientRole.Both;
+                    }
+                    else if (user.Role.HasFlag(ClientRole.Worker))
                     {
                         await _userManager.AddToRoleAsync(user, "Worker");
                     }
-                    if (user.Role.HasFlag(ClientRole.Poster))
+                   else if (user.Role.HasFlag(ClientRole.Poster))
                     {
                         await _userManager.AddToRoleAsync(user, "Poster");
                     }
+                   
                     
                     //if this is the first user, assign them the Admin role as well
                     if (isfirstuser)

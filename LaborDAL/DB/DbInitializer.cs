@@ -92,7 +92,7 @@ namespace LaborDAL.DB
                     FirstName = "System",
                     LastName = "Admin",
                     EmailConfirmed = true,
-                    Role = ClientRole.Admin | ClientRole.Worker | ClientRole.Poster, // Admin with both Worker and Poster capabilities
+                    Role = ClientRole.AdminBoth, // Admin with both Worker and Poster capabilities
                     CreatedAt = DateTime.UtcNow,
                     IDVerified = true
                 };
@@ -130,9 +130,9 @@ namespace LaborDAL.DB
                 }
                 
                 // Update the Role property if needed
-                if (existingAdmin.Role != (ClientRole.Admin | ClientRole.Worker | ClientRole.Poster))
+                if (existingAdmin.Role != ClientRole.AdminBoth)
                 {
-                    existingAdmin.Role = ClientRole.Admin | ClientRole.Worker | ClientRole.Poster;
+                    existingAdmin.Role = ClientRole.AdminBoth;
                     await userManager.UpdateAsync(existingAdmin);
                 }
                 
@@ -236,7 +236,7 @@ namespace LaborDAL.DB
                     FirstName = bothRoles.FirstName,
                     LastName = bothRoles.LastName,
                     EmailConfirmed = true,
-                    Role = ClientRole.Poster | ClientRole.Worker, // Both roles
+                    Role = ClientRole.Both, // Both roles
                     CreatedAt = DateTime.UtcNow,
                     IDVerified = true,
                     Country = bothRoles.Country,

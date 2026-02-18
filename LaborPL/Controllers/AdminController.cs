@@ -53,8 +53,8 @@ namespace LaborPL.Controllers
             // Apply filters
             users = filter?.ToLower() switch
             {
-                "workers" => users.Where(u => u.Role == LaborDAL.Enums.ClientRole.Worker),
-                "posters" => users.Where(u => u.Role == LaborDAL.Enums.ClientRole.Poster),
+                "workers" => users.Where(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker)),
+                "posters" => users.Where(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Poster)),
                 "verified" => users.Where(u => u.IDVerified),
                 _ => users
             };
@@ -62,8 +62,8 @@ namespace LaborPL.Controllers
             // Statistics
             var allUsers = await _userRepository.GetAllAsync();
             ViewBag.TotalUsers = allUsers.Count();
-            ViewBag.WorkersCount = allUsers.Count(u => u.Role == LaborDAL.Enums.ClientRole.Worker);
-            ViewBag.PostersCount = allUsers.Count(u => u.Role == LaborDAL.Enums.ClientRole.Poster);
+            ViewBag.WorkersCount = allUsers.Count(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker));
+            ViewBag.PostersCount = allUsers.Count(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Poster));
             ViewBag.VerifiedUsers = allUsers.Count(u => u.IDVerified);
 
             // Map AppUser entities to ProfileViewModel
