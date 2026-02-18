@@ -1,0 +1,120 @@
+@model LaborBLL.ModelVM.CreateApplicationViewModel
+@{
+    ViewData["Title"] = "Apply for Task";
+    var taskTitle = ViewBag.TaskTitle as string ?? "Task";
+    var taskBudget = ViewBag.TaskBudget as decimal? ?? 0;
+    var taskBudgetType = ViewBag.TaskBudgetType as string ?? "Fixed";
+}
+
+<div class="create-application-container fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary-gradient text-white">
+                    <h4 class="mb-0"><i class="bi bi-send me-2"></i>Apply for Task</h4>
+                    <p class="mb-0 opacity-75">@taskTitle</p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Task Summary -->
+                    <div class="task-summary mb-4 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="bi bi-info-circle me-1"></i>Task Details</h6>
+                        <p class="mb-1"><strong>@taskTitle</strong></p>
+                        <p class="mb-0 text-muted">
+                            Budget: <span class="text-primary fw-bold">$@taskBudget.ToString("N2")</span> 
+                            <small>(@taskBudgetType)</small>
+                        </p>
+                    </div>
+
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+                        
+                        <input type="hidden" asp-for="TaskId" />
+
+                        <div class="mb-3">
+                            <label asp-for="ProposedBudget" class="form-label">
+                                <i class="bi bi-cash me-1"></i>Your Proposed Rate
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="ProposedBudget" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="ProposedBudget" class="field-validation-error"></span>
+                            <div class="form-text">
+                                Suggested: $@taskBudget.ToString("N2") (@taskBudgetType)
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EstimatedHours" class="form-label">
+                                <i class="bi bi-clock me-1"></i>Estimated Hours
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="EstimatedHours" class="form-control" type="number" step="0.5" placeholder="Hours needed" />
+                                <span class="input-group-text">hours</span>
+                            </div>
+                            <span asp-validation-for="EstimatedHours" class="field-validation-error"></span>
+                            <div class="form-text">Optional - helps the poster understand your timeline</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Message" class="form-label">
+                                <i class="bi bi-chat-text me-1"></i>Cover Letter / Message
+                            </label>
+                            <textarea asp-for="Message" class="form-control" rows="5" placeholder="Introduce yourself and explain why you're the right person for this task. Mention your relevant experience, availability, and any questions you have."></textarea>
+                            <span asp-validation-for="Message" class="field-validation-error"></span>
+                            <div class="form-text">
+                                <span id="charCount">0</span>/2000 characters
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-between">
+                            <a asp-controller="Task" asp-action="Details" asp-route-id="@Model.TaskId" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Submit Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Tips for a Great Application</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Be specific about your relevant experience</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Mention your availability and flexibility</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Ask clarifying questions if needed</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Keep your message professional and concise</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Set a competitive but fair rate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Character counter
+            const messageField = document.querySelector('textarea[name="Message"]');
+            const charCountSpan = document.getElementById('charCount');
+            
+            messageField.addEventListener('input', function() {
+                charCountSpan.textContent = this.value.length;
+                if (this.value.length > 2000) {
+                    charCountSpan.classList.add('text-danger');
+                } else {
+                    charCountSpan.classList.remove('text-danger');
+                }
+            });
+        });
+    </script>
+}

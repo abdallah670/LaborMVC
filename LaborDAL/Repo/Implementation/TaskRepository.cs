@@ -99,7 +99,8 @@ namespace LaborDAL.Repo.Implementation
         {
             return await _dbSet
                 .Include(t => t.Poster)
-                .Where(t => t.AssignedWorkerId == workerId && !t.IsDeleted)
+                .Include(t => t.AssignedWorker)
+                .Where(t => t.AssignedWorker.Any(w => w.Id == workerId) && !t.IsDeleted)
                 .OrderByDescending(t => t.AssignedAt)
                 .ToListAsync();
         }

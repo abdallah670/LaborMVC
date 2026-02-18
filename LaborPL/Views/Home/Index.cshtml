@@ -1,8 +1,299 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="hero-title">Find Local Labor, <span class="text-primary">Get Things Done</span></h1>
+                    <p class="hero-subtitle">Connect with skilled workers for cleaning, moving, repairs, gardening, and more. Safe, secure, and simple.</p>
+                    <div class="hero-buttons">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Poster") || User.IsInRole("Both"))
+                            {
+                                <a asp-controller="Task" asp-action="Create" class="btn btn-primary btn-lg me-3">
+                                    <i class="bi bi-plus-circle me-2"></i>Post a Task
+                                </a>
+                            }
+                            @if (User.IsInRole("Worker") || User.IsInRole("Both"))
+                            {
+                                <a asp-controller="Task" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                                    <i class="bi bi-search me-2"></i>Find Work
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg me-3">
+                                <i class="bi bi-person-plus me-2"></i>Get Started
+                            </a>
+                            <a asp-controller="Task" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                                <i class="bi bi-search me-2"></i>Browse Tasks
+                            </a>
+                        }
+                    </div>
+                    <div class="hero-stats mt-5">
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="stat-number">10K+</h3>
+                                    <p class="stat-label">Tasks Posted</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="stat-number">5K+</h3>
+                                    <p class="stat-label">Verified Workers</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h3 class="stat-number">98%</h3>
+                                    <p class="stat-label">Satisfaction</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image">
+                    <div class="hero-illustration">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">Popular Categories</h2>
+            <p class="section-subtitle">Find workers for any task you need</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=1" class="category-card">
+                    <div class="category-icon bg-success-light">
+                        <i class="bi bi-stars text-success"></i>
+                    </div>
+                    <h5 class="category-name">Cleaning</h5>
+                    <p class="category-count">500+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=2" class="category-card">
+                    <div class="category-icon bg-primary-light">
+                        <i class="bi bi-truck text-primary"></i>
+                    </div>
+                    <h5 class="category-name">Moving</h5>
+                    <p class="category-count">300+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=3" class="category-card">
+                    <div class="category-icon bg-warning-light">
+                        <i class="bi bi-tools text-warning"></i>
+                    </div>
+                    <h5 class="category-name">Repairs</h5>
+                    <p class="category-count">400+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=4" class="category-card">
+                    <div class="category-icon bg-info-light">
+                        <i class="bi bi-tree text-info"></i>
+                    </div>
+                    <h5 class="category-name">Gardening</h5>
+                    <p class="category-count">200+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=5" class="category-card">
+                    <div class="category-icon bg-danger-light">
+                        <i class="bi bi-palette text-danger"></i>
+                    </div>
+                    <h5 class="category-name">Painting</h5>
+                    <p class="category-count">150+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=6" class="category-card">
+                    <div class="category-icon bg-primary-light">
+                        <i class="bi bi-droplet text-primary"></i>
+                    </div>
+                    <h5 class="category-name">Plumbing</h5>
+                    <p class="category-count">250+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=7" class="category-card">
+                    <div class="category-icon bg-warning-light">
+                        <i class="bi bi-lightning text-warning"></i>
+                    </div>
+                    <h5 class="category-name">Electrical</h5>
+                    <p class="category-count">180+ tasks</p>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/Task?category=16" class="category-card">
+                    <div class="category-icon bg-success-light">
+                        <i class="bi bi-calendar-event text-success"></i>
+                    </div>
+                    <h5 class="category-name">Event Help</h5>
+                    <p class="category-count">120+ tasks</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section py-5 bg-light">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Get your tasks done in 4 simple steps</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="bi bi-clipboard-plus"></i>
+                    </div>
+                    <h4 class="step-title">Post a Task</h4>
+                    <p class="step-description">Describe what you need, set your budget, and choose a category.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4 class="step-title">Get Offers</h4>
+                    <p class="step-description">Verified workers will apply with their proposals and rates.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="bi bi-hand-thumbs-up"></i>
+                    </div>
+                    <h4 class="step-title">Choose Worker</h4>
+                    <p class="step-description">Review profiles, ratings, and pick the best worker for your task.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <h4 class="step-title">Get It Done</h4>
+                    <p class="step-description">Worker completes the task, you release payment when satisfied.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">Why Choose Us</h2>
+            <p class="section-subtitle">Safe, secure, and reliable labor marketplace</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-shield-check text-primary"></i>
+                    </div>
+                    <h4 class="feature-title">Verified Workers</h4>
+                    <p class="feature-description">All workers go through ID verification and background checks for your safety.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-lock text-success"></i>
+                    </div>
+                    <h4 class="feature-title">Secure Payments</h4>
+                    <p class="feature-description">Your payment is held in escrow until the job is completed to your satisfaction.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-star-fill text-warning"></i>
+                    </div>
+                    <h4 class="feature-title">Rating System</h4>
+                    <p class="feature-description">Transparent ratings and reviews help you choose the right worker every time.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-chat-dots text-info"></i>
+                    </div>
+                    <h4 class="feature-title">In-App Messaging</h4>
+                    <p class="feature-description">Communicate directly with workers through our secure messaging system.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-geo-alt text-danger"></i>
+                    </div>
+                    <h4 class="feature-title">Location Based</h4>
+                    <p class="feature-description">Find workers near you with our location-based search and map integration.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-headset text-secondary"></i>
+                    </div>
+                    <h4 class="feature-title">24/7 Support</h4>
+                    <p class="feature-description">Our support team is always here to help with any issues or disputes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 bg-primary-gradient text-white">
+    <div class="container text-center">
+        <h2 class="cta-title mb-3">Ready to Get Started?</h2>
+        <p class="cta-subtitle mb-4">Join thousands of satisfied users on Labor Marketplace</p>
+        <div class="cta-buttons">
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg me-3">
+                    <i class="bi bi-person-plus me-2"></i>Create Free Account
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Task" asp-action="Index" class="btn btn-light btn-lg">
+                    <i class="bi bi-search me-2"></i>Browse Tasks
+                </a>
+            }
+        </div>
+    </div>
+</section>

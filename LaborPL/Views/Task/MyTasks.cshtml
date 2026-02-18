@@ -1,0 +1,200 @@
+@model IEnumerable<LaborBLL.ModelVM.TaskListViewModel>
+@using LaborDAL.Enums
+@{
+    ViewData["Title"] = "My Tasks";
+    var currentFilter = ViewBag.CurrentFilter as string ?? "all";
+}
+
+<div class="my-tasks-container fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-clipboard-check me-2"></i>My Tasks</h2>
+            <p class="text-muted mb-0">Manage your posted tasks and applications</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Post New Task
+        </a>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-transparent">
+            <ul class="nav nav-pills card-header-pills">
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "all" ? "active" : "")" asp-action="MyTasks" asp-route-filter="all">
+                        <i class="bi bi-grid me-1"></i>All
+                        <span class="badge bg-secondary ms-1">@ViewBag.TotalCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "open" ? "active" : "")" asp-action="MyTasks" asp-route-filter="open">
+                        <i class="bi bi-door-open me-1"></i>Open
+                        <span class="badge bg-success ms-1">@ViewBag.OpenCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "assigned" ? "active" : "")" asp-action="MyTasks" asp-route-filter="assigned">
+                        <i class="bi bi-person-check me-1"></i>Assigned
+                        <span class="badge bg-info ms-1">@ViewBag.AssignedCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "inprogress" ? "active" : "")" asp-action="MyTasks" asp-route-filter="inprogress">
+                        <i class="bi bi-hourglass-split me-1"></i>In Progress
+                        <span class="badge bg-warning ms-1">@ViewBag.InProgressCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "completed" ? "active" : "")" asp-action="MyTasks" asp-route-filter="completed">
+                        <i class="bi bi-check-circle me-1"></i>Completed
+                        <span class="badge bg-primary ms-1">@ViewBag.CompletedCount</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Category</th>
+                                <th>Budget</th>
+                                <th>Status</th>
+                                <th>Applications</th>
+                                <th>Posted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="task-info">
+                                                <h6 class="mb-0">
+                                                    <a asp-action="Details" asp-route-id="@task.Id" class="text-decoration-none">
+                                                        @task.Title
+                                                    </a>
+                                                    @if (task.IsUrgent)
+                                                    {
+                                                        <span class="badge bg-danger ms-1"><i class="bi bi-lightning-fill"></i></span>
+                                                    }
+                                                </h6>
+                                                <small class="text-muted">
+                                                    @if (!string.IsNullOrEmpty(task.City))
+                                                    {
+                                                        <i class="bi bi-geo-alt me-1"></i>@task.City
+                                                    }
+                                                    @if (task.DueDate.HasValue)
+                                                    {
+                                                        <span class="mx-1">|</span>
+                                                        <i class="bi bi-calendar me-1"></i>@task.DueDate.Value.ToString("MMM dd")
+                                                    }
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">@task.CategoryDisplay</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">$@task.Budget.ToString("N2")</span>
+                                        <small class="text-muted">@task.BudgetTypeDisplay</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(task.Status)">
+                                            @task.StatusDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@task.ApplicationCount</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@task.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (task.Status == LaborDAL.Enums.TaskStatus.Open || task.Status == LaborDAL.Enums.TaskStatus.Assigned)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            }
+                                            @if (task.Status == LaborDAL.Enums.TaskStatus.Open)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" 
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal@(task.Id)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        @if (task.Status == LaborDAL.Enums.TaskStatus.Open)
+                                        {
+                                            <div class="modal fade" id="deleteModal@(task.Id)" tabindex="-1">
+                                                <div class="modal-dialog modal-sm">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Delete Task</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Delete "@task.Title"?</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <form asp-action="Delete" asp-route-id="@task.Id" method="post" class="d-inline">
+                                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-3">
+                        <i class="bi bi-clipboard-x" style="font-size: 3rem; color: var(--muted-text);"></i>
+                    </div>
+                    <h5>No tasks found</h5>
+                    <p class="text-muted">You haven't posted any tasks yet.</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Post Your First Task
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(LaborDAL.Enums.TaskStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.TaskStatus.Open => "bg-success",
+            LaborDAL.Enums.TaskStatus.Assigned => "bg-info",
+            LaborDAL.Enums.TaskStatus.InProgress => "bg-warning",
+            LaborDAL.Enums.TaskStatus.Completed => "bg-primary",
+            LaborDAL.Enums.TaskStatus.Cancelled => "bg-secondary",
+            LaborDAL.Enums.TaskStatus.Expired => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+}

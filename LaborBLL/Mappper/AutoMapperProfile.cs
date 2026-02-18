@@ -1,3 +1,4 @@
+using LaborDAL.Entities;
 
 namespace LaborBLL.Mapping
 {
@@ -52,6 +53,8 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.Skills, opt => opt.MapFrom(src => src.Skills))
                 .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            // Booking mappings
             CreateMap<Booking, BookingDetailsViewModel>()
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
@@ -60,6 +63,36 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.TaskId, opt => opt.MapFrom(src => src.TaskId))
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
+            // TaskItem mappings
+            CreateMap<CreateTaskViewModel, TaskItem>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.PosterId, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.ViewCount, opt => opt.MapFrom(src => 0))
+                .ForMember(dest => dest.AssignedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CompletedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CancellationReason, opt => opt.Ignore())
+                .ForMember(dest => dest.Poster, opt => opt.Ignore())
+                .ForMember(dest => dest.AssignedWorker, opt => opt.Ignore())
+                .ForMember(dest => dest.Applications, opt => opt.Ignore());
+
+            CreateMap<EditTaskViewModel, TaskItem>()
+                .ForMember(dest => dest.PosterId, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.ViewCount, opt => opt.Ignore())
+                .ForMember(dest => dest.AssignedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CompletedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CancellationReason, opt => opt.Ignore())
+                .ForMember(dest => dest.Poster, opt => opt.Ignore())
+                .ForMember(dest => dest.AssignedWorker, opt => opt.Ignore())
+                .ForMember(dest => dest.Applications, opt => opt.Ignore());
         }
     }
 }

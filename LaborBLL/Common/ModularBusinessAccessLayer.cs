@@ -1,4 +1,7 @@
-
+using LaborBLL.Mapping;
+using LaborBLL.Service;
+using LaborBLL.Service.Abstract;
+using LaborBLL.Service.Implementation;
 
 namespace LaborBLL.Common
 {
@@ -15,6 +18,10 @@ namespace LaborBLL.Common
 
             // Booking service
             services.AddScoped<IBookingService, BookingService>();
+
+            // Task and Application services
+            services.AddScoped<ITaskService, TaskService>();
+            services.AddScoped<IApplicationService, ApplicationService>();
 
 
             //  services.AddScoped<IEmailService, EmailService>();

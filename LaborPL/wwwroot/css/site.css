@@ -625,3 +625,531 @@ footer {
         transform: rotate(360deg);
     }
 }
+
+/* ============================================
+   Home Page - Hero Section
+   ============================================ */
+
+.hero-section {
+    padding: 3rem 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 0 0 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--muted-text);
+    margin-bottom: 2rem;
+}
+
+.hero-buttons {
+    margin-bottom: 2rem;
+}
+
+.hero-illustration {
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border-radius: 2rem;
+}
+
+.hero-illustration i {
+    font-size: 10rem;
+    color: white;
+    opacity: 0.9;
+}
+
+.hero-stats {
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--muted-text);
+    font-size: 0.875rem;
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+/* ============================================
+   Home Page - Categories Section
+   ============================================ */
+
+.categories-section {
+    padding: 4rem 0;
+}
+
+.section-header {
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+    color: var(--muted-text);
+    font-size: 1.1rem;
+}
+
+.category-card {
+    display: block;
+    padding: 2rem 1.5rem;
+    background: white;
+    border-radius: 1rem;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow);
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+    text-decoration: none;
+}
+
+.category-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+}
+
+.bg-success-light { background-color: #dcfce7; }
+.bg-primary-light { background-color: #dbeafe; }
+.bg-warning-light { background-color: #fef3c7; }
+.bg-info-light { background-color: #e0f2fe; }
+.bg-danger-light { background-color: #fee2e2; }
+
+.category-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--dark-text);
+}
+
+.category-count {
+    color: var(--muted-text);
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+/* ============================================
+   Home Page - How It Works Section
+   ============================================ */
+
+.how-it-works-section {
+    padding: 4rem 0;
+    background-color: #f8fafc;
+}
+
+.step-card {
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin: 0 auto 1rem;
+}
+
+.step-icon {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: var(--primary-color);
+    box-shadow: var(--card-shadow);
+}
+
+.step-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.step-description {
+    color: var(--muted-text);
+    margin-bottom: 0;
+}
+
+/* ============================================
+   Home Page - Features Section
+   ============================================ */
+
+.features-section {
+    padding: 4rem 0;
+}
+
+.feature-card {
+    padding: 2rem;
+    background: white;
+    border-radius: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    background: #f8fafc;
+}
+
+.feature-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.feature-description {
+    color: var(--muted-text);
+    margin-bottom: 0;
+}
+
+/* ============================================
+   Home Page - CTA Section
+   ============================================ */
+
+.cta-section {
+    padding: 4rem 0;
+}
+
+.cta-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.cta-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+/* ============================================
+   Task Views Styles
+   ============================================ */
+
+.task-search-container {
+    padding: 1rem 0;
+}
+
+.search-header {
+    margin-bottom: 2rem;
+}
+
+.task-card {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.task-card:hover {
+    transform: translateY(-5px);
+}
+
+.poster-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.poster-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.poster-name {
+    font-weight: 500;
+}
+
+/* Task Details */
+.task-details-container {
+    padding: 1rem 0;
+}
+
+.task-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.poster-avatar-lg {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.poster-avatar-lg-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--dark-text);
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.detail-item i {
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.detail-item label {
+    font-size: 0.875rem;
+    color: var(--muted-text);
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.detail-item p {
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.worker-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.worker-avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color), #475569);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.worker-avatar-lg {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.worker-avatar-lg-placeholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color), #475569);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+/* ============================================
+   Application Views Styles
+   ============================================ */
+
+.applications-poster-container,
+.applications-worker-container {
+    padding: 1rem 0;
+}
+
+.application-card {
+    transition: all 0.3s ease;
+}
+
+.application-card:hover {
+    box-shadow: var(--card-shadow-hover) !important;
+}
+
+/* ============================================
+   Booking Views Styles
+   ============================================ */
+
+.booking-dashboard-container {
+    padding: 1rem 0;
+}
+
+.booking-card {
+    transition: all 0.3s ease;
+}
+
+.booking-card:hover {
+    box-shadow: var(--card-shadow-hover) !important;
+}
+
+/* ============================================
+   Admin Views Styles
+   ============================================ */
+
+.admin-dashboard-container {
+    padding: 1rem 0;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   Form Sections
+   ============================================ */
+
+.form-section {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+}
+
+.form-section .section-title {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   Filter Tags
+   ============================================ */
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ============================================
+   Map Container
+   ============================================ */
+
+.map-container {
+    width: 100%;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .hero-illustration {
+        height: 250px;
+        margin-top: 2rem;
+    }
+    
+    .hero-illustration i {
+        font-size: 6rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+    
+    .cta-title {
+        font-size: 1.75rem;
+    }
+    
+    .step-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
