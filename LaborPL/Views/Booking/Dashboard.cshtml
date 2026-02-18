@@ -1,0 +1,50 @@
+﻿@model List<LaborBLL.ModelVM.BookingDashboardViewModel>
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>Dashboard</h2>
+
+<div class="mb-3">
+    <a class="btn btn-primary" href="@Url.Action("Dashboard", new { status = "upcoming" })">Upcoming</a>
+    <a class="btn btn-secondary" href="@Url.Action("Dashboard", new { status = "past" })">Past</a>
+    <a class="btn btn-light" href="@Url.Action("Dashboard")">All</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Booking Id</th>
+            <th>Poster Name</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Status</th>
+            <th>Agreed Rate</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var booking in Model)
+        {
+            <tr>
+                <td>@booking.Id</td>
+                <td>@booking.UserName</td>
+                <td>@(booking.StartTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                <td>@(booking.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                <td>@booking.Status</td>
+                <td>@booking.AgreedRate.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="mt-4">
+    <h4>Booking Summary</h4>
+    <ul>
+        <li>Pending: @Model.Sum(b => b.PendingCount)</li>
+        <li>In Progress: @Model.Sum(b => b.InProgressCount)</li>
+        <li>Completed: @Model.Sum(b => b.CompletedCount)</li>
+        <li>Cancelled: @Model.Sum(b => b.CancelledCount)</li>
+        <li>Disputed: @Model.Sum(b => b.DisputedCount)</li>
+    </ul>
+</div>

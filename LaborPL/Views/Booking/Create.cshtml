@@ -1,0 +1,33 @@
+﻿@model LaborBLL.ModelVM.CreateBookingViewModel
+
+<h2>Create Booking</h2>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="StartTime" class="form-label">Start Time</label>
+        <input asp-for="StartTime" type="datetime-local" class="form-control" />
+        <span asp-validation-for="StartTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="EndTime" class="form-label">End Time</label>
+        <input asp-for="EndTime" type="datetime-local" class="form-control" />
+        <span asp-validation-for="EndTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AgreedRate" class="form-label">Agreed Rate</label>
+        <input asp-for="AgreedRate" type="number" step="0.01" class="form-control" />
+        <span asp-validation-for="AgreedRate" class="text-danger"></span>
+    </div>
+
+    <input asp-for="WorkerId" type="hidden"  />
+
+    <button type="submit" class="btn btn-primary">Create Booking</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
