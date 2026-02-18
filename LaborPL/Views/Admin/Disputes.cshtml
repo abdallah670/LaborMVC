@@ -1,0 +1,169 @@
+@{
+    ViewData["Title"] = "Dispute Management";
+    var currentFilter = ViewBag.CurrentFilter as string ?? "open";
+}
+
+<div class="admin-disputes-container fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>Dispute Management</h2>
+            <p class="text-muted mb-0">Handle disputes between users</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.OpenCount</h3>
+                    <small>Open Disputes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-warning">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.UnderReviewCount</h3>
+                    <small>Under Review</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.ResolvedCount</h3>
+                    <small>Resolved</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.TotalDisputes</h3>
+                    <small>Total Disputes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card shadow">
+        <div class="card-header bg-transparent">
+            <ul class="nav nav-pills card-header-pills">
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "open" ? "active" : "")" asp-action="Disputes" asp-route-filter="open">
+                        <i class="bi bi-exclamation-circle me-1"></i>Open
+                        <span class="badge bg-danger ms-1">@ViewBag.OpenCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "underreview" ? "active" : "")" asp-action="Disputes" asp-route-filter="underreview">
+                        <i class="bi bi-eye me-1"></i>Under Review
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "resolved" ? "active" : "")" asp-action="Disputes" asp-route-filter="resolved">
+                        <i class="bi bi-check-circle me-1"></i>Resolved
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "all" ? "active" : "")" asp-action="Disputes" asp-route-filter="all">
+                        <i class="bi bi-grid me-1"></i>All
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.Disputes != null && ((IEnumerable<dynamic>)ViewBag.Disputes).Any())
+            {
+                <div class="disputes-list">
+                    @foreach (var dispute in (IEnumerable<dynamic>)ViewBag.Disputes)
+                    {
+                        <div class="dispute-card card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="mb-1">Dispute #@dispute.Id</h5>
+                                        <p class="text-muted mb-0 small">
+                                            <i class="bi bi-calendar me-1"></i>Created @dispute.CreatedAt.ToString("MMM dd, yyyy")
+                                        </p>
+                                    </div>
+                                    <span class="badge @GetStatusBadgeClass(dispute.Status)">@dispute.Status</span>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-2">Booking Details</h6>
+                                        <p class="mb-0 small">
+                                            <strong>Booking #@dispute.BookingId</strong><br>
+                                            Raised by: @dispute.RaisedBy
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="mb-2">Reason</h6>
+                                        <p class="mb-0 small text-muted">@(dispute.Reason?.Length > 100 ? dispute.Reason[..100] + "..." : dispute.Reason)</p>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(dispute.Resolution))
+                                {
+                                    <div class="alert alert-info mb-3">
+                                        <h6 class="mb-1"><i class="bi bi-info-circle me-1"></i>Resolution</h6>
+                                        <p class="mb-0 small">@dispute.Resolution</p>
+                                    </div>
+                                }
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        @if (dispute.ResolvedAt.HasValue)
+                                        {
+                                            <span><i class="bi bi-calendar-check me-1"></i>Resolved @dispute.ResolvedAt.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                    </small>
+                                    <div class="btn-group">
+                                        <a asp-action="DisputeDetails" asp-route-id="@dispute.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>View Details
+                                        </a>
+                                        @if (dispute.Status.ToString() == "Open" || dispute.Status.ToString() == "UnderReview")
+                                        {
+                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal@(dispute.Id)">
+                                                <i class="bi bi-check-lg me-1"></i>Resolve
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-3">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: var(--muted-text);"></i>
+                    </div>
+                    <h5>No disputes found</h5>
+                    <p class="text-muted">No disputes match the current filter.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "open" => "bg-danger",
+            "underreview" => "bg-warning",
+            "resolved" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}

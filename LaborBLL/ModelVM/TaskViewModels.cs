@@ -182,6 +182,7 @@ namespace LaborBLL.ModelVM
     {
         public int Id { get; set; }
         public int TaskId { get; set; }
+        public string? TaskTitle { get; set; }
         public string WorkerId { get; set; } = string.Empty;
         public string? WorkerName { get; set; }
         public string? WorkerProfilePicture { get; set; }

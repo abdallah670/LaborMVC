@@ -142,137 +142,113 @@ namespace LaborDAL.DB
 
         private static async Task SeedSampleUsersAsync(UserManager<AppUser> userManager, ILogger logger)
         {
-            // Sample Poster Users
-            var posters = new[]
+            // One Poster User
+            var poster = new
             {
-                new
-                {
-                    Email = "john.doe@email.com",
-                    Password = "User@123456",
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Country = "Egypt",
-                    City = "Cairo"
-                },
-                new
-                {
-                    Email = "sarah.smith@email.com",
-                    Password = "User@123456",
-                    FirstName = "Sarah",
-                    LastName = "Smith",
-                    Country = "Egypt",
-                    City = "Alexandria"
-                },
-                new
-                {
-                    Email = "mohamed.ali@email.com",
-                    Password = "User@123456",
-                    FirstName = "Mohamed",
-                    LastName = "Ali",
-                    Country = "Egypt",
-                    City = "Giza"
-                }
+                Email = "poster@labormarketplace.com",
+                Password = "User@123456",
+                FirstName = "John",
+                LastName = "Doe",
+                Country = "Egypt"
             };
 
-            // Sample Worker Users
-            var workers = new[]
+            // One Worker User
+            var worker = new
             {
-                new
-                {
-                    Email = "ahmed.worker@email.com",
-                    Password = "User@123456",
-                    FirstName = "Ahmed",
-                    LastName = "Hassan",
-                    Country = "Egypt",
-                    City = "Cairo",
-                    Skills = "Cleaning, Moving, General Labor"
-                },
-                new
-                {
-                    Email = "fatma.plumber@email.com",
-                    Password = "User@123456",
-                    FirstName = "Fatma",
-                    LastName = "Ibrahim",
-                    Country = "Egypt",
-                    City = "Cairo",
-                    Skills = "Plumbing, Electrical, Repairs"
-                },
-                new
-                {
-                    Email = "omar.gardener@email.com",
-                    Password = "User@123456",
-                    FirstName = "Omar",
-                    LastName = "Mahmoud",
-                    Country = "Egypt",
-                    City = "Giza",
-                    Skills = "Gardening, Landscaping, Outdoor Work"
-                },
-                new
-                {
-                    Email = "layla.cleaner@email.com",
-                    Password = "User@123456",
-                    FirstName = "Layla",
-                    LastName = "Mostafa",
-                    Country = "Egypt",
-                    City = "Alexandria",
-                    Skills = "Cleaning, Housekeeping, Organization"
-                }
+                Email = "worker@labormarketplace.com",
+                Password = "User@123456",
+                FirstName = "Ahmed",
+                LastName = "Hassan",
+                Country = "Egypt",
+                Skills = "Cleaning, Moving, Plumbing, Electrical, Gardening"
             };
 
-            // Create Poster Users
-            foreach (var posterData in posters)
+            // One User with Both Roles (Poster + Worker)
+            var bothRoles = new
             {
-                var existingUser = await userManager.FindByEmailAsync(posterData.Email);
-                if (existingUser == null)
-                {
-                    var user = new AppUser
-                    {
-                        UserName = posterData.Email,
-                        Email = posterData.Email,
-                        FirstName = posterData.FirstName,
-                        LastName = posterData.LastName,
-                        EmailConfirmed = true,
-                        Role = ClientRole.Poster,
-                        CreatedAt = DateTime.UtcNow,
-                        IDVerified = true,
-                        Country = posterData.Country
-                    };
+                Email = "both@labormarketplace.com",
+                Password = "User@123456",
+                FirstName = "Sarah",
+                LastName = "Smith",
+                Country = "Egypt",
+                Skills = "Cleaning, Housekeeping, Organization"
+            };
 
-                    var result = await userManager.CreateAsync(user, posterData.Password);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(user, "Poster");
-                        logger.LogInformation("Created poster user: {Email}", posterData.Email);
-                    }
+            // Create Poster User
+            var existingPoster = await userManager.FindByEmailAsync(poster.Email);
+            if (existingPoster == null)
+            {
+                var user = new AppUser
+                {
+                    UserName = poster.Email,
+                    Email = poster.Email,
+                    FirstName = poster.FirstName,
+                    LastName = poster.LastName,
+                    EmailConfirmed = true,
+                    Role = ClientRole.Poster,
+                    CreatedAt = DateTime.UtcNow,
+                    IDVerified = true,
+                    Country = poster.Country
+                };
+
+                var result = await userManager.CreateAsync(user, poster.Password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "Poster");
+                    logger.LogInformation("Created poster user: {Email}", poster.Email);
                 }
             }
 
-            // Create Worker Users
-            foreach (var workerData in workers)
+            // Create Worker User
+            var existingWorker = await userManager.FindByEmailAsync(worker.Email);
+            if (existingWorker == null)
             {
-                var existingUser = await userManager.FindByEmailAsync(workerData.Email);
-                if (existingUser == null)
+                var user = new AppUser
                 {
-                    var user = new AppUser
-                    {
-                        UserName = workerData.Email,
-                        Email = workerData.Email,
-                        FirstName = workerData.FirstName,
-                        LastName = workerData.LastName,
-                        EmailConfirmed = true,
-                        Role = ClientRole.Worker,
-                        CreatedAt = DateTime.UtcNow,
-                        IDVerified = true,
-                        Country = workerData.Country,
-                        Skills = workerData.Skills
-                    };
+                    UserName = worker.Email,
+                    Email = worker.Email,
+                    FirstName = worker.FirstName,
+                    LastName = worker.LastName,
+                    EmailConfirmed = true,
+                    Role = ClientRole.Worker,
+                    CreatedAt = DateTime.UtcNow,
+                    IDVerified = true,
+                    Country = worker.Country,
+                    Skills = worker.Skills
+                };
 
-                    var result = await userManager.CreateAsync(user, workerData.Password);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(user, "Worker");
-                        logger.LogInformation("Created worker user: {Email}", workerData.Email);
-                    }
+                var result = await userManager.CreateAsync(user, worker.Password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "Worker");
+                    logger.LogInformation("Created worker user: {Email}", worker.Email);
+                }
+            }
+
+            // Create User with Both Roles
+            var existingBoth = await userManager.FindByEmailAsync(bothRoles.Email);
+            if (existingBoth == null)
+            {
+                var user = new AppUser
+                {
+                    UserName = bothRoles.Email,
+                    Email = bothRoles.Email,
+                    FirstName = bothRoles.FirstName,
+                    LastName = bothRoles.LastName,
+                    EmailConfirmed = true,
+                    Role = ClientRole.Poster | ClientRole.Worker, // Both roles
+                    CreatedAt = DateTime.UtcNow,
+                    IDVerified = true,
+                    Country = bothRoles.Country,
+                    Skills = bothRoles.Skills
+                };
+
+                var result = await userManager.CreateAsync(user, bothRoles.Password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "Poster");
+                    await userManager.AddToRoleAsync(user, "Worker");
+                    logger.LogInformation("Created user with both Poster and Worker roles: {Email}", bothRoles.Email);
                 }
             }
         }
@@ -286,10 +262,10 @@ namespace LaborDAL.DB
                 return;
             }
 
-            // Get poster users
-            var johnDoe = await userManager.FindByEmailAsync("john.doe@email.com");
-            var sarahSmith = await userManager.FindByEmailAsync("sarah.smith@email.com");
-            var mohamedAli = await userManager.FindByEmailAsync("mohamed.ali@email.com");
+            // Get poster users (using new simplified user structure)
+            var posterUser = await userManager.FindByEmailAsync("poster@labormarketplace.com");
+            var bothUser = await userManager.FindByEmailAsync("both@labormarketplace.com");
+            var adminUser = await userManager.FindByEmailAsync("admin@labormarketplace.com");
 
             var tasks = new List<TaskItem>
             {
@@ -306,7 +282,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = johnDoe?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-2),
                     DueDate = DateTime.UtcNow.AddDays(7),
                     IsUrgent = true
@@ -325,7 +301,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 2,
-                    PosterId = sarahSmith?.Id ?? "",
+                    PosterId = bothUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-1),
                     DueDate = DateTime.UtcNow.AddDays(14)
                 },
@@ -342,7 +318,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = mohamedAli?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-3),
                     DueDate = DateTime.UtcNow.AddDays(3),
                     IsUrgent = true
@@ -361,7 +337,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = johnDoe?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-5),
                     DueDate = DateTime.UtcNow.AddDays(10)
                 },
@@ -378,7 +354,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = sarahSmith?.Id ?? "",
+                    PosterId = bothUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-1),
                     DueDate = DateTime.UtcNow.AddDays(21)
                 },
@@ -396,7 +372,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = mohamedAli?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow,
                     DueDate = DateTime.UtcNow.AddDays(5),
                     IsUrgent = true
@@ -414,7 +390,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = johnDoe?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-4),
                     DueDate = DateTime.UtcNow.AddDays(7)
                 },
@@ -429,7 +405,7 @@ namespace LaborDAL.DB
                     EstimatedHours = 10,
                     IsRemote = true,
                     WorkersNeeded = 1,
-                    PosterId = sarahSmith?.Id ?? "",
+                    PosterId = bothUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-2),
                     DueDate = DateTime.UtcNow.AddDays(14)
                 },
@@ -446,7 +422,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 2,
-                    PosterId = mohamedAli?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow.AddDays(-1),
                     DueDate = DateTime.UtcNow.AddDays(3),
                     IsUrgent = true
@@ -464,7 +440,7 @@ namespace LaborDAL.DB
                     Country = "Egypt",
                     IsRemote = false,
                     WorkersNeeded = 1,
-                    PosterId = johnDoe?.Id ?? "",
+                    PosterId = posterUser?.Id ?? adminUser?.Id ?? "",
                     CreatedAt = DateTime.UtcNow,
                     DueDate = DateTime.UtcNow.AddDays(10)
                 }
