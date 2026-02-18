@@ -9,7 +9,14 @@ namespace LaborDAL.Repo.Implementation
         {
          
         }
-      
+        public override async Task<Booking> GetByIdAsync(int id)
+        {
+            var booking = await _dbSet.Include(b => b.Task)
+                .ThenInclude(t=>t.Poster)
+                .Include(b=> b.Worker)
+                                      .FirstOrDefaultAsync(b => b.Id == id);
+            return booking;
+        }
        
         public Task<List<Booking>> GetBookingsByPosterIdAsync(string posterId)
         {

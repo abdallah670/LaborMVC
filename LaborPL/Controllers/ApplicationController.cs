@@ -1,6 +1,8 @@
 using LaborBLL.ModelVM;
 using LaborBLL.Response;
 using LaborBLL.Service.Abstract;
+using LaborDAL.Repo.Abstract;
+using LaborDAL.Repo.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

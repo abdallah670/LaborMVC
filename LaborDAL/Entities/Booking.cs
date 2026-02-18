@@ -11,9 +11,9 @@ namespace LaborDAL.Entities
             AgreedRate = agreedRate;
             StartTime = startTime;
             EndTime = endTime;
-            TaskId = taskId;
+            TaskItemId = taskId;
             WorkerId = workerId;
-            Status = BookingStatus.Cancelled;
+            Status = BookingStatus.Scheduled;
             CreatedAt = DateTime.UtcNow;
         }
         public void Update(DateTime start, DateTime end,decimal rate)
@@ -29,12 +29,14 @@ namespace LaborDAL.Entities
         public DateTime? StartTime { get; private set; }
         public DateTime? EndTime { get; private set; }
         public BookingStatus Status { get;  set; }
-        public int TaskId { get;  set; }
+        public int TaskItemId { get;  set; }
         public string WorkerId { get;  set; }
         public byte[] RowVersion { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public AppUser Worker { get; set; }
+        public TaskItem? Task { get; set; }
+
 
 
 

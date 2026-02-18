@@ -273,6 +273,7 @@ namespace LaborBLL.Service.Implementation
                     application.Task.DueDate,
                     application.TaskItemId,
                     application.WorkerId ?? "0"
+
                 );
 
                 _context.Bookings.Add(booking);

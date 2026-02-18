@@ -155,5 +155,7 @@ namespace LaborDAL.Entities
         /// Applications submitted for this task
         /// </summary>
         public virtual ICollection<TaskApplication> Applications { get; set; } = new List<TaskApplication>();
+
+        public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }

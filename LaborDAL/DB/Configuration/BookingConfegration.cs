@@ -9,6 +9,7 @@ namespace LaborDAL.DB.Configuration
         public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Booking> builder)
          {
              builder.ToTable("Bookings");
+            
              builder.Property(b => b.AgreedRate)
                  .HasPrecision(18, 2)
                  .IsRequired();
@@ -37,7 +38,7 @@ namespace LaborDAL.DB.Configuration
                  .IsConcurrencyToken();
 
             builder.HasIndex(b => b.CreatedAt);
-            builder.HasIndex(b => b.TaskId);
+            builder.HasIndex(b => b.TaskItemId);
             builder.HasIndex(b => b.WorkerId);
             builder.HasIndex(b => b.Status);
 

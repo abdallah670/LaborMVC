@@ -83,16 +83,16 @@ namespace LaborBLL.Service.Implementation
             var mappedBookings = mapper.Map<List<BookingDetailViewModel>>(bookings);
             return new Response<List<BookingDetailViewModel>>(mappedBookings, true, null);
         }
-
-        public async Task<Response<List<BookingDetailViewModel>>> GetBookingByIdAsync(int bookingId)
+            
+        public async Task<Response<BookingDetailViewModel>> GetBookingByIdAsync(int bookingId)
         {
             var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
             if (booking == null)
             {
-               return new Response<List<BookingDetailViewModel>>(null, false, "Booking not found");
+               return new Response<BookingDetailViewModel>(null, false, "Booking not found");
             }
-            var bookingDetails = mapper.Map<List<BookingDetailViewModel>>(booking);
-            return new Response<List<BookingDetailViewModel>>(bookingDetails, true, null);
+            var bookingDetails = mapper.Map<BookingDetailViewModel>(booking);
+            return new Response<BookingDetailViewModel>(bookingDetails, true, null);
         }
 
         public Task<Response<List<BookingDetailViewModel>>> GetBookingsByPosterIdAsync(string posterId)

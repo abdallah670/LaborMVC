@@ -3,7 +3,7 @@ namespace LaborBLL.Service.Abstract
 {
     public interface IBookingService 
     {
-        Task<Response<List<BookingDetailViewModel>>> GetBookingByIdAsync(int bookingId);
+        Task<Response<BookingDetailViewModel>> GetBookingByIdAsync(int bookingId);
         Task<Response<List<BookingDetailViewModel>>> GetAllBookingAsync();
 
 

@@ -1,0 +1,118 @@
+﻿@model BookingDetailViewModel
+@{
+    ViewData["Title"] = "Booking Details";
+}
+
+<div class="booking-dashboard-container fade-in">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-calendar-check me-2"></i>
+                Booking #@Model.Id
+            </h2>
+            <span class="badge @GetStatusBadgeClass(Model.Status)">
+                @Model.Status
+            </span>
+        </div>
+
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Main Info -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0">Booking Information</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <strong>Poster Name</strong>
+                        <p class="text-muted mb-0">
+                            @(Model.PosterName)
+                        </p>
+                    </div> <div class="mb-3">
+                        <strong>Start Time</strong>
+                        <p class="text-muted mb-0">
+                            @(Model.StartTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet")
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Agreed Rate</strong>
+                        <p class="text-primary fs-5 mb-0">
+                            $@Model.AgreedRate.ToString("N2")
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Status</strong>
+                        <p class="mb-0">@Model.Status</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+
+                    @if (Model.Status == LaborDAL.Enums.BookingStatus.Scheduled)
+                    {
+                        <a asp-action="Cancel"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-danger w-100 mb-2">
+                            Cancel Booking
+                        </a>
+                    }
+
+                    @if (Model.Status == LaborDAL.Enums.BookingStatus.Scheduled)
+                    {
+                        <a asp-action="Start"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-primary w-100 mb-2">
+                            Start Work
+                        </a>
+                    }
+
+                    @if (Model.Status == LaborDAL.Enums.BookingStatus.InProgress)
+                    {
+                        <a asp-action="Complete"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-success w-100">
+                            Mark as Completed
+                        </a>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(LaborDAL.Enums.BookingStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.BookingStatus.Scheduled => "bg-warning",
+            LaborDAL.Enums.BookingStatus.InProgress => "bg-info",
+            LaborDAL.Enums.BookingStatus.Completed => "bg-success",
+            LaborDAL.Enums.BookingStatus.Cancelled => "bg-danger",
+            LaborDAL.Enums.BookingStatus.Disputed => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+}

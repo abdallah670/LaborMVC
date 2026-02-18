@@ -134,6 +134,15 @@ namespace LaborDAL.DB
             modelBuilder.Entity<TaskItem>()
                 .Property(t => t.EstimatedHours)
                 .HasPrecision(10, 2);
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.Poster)
+                .WithMany(u => u.PostedTasks)
+                .HasForeignKey(t => t.PosterId);
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Task)
+                .WithMany(t => t.Bookings)
+                .HasForeignKey(b => b.TaskItemId)
+            .OnDelete(DeleteBehavior.Cascade);
 
             // Configure decimal precision for TaskApplication
             modelBuilder.Entity<TaskApplication>()
