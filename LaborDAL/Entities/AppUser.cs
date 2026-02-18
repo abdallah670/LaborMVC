@@ -143,8 +143,21 @@ namespace LaborDAL.Entities
         /// </summary>
         public string? CreatedBy { get; set; }
 
-        // Navigation properties will be added when Task and TaskApplication entities are created
-        // public virtual ICollection<Task> PostedTasks { get; set; } = new List<Task>();
-        // public virtual ICollection<TaskApplication> Applications { get; set; } = new List<TaskApplication>();
+        // Navigation properties
+
+        /// <summary>
+        /// Tasks posted by this user
+        /// </summary>
+        public virtual ICollection<TaskItem> PostedTasks { get; set; } = new List<TaskItem>();
+
+        /// <summary>
+        /// Tasks assigned to this user (as worker)
+        /// </summary>
+        public virtual ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
+
+        /// <summary>
+        /// Task applications submitted by this user
+        /// </summary>
+        public virtual ICollection<TaskApplication> Applications { get; set; } = new List<TaskApplication>();
     }
 }
