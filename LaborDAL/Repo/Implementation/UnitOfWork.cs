@@ -18,6 +18,8 @@ namespace LaborDAL.Repo.Implementation
 
         public ITaskRepository Tasks { get; private set; }
 
+        public IDisputeRepo Disputes { get; private set; }
+
         public UnitOfWork(
             ApplicationDbContext context,
             UserManager<AppUser> userManager,
@@ -45,6 +47,8 @@ namespace LaborDAL.Repo.Implementation
                 _loggerFactory.CreateLogger<AppUserRepository>());
 
             Tasks = new TaskRepository(_context);
+
+            Disputes = new DisputeRepo(_context);
         }
 
         public async Task<int> SaveAsync()

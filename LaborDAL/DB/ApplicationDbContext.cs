@@ -27,6 +27,11 @@ namespace LaborDAL.DB
         /// </summary>
         public DbSet<TaskApplication> TaskApplications { get; set; }
 
+        /// <summary>
+        /// Disputes DbSet
+        /// </summary>
+        public DbSet<Dispute> Disputes { get; set; }
+
 
         /// <summary>
         /// Override SaveChanges to implement soft delete and audit functionality
@@ -152,6 +157,25 @@ namespace LaborDAL.DB
             modelBuilder.Entity<TaskApplication>()
                 .Property(ta => ta.EstimatedHours)
                 .HasPrecision(10, 2);
+
+            // Configure Dispute relationships
+            modelBuilder.Entity<Dispute>()
+                .HasOne(d => d.Booking)
+                .WithMany()
+                .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Dispute>()
+                .HasOne(d => d.RaisedByUser)
+                .WithMany()
+                .HasForeignKey(d => d.RaisedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Dispute>()
+                .HasOne(d => d.ResolvedByUser)
+                .WithMany()
+                .HasForeignKey(d => d.ResolvedBy)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Additional Identity configurations can be added here
         }

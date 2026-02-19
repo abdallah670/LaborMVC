@@ -23,6 +23,9 @@ namespace LaborBLL.Common
             services.AddScoped<ITaskService, TaskService>();
             services.AddScoped<IApplicationService, ApplicationService>();
 
+            // Dispute service
+            services.AddScoped<IDisputeService, DisputeService>();
+
 
             //  services.AddScoped<IEmailService, EmailService>();
 

@@ -2,6 +2,7 @@
 using LaborBLL.Service.Abstract;
 using LaborBLL.Service.Implementation;
 using LaborDAL.Entities;
+using LaborDAL.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +12,13 @@ namespace LaborPL.Controllers
     public class BookingController : Controller
     {
         private readonly IBookingService bookingService;
+        private readonly IDisputeService disputeService;
         private readonly UserManager<AppUser> userManager;
 
-        public BookingController(IBookingService bookingService, UserManager<AppUser> userManager)
+        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager)
         {
             this.bookingService = bookingService;
+            this.disputeService = disputeService;
             this.userManager = userManager;
         }
         [HttpGet]
@@ -97,6 +100,63 @@ namespace LaborPL.Controllers
 
             return View(booking.Result);
         }
+
+        #region Dispute Actions
+
+        // GET: /Booking/RaiseDispute/{bookingId}
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> RaiseDispute(int bookingId)
+        {
+            var userId = userManager.GetUserId(User);
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            // Check if user can raise dispute
+            var canRaise = await disputeService.CanRaiseDisputeAsync(bookingId, userId);
+            if (!canRaise)
+            {
+                TempData["ErrorMessage"] = "You cannot raise a dispute for this booking. Disputes can only be raised within 48 hours of completion.";
+                return RedirectToAction(nameof(Details), new { id = bookingId });
+            }
+
+            var model = new CreateDisputeViewModel
+            {
+                BookingId = bookingId
+            };
+
+            ViewBag.BookingId = bookingId;
+            return View(model);
+        }
+
+        // POST: /Booking/RaiseDispute
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RaiseDispute(CreateDisputeViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var userId = userManager.GetUserId(User);
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var result = await disputeService.RaiseDisputeAsync(model, userId);
+
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Your dispute has been raised successfully. An administrator will review it shortly.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            ModelState.AddModelError("", result.ErrorMessage ?? "Failed to raise dispute.");
+            return View(model);
+        }
+
+        #endregion
 
 
 

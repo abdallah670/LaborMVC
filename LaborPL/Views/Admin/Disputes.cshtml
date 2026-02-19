@@ -1,3 +1,4 @@
+@model IEnumerable<LaborBLL.ModelVM.DisputeListViewModel>
 @{
     ViewData["Title"] = "Dispute Management";
     var currentFilter = ViewBag.CurrentFilter as string ?? "open";
@@ -78,67 +79,59 @@
             </ul>
         </div>
         <div class="card-body">
-            @if (ViewBag.Disputes != null && ((IEnumerable<dynamic>)ViewBag.Disputes).Any())
+            @if (Model.Any())
             {
-                <div class="disputes-list">
-                    @foreach (var dispute in (IEnumerable<dynamic>)ViewBag.Disputes)
-                    {
-                        <div class="dispute-card card mb-3 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h5 class="mb-1">Dispute #@dispute.Id</h5>
-                                        <p class="text-muted mb-0 small">
-                                            <i class="bi bi-calendar me-1"></i>Created @dispute.CreatedAt.ToString("MMM dd, yyyy")
-                                        </p>
-                                    </div>
-                                    <span class="badge @GetStatusBadgeClass(dispute.Status)">@dispute.Status</span>
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <h6 class="mb-2">Booking Details</h6>
-                                        <p class="mb-0 small">
-                                            <strong>Booking #@dispute.BookingId</strong><br>
-                                            Raised by: @dispute.RaisedBy
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6 class="mb-2">Reason</h6>
-                                        <p class="mb-0 small text-muted">@(dispute.Reason?.Length > 100 ? dispute.Reason[..100] + "..." : dispute.Reason)</p>
-                                    </div>
-                                </div>
-                                
-                                @if (!string.IsNullOrEmpty(dispute.Resolution))
-                                {
-                                    <div class="alert alert-info mb-3">
-                                        <h6 class="mb-1"><i class="bi bi-info-circle me-1"></i>Resolution</h6>
-                                        <p class="mb-0 small">@dispute.Resolution</p>
-                                    </div>
-                                }
-                                
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        @if (dispute.ResolvedAt.HasValue)
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Task</th>
+                                <th>Raised By</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dispute in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">#@dispute.Id</span>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@dispute.TaskTitle</strong>
+                                            <br>
+                                            <small class="text-muted">Booking #@dispute.BookingId</small>
+                                        </div>
+                                    </td>
+                                    <td>@dispute.RaisedByName</td>
+                                    <td>
+                                        @switch (dispute.Status)
                                         {
-                                            <span><i class="bi bi-calendar-check me-1"></i>Resolved @dispute.ResolvedAt.Value.ToString("MMM dd, yyyy")</span>
+                                            case LaborDAL.Enums.DisputeStatus.Open:
+                                                <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>Open</span>
+                                                break;
+                                            case LaborDAL.Enums.DisputeStatus.UnderReview:
+                                                <span class="badge bg-warning"><i class="bi bi-eye me-1"></i>Under Review</span>
+                                                break;
+                                            case LaborDAL.Enums.DisputeStatus.Resolved:
+                                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Resolved</span>
+                                                break;
                                         }
-                                    </small>
-                                    <div class="btn-group">
+                                    </td>
+                                    <td>@dispute.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
                                         <a asp-action="DisputeDetails" asp-route-id="@dispute.Id" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye me-1"></i>View Details
+                                            <i class="bi bi-eye me-1"></i>View
                                         </a>
-                                        @if (dispute.Status.ToString() == "Open" || dispute.Status.ToString() == "UnderReview")
-                                        {
-                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal@(dispute.Id)">
-                                                <i class="bi bi-check-lg me-1"></i>Resolve
-                                            </button>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             }
             else
@@ -154,16 +147,3 @@
         </div>
     </div>
 </div>
-
-@functions {
-    string GetStatusBadgeClass(string status)
-    {
-        return status?.ToLower() switch
-        {
-            "open" => "bg-danger",
-            "underreview" => "bg-warning",
-            "resolved" => "bg-success",
-            _ => "bg-secondary"
-        };
-    }
-}
