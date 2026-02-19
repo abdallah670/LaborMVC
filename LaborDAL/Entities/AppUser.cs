@@ -142,6 +142,8 @@ namespace LaborDAL.Entities
         /// ID of user who created this record
         /// </summary>
         public string? CreatedBy { get; set; }
+        public virtual ICollection<Booking> PostedBookings { get; set; } = new List<Booking>();
+
 
         // Navigation properties
 

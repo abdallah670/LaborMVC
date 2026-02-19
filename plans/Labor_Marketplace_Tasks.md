@@ -243,13 +243,13 @@
   - Implement Start action (POST) - worker marks as started
   - Implement Complete action (POST) - both parties confirm
   - Implement Cancel action (POST) - with penalty calculation
-  - Implement Dashboard action - list user bookings
-  - Implement Detail action
+  -- Implement Dashboard action - list user bookings
+  -- Implement Detail action
 
 - [ ] **T4.3.2** Create Booking Views
-  - Dashboard.cshtml - booking dashboard with upcoming/past tabs
-  - Details.cshtml - booking details with status timeline
-  - _BookingCard.cshtml - partial view for booking display
+  -- Dashboard.cshtml - booking dashboard with upcoming/past tabs
+  -- Details.cshtml - booking details with status timeline
+    - _BookingCard.cshtml - partial view for booking display
 
 ---
 

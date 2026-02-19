@@ -146,10 +146,11 @@ namespace LaborDAL.Entities
         /// </summary>
         public virtual AppUser? Poster { get; set; }
 
+
         /// <summary>
         /// Worker assigned to the task
         /// </summary>
-        public  ICollection<AppUser?> AssignedWorker { get; set; } = new List<AppUser?>();
+        public ICollection<AppUser?> AssignedWorker { get; set; } = new List<AppUser?>();
 
         /// <summary>
         /// Applications submitted for this task

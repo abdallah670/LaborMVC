@@ -7,6 +7,7 @@ namespace LaborBLL.ModelVM
         public string Id { get; set; }
         public string TaskTitle { get; set; }
         public string TaskDescription { get; set; }
+        public string PosterId { get; set; }
         public string PosterName { get; set; }
         public string WorkerName { get; set; }
         public decimal AgreedRate { get; set; }

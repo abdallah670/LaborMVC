@@ -1,0 +1,108 @@
+﻿@model LaborBLL.ModelVM.ProfileViewModel
+@{
+    ViewData["Title"] = "Worker Profile";
+    Layout = "_Layout";
+}
+
+<div class="profile-container fade-in">
+
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow profile-sidebar">
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="profile-avatar" />
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder">
+                            <span>@(Model.FirstName?.FirstOrDefault())@(Model.LastName?.FirstOrDefault())</span>
+                        </div>
+                    }
+
+                    <h4 class="profile-name">@Model.FirstName @Model.LastName</h4>
+                    <p class="profile-email">@Model.Email</p>
+
+                    @if (Model.IDVerified)
+                    {
+                        <span class="profile-badge verified">
+                            <i class="bi bi-patch-check-fill me-1"></i>ID Verified
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="profile-badge not-verified">
+                            <i class="bi bi-exclamation-triangle me-1"></i>ID Not Verified
+                        </span>
+                    }
+
+                    @if (Model.AverageRating.HasValue)
+                    {
+                        <div class="profile-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="bi bi-star-fill star @(i <= Math.Round(Model.AverageRating.Value) ? "filled" : "empty")"></i>
+                            }
+                            <span class="ms-2 text-muted">(@Model.AverageRating?.ToString("0.0"))</span>
+                        </div>
+                    }
+
+                    <p class="profile-member-since">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        Member since: @Model.CreatedAt.ToString("MMM dd, yyyy")
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary-gradient text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person me-2"></i><text>Worker Profile</text>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Read-only profile view -->
+                    <div class="profile-read-only">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-1"><i class="bi bi-phone me-1"></i>Phone</h6>
+                                <p class="mb-3">@(Model.PhoneNumber ?? "Not provided")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>Location</h6>
+                                <p class="mb-3">@(Model.Location ?? Model.Country ?? "Not provided")</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-1"><i class="bi bi-text-paragraph me-1"></i>Bio</h6>
+                            <p class="mb-3">@(Model.Bio ?? "No bio provided")</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-1"><i class="bi bi-tools me-1"></i>Skills</h6>
+                            @if (!string.IsNullOrEmpty(Model.Skills))
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var skill in Model.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <span class="badge bg-primary">@skill.Trim()</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="mb-0 text-muted">No skills listed</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

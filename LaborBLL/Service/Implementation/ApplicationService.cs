@@ -268,13 +268,14 @@ namespace LaborBLL.Service.Implementation
 
                 // Create booking
                 var booking = new Booking(
-                    application.ProposedBudget,
-                    application.Task.StartDate,
-                    application.Task.DueDate,
-                    application.TaskItemId,
-                    application.WorkerId ?? "0"
+     application.ProposedBudget,
+     application.Task.StartDate,
+     application.Task.DueDate,
+     application.TaskItemId,
+     application.WorkerId ?? throw new Exception("WorkerId is null"),
+     application.Task.PosterId ?? throw new Exception("PosterId is null")
+ );
 
-                );
 
                 _context.Bookings.Add(booking);
 

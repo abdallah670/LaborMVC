@@ -12,6 +12,7 @@
 
 
             public int TaskId { get; set; }
+        public string PosterId { get; set; }
                 public string WorkerId { get; set; }
 
         }

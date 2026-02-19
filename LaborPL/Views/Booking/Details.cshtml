@@ -35,14 +35,23 @@
                     <div class="mb-3">
                         <strong>Poster Name</strong>
                         <p class="text-muted mb-0">
-                            @(Model.PosterName)
+                            <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.PosterId})">
+                                @Model.PosterName
+                            </a>
+
                         </p>
                     </div> <div class="mb-3">
                         <strong>Start Time</strong>
                         <p class="text-muted mb-0">
                             @(Model.StartTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet")
+                        </p>    
+                    </div><div class="mb-3">
+                        <strong>End Time</strong>
+                        <p class="text-muted mb-0">
+                            @(Model.EndTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet")
                         </p>
                     </div>
+
 
                     <div class="mb-3">
                         <strong>Agreed Rate</strong>
@@ -70,29 +79,34 @@
 
                     @if (Model.Status == LaborDAL.Enums.BookingStatus.Scheduled)
                     {
-                        <a asp-action="Cancel"
-                           asp-route-id="@Model.Id"
-                           class="btn btn-danger w-100 mb-2">
-                            Cancel Booking
-                        </a>
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                            <button type="submit" class="btn btn-danger" w-100 mb-2>
+                                Cancel Booking
+                            </button>
+                        </form>
+
                     }
 
                     @if (Model.Status == LaborDAL.Enums.BookingStatus.Scheduled)
                     {
-                        <a asp-action="Start"
-                           asp-route-id="@Model.Id"
-                           class="btn btn-primary w-100 mb-2">
-                            Start Work
-                        </a>
+                      
+                        <form asp-action="Start" asp-route-id="@Model.Id" method="post">
+                            <button type="submit" class="btn btn-primary w-100 mb-2" >
+                                Start Work
+                            </button>
+                        </form>
+
+
                     }
 
                     @if (Model.Status == LaborDAL.Enums.BookingStatus.InProgress)
                     {
-                        <a asp-action="Complete"
-                           asp-route-id="@Model.Id"
-                           class="btn btn-success w-100">
-                            Mark as Completed
-                        </a>
+                        
+                        <form asp-action = "Complete" asp-route-id ="@Model.Id" method = "post" >
+                        <button type = "submit" class= "btn btn-success w-100" >
+                        Mark as Completed
+                                        </button >
+                                        </form >
                     }
 
                 </div>

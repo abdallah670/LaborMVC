@@ -10,10 +10,15 @@ namespace LaborBLL.Service.Abstract
         Task<Response<bool>> CreateBookingAsync(CreateBookingViewModel model);
         Task<Response<bool>> DeleteBookingAsync(int BookingId);
         Task<Response<bool>> UpdateBookingAsync(UpdateBookingViewModel model);
+        Task<Response<bool>> CancelBookingAsync(int bookingId);
+        Task<Response<bool>> StartWorkBookingAsync(int bookingId);
+        Task<Response<bool>> CompleteBookingAsync(int bookingId);
 
         Task<Response<List<BookingDashboardViewModel>>> GetBookingsByWorkerIdAsync(string workerId);
-            Task<Response<List<BookingDetailViewModel>>> GetBookingsByPosterIdAsync(string posterId);
+            Task<Response<List<BookingDashboardViewModel>>> GetBookingsByPosterIdAsync(string posterId);
             Task<Response<List<BookingDashboardViewModel>>> GetOverlappingBookingsAsync(string workerId, DateTime start, DateTime end);
+        Task<Response<IEnumerable<BookingDashboardViewModel>>>GetBookingsByUserIdAsync(string userId);
+
 
 
 

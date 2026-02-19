@@ -55,9 +55,10 @@ namespace LaborBLL.Service.Implementation
             }
 
 
-            booking.Update(model.StartTime.Value, model.EndTime.Value, model.AgreedRate);
+            booking.Update(model.StartTime.Value, model.EndTime.Value, model.AgreedRate,model.Status);
             await unitOfWork.Bookings.UpdateAsync(booking);
             await unitOfWork.SaveAsync();
+
 
 
             return new Response<bool>(true, true, null);
@@ -95,9 +96,23 @@ namespace LaborBLL.Service.Implementation
             return new Response<BookingDetailViewModel>(bookingDetails, true, null);
         }
 
-        public Task<Response<List<BookingDetailViewModel>>> GetBookingsByPosterIdAsync(string posterId)
+        public async Task<Response<List<BookingDashboardViewModel>>> GetBookingsByPosterIdAsync(string PosterId)
         {
-            throw new NotImplementedException();
+            var bookings = await unitOfWork.Bookings.GetBookingsWithPosterAsync(PosterId);
+
+            var mapped = mapper.Map<List<BookingDashboardViewModel>>(bookings);
+
+            mapped.ForEach(b =>
+            {
+
+                b.PendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
+                b.InProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
+                b.CompletedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
+                b.CancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
+                b.DisputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+            });
+
+            return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
         }
 
         public async Task<Response<List<BookingDashboardViewModel>>> GetBookingsByWorkerIdAsync(string workerId)
@@ -139,7 +154,78 @@ namespace LaborBLL.Service.Implementation
 
         return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
     }
+        public async Task<Response<bool>> CancelBookingAsync(int bookingId)
+        {
+            var booking=await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return new Response<bool>(false, false, "Booking not found");
+            }
+            if (booking.Status == BookingStatus.Completed || booking.Status == BookingStatus.Cancelled)
+            {
+                return new Response<bool>(false, false, "Cannot cancel a completed or already cancelled booking");
+            }
+            booking.Status = BookingStatus.Cancelled;
+            await unitOfWork.Bookings.UpdateAsync(booking);
+            await unitOfWork.SaveAsync();
 
-       
+            return new Response<bool>(true, true, null);
+        }
+
+        public async Task<Response<bool>> StartWorkBookingAsync(int bookingId)
+        {
+            var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return new Response<bool>(false, false, "Booking Not Found");
+            }
+            if (booking.Status != BookingStatus.Scheduled)
+            {
+                return new Response<bool>(false, false, "Only scheduled bookings can be started");
+            }
+            booking.Status= BookingStatus.InProgress;
+            await unitOfWork.Bookings.UpdateAsync(booking);
+            await unitOfWork.SaveAsync();
+            return new Response<bool>(true, true, null);
+        }
+
+        public async Task<Response<bool>> CompleteBookingAsync(int bookingId)
+        {
+            var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return (new Response<bool>(false, false, "Booking Not Found"));
+            }
+
+            booking.Status = BookingStatus.Completed;
+            unitOfWork.Bookings.UpdateAsync(booking);
+            unitOfWork.SaveAsync();
+            return new Response<bool>(true, true, null);
+        }
+        public async Task<Response<IEnumerable<BookingDashboardViewModel>>>
+    GetBookingsByUserIdAsync(string userId)
+        {
+            var workerBookings = await GetBookingsByWorkerIdAsync(userId);
+            var posterBookings = await GetBookingsByPosterIdAsync(userId);
+
+            var allBookings = new List<BookingDashboardViewModel>();
+
+            if (workerBookings.Success && workerBookings.Result != null)
+                allBookings.AddRange(workerBookings.Result);
+
+            if (posterBookings.Success && posterBookings.Result != null)
+                allBookings.AddRange(posterBookings.Result);
+
+            // إزالة التكرار
+            allBookings = allBookings
+                .GroupBy(b => b.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            return new Response<IEnumerable<BookingDashboardViewModel>>(allBookings, true, null);
+                
+        }
+
+
     }
 }

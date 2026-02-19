@@ -14,18 +14,26 @@ namespace LaborDAL.Repo.Implementation
             var booking = await _dbSet.Include(b => b.Task)
                 .ThenInclude(t=>t.Poster)
                 .Include(b=> b.Worker)
+                .IgnoreQueryFilters()
                                       .FirstOrDefaultAsync(b => b.Id == id);
             return booking;
         }
-       
-        public Task<List<Booking>> GetBookingsByPosterIdAsync(string posterId)
+
+        public async Task<List<Booking>> GetBookingsWithPosterAsync(string posterId)
         {
-            throw new NotImplementedException();
+            return await _dbSet
+                .Include(b => b.Task)        // جلب بيانات المهمة
+                .Include(b => b.Poster)      // جلب بيانات البوستر
+                .Where(b => b.Task.PosterId == posterId)
+                .IgnoreQueryFilters()
+                .ToListAsync();
         }
+
         public async Task<List<Booking>> GetBookingsWithWorkerAsync(Expression<Func<Booking, bool>> predicate)
         {
             return await _dbSet.Include(b => b.Worker)
                                .Where(predicate)
+                               .IgnoreQueryFilters()
                                .ToListAsync();
         }
 
@@ -40,5 +48,9 @@ namespace LaborDAL.Repo.Implementation
             throw new NotImplementedException();
         }
 
+        public Task<List<Booking>> GetBookingsByPosterIdAsync(string posterId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

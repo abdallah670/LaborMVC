@@ -4,6 +4,7 @@ using LaborDAL.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LaborDAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260219120437_addposterid")]
+    partial class addposterid
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -645,7 +648,7 @@ namespace LaborDAL.Migrations
             modelBuilder.Entity("LaborDAL.Entities.Booking", b =>
                 {
                     b.HasOne("LaborDAL.Entities.AppUser", "Poster")
-                        .WithMany("PostedBookings")
+                        .WithMany()
                         .HasForeignKey("PosterId");
 
                     b.HasOne("LaborDAL.Entities.TaskItem", "Task")
@@ -750,8 +753,6 @@ namespace LaborDAL.Migrations
             modelBuilder.Entity("LaborDAL.Entities.AppUser", b =>
                 {
                     b.Navigation("Applications");
-
-                    b.Navigation("PostedBookings");
 
                     b.Navigation("PostedTasks");
                 });

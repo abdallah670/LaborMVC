@@ -1,11 +1,4 @@
-﻿using LaborBLL.ModelVM;
-using LaborBLL.Service.Abstract;
-using LaborBLL.Service.Implementation;
-using LaborDAL.Entities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-
+﻿
 namespace LaborPL.Controllers
 {
     public class BookingController : Controller
@@ -53,50 +46,115 @@ namespace LaborPL.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Dashboard(string filter = "all")
+        public async Task<IActionResult> Dashboard(string filter = "all", string role = "all")
         {
             var userId = userManager.GetUserId(User);
-            var response = await bookingService.GetBookingsByWorkerIdAsync(userId);
 
-            var allBookings = response.Result;
+            var response = await bookingService.GetBookingsByUserIdAsync(userId);
 
+            if (!response.Success)
+                return View(new List<BookingDashboardViewModel>());
+
+            var allBookings = response.Result.AsQueryable();
+
+            if (role?.ToLower() == "worker")
+                allBookings = allBookings.Where(b => b.WorkerId == userId);
+
+            if (role?.ToLower() == "poster")
+                allBookings = allBookings.Where(b => b.PosterId == userId);
+
+            var list = allBookings.ToList();
+
+            ViewBag.CurrentRole = role;
             ViewBag.CurrentFilter = filter;
 
-            // احسب العدادات من كل الحجوزات
-            ViewBag.TotalBookings = allBookings.Count;
-            ViewBag.UpcomingCount = allBookings.Count(b => b.Status == BookingStatus.Scheduled);
-            ViewBag.InProgressCount = allBookings.Count(b => b.Status == BookingStatus.InProgress);
-            ViewBag.CompletedCount = allBookings.Count(b => b.Status == BookingStatus.Completed);
+            ViewBag.TotalBookings = list.Count();
+            ViewBag.UpcomingCount = list.Count(b => b.Status == BookingStatus.Scheduled);
+            ViewBag.InProgressCount = list.Count(b => b.Status == BookingStatus.InProgress);
+            ViewBag.CompletedCount = list.Count(b => b.Status == BookingStatus.Completed);
+            ViewBag.CancelCount = list.Count(b => b.Status == BookingStatus.Cancelled);
 
-            // بعد كده فلتر للعرض فقط
-            var bookings = allBookings;
+            var bookings = list.AsEnumerable();
 
             switch (filter.ToLower())
             {
                 case "upcoming":
-                    bookings = allBookings.Where(b => b.Status == BookingStatus.Scheduled).ToList();
+                    bookings = bookings.Where(b => b.Status == BookingStatus.Scheduled);
                     break;
 
                 case "inprogress":
-                    bookings = allBookings.Where(b => b.Status == BookingStatus.InProgress).ToList();
+                    bookings = bookings.Where(b => b.Status == BookingStatus.InProgress);
                     break;
 
                 case "completed":
-                    bookings = allBookings.Where(b => b.Status == BookingStatus.Completed).ToList();
+                    bookings = bookings.Where(b => b.Status == BookingStatus.Completed);
+                    break;
+
+                case "cancel":
+                    bookings = bookings.Where(b => b.Status == BookingStatus.Cancelled);
                     break;
             }
 
-            return View(bookings);
+            return View(bookings.ToList());
         }
-        public async Task< IActionResult> Details(int id)
-        {
 
-            var booking = await bookingService.GetBookingByIdAsync(id);
-            if (booking == null)
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var response = await bookingService.GetBookingByIdAsync(id);
+
+            if (!response.Success || response.Result == null)
                 return NotFound();
 
-            return View(booking.Result);
+            return View(response.Result);
         }
+        [HttpPost]
+        public async Task<IActionResult> Cancel(int id)
+        {       
+            var result = await bookingService.CancelBookingAsync(id);
+            if (!result.Success)
+                return NotFound();
+            TempData["Message"] = "Booking cancelled successfully.";
+
+            return RedirectToAction("Details", new {id=id});
+        }
+        [HttpPost]
+        public async Task <IActionResult> Start( int id)
+        {
+           var result = await bookingService.StartWorkBookingAsync(id);
+            if (!result.Success)
+                return NotFound();
+            TempData["Message"] = "Booking started successfully.";
+            return RedirectToAction("Details", new { id = id });
+
+        }
+        [HttpPost]
+        public async Task<IActionResult> Complete(int id)
+        {
+            var result = await bookingService.CompleteBookingAsync(id);
+            if (!result.Success)
+                return NotFound();
+            TempData["Message"] = "Booking completed successfully.";
+            return RedirectToAction("Details", new { id = id });
+        }
+        public IActionResult ProfilePoster(string id)
+        {
+            var user = userManager.FindByIdAsync(id).Result;
+            if (user == null) return NotFound();
+
+            var model = new ProfileViewModel
+            {
+                Id = user.Id,
+                FirstName = $"{user.FirstName} {user.LastName}",
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Bio = user.Bio,
+                Country= user.Country,
+
+            };
+            return View(model);
+        }
+
 
 
 

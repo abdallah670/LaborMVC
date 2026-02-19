@@ -1,4 +1,3 @@
-using LaborDAL.Entities;
 
 namespace LaborBLL.Mapping
 {
@@ -64,8 +63,9 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.TaskId, opt => opt.MapFrom(src => src.TaskItemId))
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
                 .ForMember(dest => dest.PosterName, opt =>   opt.MapFrom(src => src.Task.Poster.FirstName+src.Task.Poster.LastName))
-
+                .ForMember(dest=>dest.PosterId, opt=>opt.MapFrom(src=>src.Task.PosterId))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+                
             
 
             // TaskItem mappings
@@ -105,7 +105,9 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
                 .ForMember(dest => dest.TaskItemId, opt => opt.MapFrom(src => src.TaskId))
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
+                .ForMember(d => d.PosterId, opt => opt.MapFrom(src => src.PosterId))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
             CreateMap <BookingListViewModel,Booking>()
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
@@ -123,6 +125,9 @@ namespace LaborBLL.Mapping
            .ForMember(dest => dest.InProgressCount, opt => opt.Ignore())
            .ForMember(dest => dest.CompletedCount, opt => opt.Ignore())
            .ForMember(dest => dest.CancelledCount, opt => opt.Ignore())
+           .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src=>src.PosterId))
+           .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src=>src.WorkerId))
+           
            .ForMember(dest => dest.DisputedCount, opt => opt.Ignore());
 
 

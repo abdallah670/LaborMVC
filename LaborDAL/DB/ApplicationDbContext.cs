@@ -122,6 +122,10 @@ namespace LaborDAL.DB
             modelBuilder.Entity<TaskItem>()
                 .Property(t => t.Latitude)
                 .HasPrecision(10, 8);
+            modelBuilder.Entity<Booking>()
+    .HasOne(b => b.Poster)
+    .WithMany(u => u.PostedBookings)
+    .HasForeignKey(b => b.PosterId);
 
             modelBuilder.Entity<TaskItem>()
                 .Property(t => t.Longitude)
@@ -143,6 +147,7 @@ namespace LaborDAL.DB
                 .WithMany(t => t.Bookings)
                 .HasForeignKey(b => b.TaskItemId)
             .OnDelete(DeleteBehavior.Cascade);
+
 
             // Configure decimal precision for TaskApplication
             modelBuilder.Entity<TaskApplication>()
