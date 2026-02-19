@@ -145,12 +145,22 @@
                                     <td>@user.CreatedAt.ToString("MMM dd, yyyy")</td>
                                     <td>
                                         <div class="btn-group">
-                                            <a asp-controller="Account" asp-action="Profile" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="View Profile">
+                                            <a asp-action="UserDetails" asp-route-id="@user.Id" class="btn btn-sm btn-outline-info" title="User Details">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-warning" title="Edit Roles">
-                                                <i class="bi bi-person-gear"></i>
-                                            </button>
+                                           
+                                            @if (!user.IsAdmin)
+                                            {
+                                               
+                                                <a asp-action="EditRoles" asp-route-id="@user.Id" class="btn btn-sm btn-outline-warning" title="Edit Roles">
+                                                    <i class="bi bi-person-gear"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete User"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                        data-user-id="@user.Id" data-user-name="@user.FirstName @user.LastName">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -172,3 +182,44 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the user <strong id="deleteUserName"></strong>?</p>
+                <p class="text-muted small mb-0">This action will soft-delete the user account. The user will no longer be able to access the system.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" asp-action="DeleteUser" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteUserId" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var userId = button.getAttribute('data-user-id');
+            var userName = button.getAttribute('data-user-name');
+            
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUserName').textContent = userName;
+        });
+    </script>
+}

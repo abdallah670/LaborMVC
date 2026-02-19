@@ -16,6 +16,9 @@ namespace LaborDAL.Common
             // Task Repository
             services.AddScoped<ITaskRepository, TaskRepository>();
 
+            // Dispute Repository
+            services.AddScoped<IDisputeRepo, DisputeRepo>();
+
             // Add Unit of Work if you have it
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

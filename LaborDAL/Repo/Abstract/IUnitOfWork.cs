@@ -10,5 +10,6 @@ namespace LaborDAL.Repo.Abstract
         IAppUserRepository AppUsers { get; }
         IBookingRepo Bookings { get; }
         ITaskRepository Tasks { get; }
+        IDisputeRepo Disputes { get; }
     }
 }

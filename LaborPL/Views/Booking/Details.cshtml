@@ -109,6 +109,26 @@
                                         </form >
                     }
 
+                    @if (Model.Status == LaborDAL.Enums.BookingStatus.Completed)
+                    {
+                        <a asp-action="RaiseDispute"
+                           asp-route-bookingId="@Model.Id"
+                           class="btn btn-outline-danger w-100">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Raise Dispute
+                        </a>
+                        <small class="text-muted d-block mt-2 text-center">
+                            Disputes must be raised within 48 hours of completion
+                        </small>
+                    }
+
+                    @if (Model.Status == LaborDAL.Enums.BookingStatus.Disputed)
+                    {
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            This booking is under dispute review.
+                        </div>
+                    }
+
                 </div>
             </div>
         </div>

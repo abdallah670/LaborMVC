@@ -1,0 +1,149 @@
+@model LaborBLL.ModelVM.EditRolesViewModel
+@{
+    ViewData["Title"] = "Edit User Roles";
+}
+
+<div class="admin-edit-roles fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-person-gear me-2"></i>Edit User Roles</h2>
+            <p class="text-muted mb-0">Modify user roles and permissions</p>
+        </div>
+        <a asp-action="Users" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Users
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                        {
+                            <img src="@Model.ProfilePictureUrl" alt="Profile" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: 600;">
+                                @(Model.UserName?.FirstOrDefault())
+                            </div>
+                        }
+                        <div>
+                            <h5 class="mb-0">@Model.UserName</h5>
+                            <small class="text-muted">@Model.Email</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditRoles" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="UserId" />
+                        <input type="hidden" asp-for="UserName" />
+                        <input type="hidden" asp-for="Email" />
+                        <input type="hidden" asp-for="ProfilePictureUrl" />
+                        <input type="hidden" asp-for="CurrentRole" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <p class="text-muted mb-4">Select the roles you want to assign to this user. A user can have multiple roles.</p>
+
+                        <!-- Worker Role -->
+                        <div class="form-check card mb-3 p-0">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsWorker" />
+                                    <label class="form-check-label d-flex align-items-center" asp-for="IsWorker">
+                                        <span class="badge bg-primary me-2"><i class="bi bi-tools"></i></span>
+                                        <div>
+                                            <strong>Worker</strong>
+                                            <br>
+                                            <small class="text-muted">Can apply for tasks and perform work</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Poster Role -->
+                        <div class="form-check card mb-3 p-0">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsPoster" />
+                                    <label class="form-check-label d-flex align-items-center" asp-for="IsPoster">
+                                        <span class="badge bg-success me-2"><i class="bi bi-clipboard-plus"></i></span>
+                                        <div>
+                                            <strong>Poster</strong>
+                                            <br>
+                                            <small class="text-muted">Can post tasks and hire workers</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Role -->
+                        <div class="form-check card mb-4 p-0 border-warning">
+                            <div class="card-body bg-warning bg-opacity-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsAdmin" />
+                                    <label class="form-check-label d-flex align-items-center" asp-for="IsAdmin">
+                                        <span class="badge bg-danger me-2"><i class="bi bi-shield-fill"></i></span>
+                                        <div>
+                                            <strong>Administrator</strong>
+                                            <br>
+                                            <small class="text-muted">Full system access including user management</small>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="alert alert-warning mt-3 mb-0 py-2">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    <strong>Warning:</strong> Administrators have full access to the system including the ability to manage other users and modify system settings.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Role Display -->
+                        <div class="mb-4">
+                            <label class="text-muted small">Current Role</label>
+                            <div>
+                                @if (Model.CurrentRole == LaborDAL.Enums.ClientRole.None)
+                                {
+                                    <span class="badge bg-secondary">No Role</span>
+                                }
+                                else
+                                {
+                                    if (Model.CurrentRole.HasFlag(LaborDAL.Enums.ClientRole.Admin))
+                                    {
+                                        <span class="badge bg-danger me-1">Admin</span>
+                                    }
+                                    if (Model.CurrentRole.HasFlag(LaborDAL.Enums.ClientRole.Worker))
+                                    {
+                                        <span class="badge bg-primary me-1">Worker</span>
+                                    }
+                                    if (Model.CurrentRole.HasFlag(LaborDAL.Enums.ClientRole.Poster))
+                                    {
+                                        <span class="badge bg-success me-1">Poster</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-check-lg me-1"></i>Save Changes
+                            </button>
+                            <a asp-action="Users" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

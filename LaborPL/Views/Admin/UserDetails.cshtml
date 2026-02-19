@@ -1,0 +1,272 @@
+@model LaborBLL.ModelVM.ProfileViewModel
+@{
+    ViewData["Title"] = "User Details";
+    var currentUserId = ViewBag.CurrentUserId as string;
+}
+
+<div class="admin-user-details fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-person-badge me-2"></i>User Details</h2>
+            <p class="text-muted mb-0">View detailed user information</p>
+        </div>
+        <a asp-action="Users" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Users
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- User Profile Card -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <!-- Profile Picture -->
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <img src="@Model.ProfilePictureUrl" alt="Profile" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--primary-color);">
+                    }
+                    else
+                    {
+                        <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-size: 2.5rem; font-weight: 600;">
+                            @(Model.FirstName?.FirstOrDefault())@(Model.LastName?.FirstOrDefault())
+                        </div>
+                    }
+
+                    <h4 class="mb-1">@Model.FirstName @Model.LastName</h4>
+                    <p class="text-muted mb-3">@Model.Email</p>
+
+                    <!-- Role Badges -->
+                    <div class="mb-3">
+                        @if (Model.IsAdmin)
+                        {
+                            <span class="badge bg-danger me-1"><i class="bi bi-shield-fill me-1"></i>Admin</span>
+                        }
+                        @if (Model.IsWorker)
+                        {
+                            <span class="badge bg-primary me-1"><i class="bi bi-tools me-1"></i>Worker</span>
+                        }
+                        @if (Model.IsPoster)
+                        {
+                            <span class="badge bg-success me-1"><i class="bi bi-clipboard-plus me-1"></i>Poster</span>
+                        }
+                    </div>
+
+                    <!-- Verification Status -->
+                    <div class="mb-3">
+                        @if (Model.IDVerified)
+                        {
+                            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>ID Verified</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary"><i class="bi bi-exclamation-triangle me-1"></i>Not Verified</span>
+                        }
+                    </div>
+
+                    <!-- Rating -->
+                    <div class="mb-3">
+                        @if (Model.AverageRating.HasValue)
+                        {
+                            <div class="text-warning">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star@(i <= Math.Round(Model.AverageRating.Value) ? "-fill" : "")"></i>
+                                }
+                                <span class="ms-2 text-dark">@Model.AverageRating.Value.ToString("0.0")</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No ratings yet</span>
+                        }
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <a asp-action="EditRoles" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="bi bi-person-gear me-1"></i>Edit Roles
+                        </a>
+                        @if (Model.Id != currentUserId && !Model.IsAdmin)
+                        {
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="@Model.Id" data-user-name="@Model.FirstName @Model.LastName">
+                                <i class="bi bi-trash me-1"></i>Delete User
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Email</label>
+                            <p class="mb-0">
+                                <i class="bi bi-envelope me-2"></i>@Model.Email
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Phone</label>
+                            <p class="mb-0">
+                                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                {
+                                    <i class="bi bi-telephone me-2"></i>@Model.PhoneNumber
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Location</label>
+                            <p class="mb-0">
+                                @if (!string.IsNullOrEmpty(Model.Location))
+                                {
+                                    <i class="bi bi-geo-alt me-2"></i>@Model.Location
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Country</label>
+                            <p class="mb-0">
+                                @if (!string.IsNullOrEmpty(Model.Country))
+                                {
+                                    <i class="bi bi-globe me-2"></i>@Model.Country
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not provided</span>
+                                }
+                            </p>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.LocationUrl))
+                        {
+                            <div class="col-12">
+                                <label class="text-muted small">Location URL</label>
+                                <p class="mb-0">
+                                    <a href="@Model.LocationUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-map me-1"></i>View on Map
+                                    </a>
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bio & Skills -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>About</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Bio</label>
+                        <p class="mb-0">
+                            @if (!string.IsNullOrEmpty(Model.Bio))
+                            {
+                                @Model.Bio
+                            }
+                            else
+                            {
+                                <span class="text-muted">No bio provided</span>
+                            }
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-muted small">Skills</label>
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.Skills))
+                            {
+                                var skills = Model.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                                @foreach (var skill in skills)
+                                {
+                                    <span class="badge bg-light text-dark me-1 mb-1">@skill.Trim()</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No skills listed</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Member Since</label>
+                            <p class="mb-0">
+                                <i class="bi bi-calendar me-2"></i>@Model.CreatedAt.ToString("MMMM dd, yyyy")
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">User ID</label>
+                            <p class="mb-0">
+                                @Model.Id
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the user <strong id="deleteUserName"></strong>?</p>
+                <p class="text-muted small mb-0">This action will soft-delete the user account. The user will no longer be able to access the system.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" asp-action="DeleteUser" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteUserId" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var userId = button.getAttribute('data-user-id');
+            var userName = button.getAttribute('data-user-name');
+            
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUserName').textContent = userName;
+        });
+    </script>
+}
