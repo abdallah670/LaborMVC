@@ -1,4 +1,6 @@
-
+﻿
+using LaborBLL.ModelVM.Rating;
+using LaborBLL.Service.Abstract.Rating;
 using LaborDAL.Repo.Abstract;
 using LaborDAL.Repo.Implementation;
 
@@ -9,12 +11,14 @@ namespace LaborPL.Controllers
         private readonly IBookingService bookingService;
         private readonly IDisputeService disputeService;
         private readonly UserManager<AppUser> userManager;
+        private readonly IRatingService ratingService;
 
-        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager)
+        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService)
         {
             this.bookingService = bookingService;
             this.disputeService = disputeService;
             this.userManager = userManager;
+            this.ratingService = ratingService;
         }
         [HttpGet]
         [Authorize]
@@ -110,8 +114,18 @@ namespace LaborPL.Controllers
 
             if (!response.Success || response.Result == null)
                 return NotFound();
+
+            
             decimal penalty = response.Result.AgreedRate * 0.10m;
                 ViewBag.Penalty = penalty;
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isPoster = currentUserId == response.Result.PosterId;
+            var rateeId = isPoster ? response.Result.WorkerId : response.Result.PosterId;
+
+            var existingRating = await ratingService.GetRatingAsync(currentUserId, rateeId, id);
+            ViewBag.ExistingScore = existingRating?.Score ?? 0;
+            ViewBag.RatedId = rateeId;
+
 
             return View(response.Result);
         }
@@ -163,17 +177,17 @@ namespace LaborPL.Controllers
                 var user =await userManager.FindByIdAsync(id);
                 if (user == null) return NotFound();
 
-                var model = new ProfileViewModel
-                {
-                    Id = user.Id,
-                    FirstName = $"{user.FirstName} {user.LastName}",
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                    Bio = user.Bio,
-                    Country= user.Country,
-
-                };
-                return View(model);
+            var model = new ProfileViewModel
+            {
+                Id = user.Id,
+                FirstName = $"{user.FirstName} {user.LastName}",
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Bio = user.Bio,
+                Country = user.Country,
+                AverageRating = user.AverageRating // ✅ أضف السطر ده
+            };
+            return View(model);
             }
 
 
@@ -235,7 +249,20 @@ namespace LaborPL.Controllers
         #endregion
 
 
-
+        public async Task <IActionResult> Rate (RatingViewModel model )
+        {
+            var userId = userManager.GetUserId(User);
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+            var result = await ratingService.SubmitOrUpdateRatingAsync(model, userId);
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = "Failed to submit rating. Please try again.";
+                return RedirectToAction(nameof(Details), new { id = model.bookingId });
+            }
+            TempData["SuccessMessage"] = "Your rating has been submitted successfully.";
+            return RedirectToAction(nameof(Details), new { id = model.bookingId });
+        }
 
         public IActionResult Index()
         {

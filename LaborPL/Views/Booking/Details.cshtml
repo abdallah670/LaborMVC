@@ -5,13 +5,9 @@
 @{
     ViewData["Title"] = "Booking Details";
 
-    var roles = ((ClaimsIdentity)User.Identity).Claims
-        .Where(c => c.Type == ClaimTypes.Role)
-        .Select(c => c.Value)
-        .ToList();
-
-    bool isWorker = roles.Contains("Worker");
-    bool isPoster = roles.Contains("Poster");
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    bool isPoster = currentUserId == Model.PosterId;
+    bool isWorker = currentUserId == Model.WorkerId;
 }
 
 <div class="booking-dashboard-container fade-in">
@@ -31,12 +27,8 @@
                     <h5 class="mb-0">Booking Information</h5>
                 </div>
                 <div class="card-body">
-                    @inject UserManager<AppUser> userManager
 
-                    @{
-                        var currentUserId = userManager.GetUserId(User);
-                    }
-                    @if (currentUserId == Model.WorkerId)
+                    @if (!isPoster)
                     {
                         <div class="mb-3">
                             <strong>Poster Name</strong>
@@ -47,7 +39,7 @@
                             </p>
                         </div>
                     }
-                    else if (currentUserId == Model.PosterId)
+                    @if (isPoster)
                     {
                         <div class="mb-3">
                             <strong>Worker Name</strong>
@@ -56,11 +48,9 @@
                                     @Model.WorkerName
                                 </a>
                             </p>
-                            <p>@currentUserId</p>
-                            <p>@Model.PosterId</p>
-                            <p>@Model.WorkerId</p>
                         </div>
                     }
+
                     <div class="mb-3"><strong>Start Time</strong> <p class="text-muted mb-0">@Model.StartTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet"</p></div>
                     <div class="mb-3"><strong>End Time</strong> <p class="text-muted mb-0">@Model.EndTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet"</p></div>
                     <div class="mb-3"><strong>Agreed Rate</strong> <p class="text-primary fs-5 mb-0">$@Model.AgreedRate.ToString("N2")</p></div>
@@ -75,6 +65,31 @@
                     <h5 class="mb-0">Quick Actions</h5>
                 </div>
                 <div class="card-body">
+
+                    @* Rating Section *@
+                    @if (Model.Status == BookingStatus.Completed || Model.Status == BookingStatus.Cancelled)
+                    {
+                        <div class="mb-3">
+                            <h6>Rate the @(isPoster ? "Worker" : "Poster")</h6>
+                            <form asp-action="Rate" asp-controller="Booking" method="post">
+                                <input type="hidden" name="bookingId" value="@Model.Id" />
+                                <input type="hidden" name="RatedId" value="@ViewBag.RatedId" />
+
+                                <div class="star-rating mb-2">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <input type="radio" name="Score" value="@i" id="star_@i"
+                                               @(ViewBag.ExistingScore == i ? "checked" : "") />
+                                        <label for="star_@i">&#9733;</label>
+                                    }
+                                </div>
+
+                                <button type="submit" class="btn btn-warning w-100">
+                                    @(ViewBag.ExistingScore > 0 ? "Update Rating" : "Submit Rating")
+                                </button>
+                            </form>
+                        </div>
+                    }
 
                     @* Cancel available for Poster or Worker if Scheduled *@
                     @if (Model.Status == BookingStatus.Scheduled && (isWorker || isPoster))
@@ -137,18 +152,15 @@
 <div class="modal fade" id="cancelModal">
     <div class="modal-dialog">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title">Warning</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
                 A penalty of @ViewBag.Penalty EGP will be deducted.
                 <br />
                 Are you sure you want to cancel this booking?
             </div>
-
             <div class="modal-footer w-100">
                 <form asp-action="Cancel" method="post" class="w-100">
                     <input type="hidden" name="id" value="@Model.Id" />
@@ -156,10 +168,36 @@
                 </form>
                 <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Go Back</button>
             </div>
-
         </div>
     </div>
 </div>
+
+<style>
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2rem;
+            color: #ccc;
+            cursor: pointer;
+        }
+
+        .star-rating input:checked ~ label {
+            color: #ffc107;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #ffc107;
+        }
+</style>
 
 @functions {
     string GetStatusBadgeClass(BookingStatus status) => status switch
