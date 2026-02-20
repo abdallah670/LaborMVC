@@ -175,6 +175,12 @@ namespace LaborBLL.Service.Implementation
         public async Task<Response<bool>> StartWorkBookingAsync(int bookingId)
         {
             var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            var chick1 = booking.PosterId;
+            var chick2= booking.WorkerId;
+            if(chick1==chick2)
+                {
+                return new Response<bool>(false, false, "Poster cannot start the work");
+            }
             if (booking == null)
             {
                 return new Response<bool>(false, false, "Booking Not Found");
@@ -189,7 +195,7 @@ namespace LaborBLL.Service.Implementation
             return new Response<bool>(true, true, null);
         }
 
-        public async Task<Response<bool>> CompleteBookingAsync(int bookingId)
+        public async Task<Response<bool>> CompleteBookingByWorkerAsync(int bookingId)
         {
             var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
             if (booking == null)
@@ -197,7 +203,7 @@ namespace LaborBLL.Service.Implementation
                 return (new Response<bool>(false, false, "Booking Not Found"));
             }
 
-            booking.Status = BookingStatus.Completed;
+            booking.Status = BookingStatus.CompletedfromWorker;
             unitOfWork.Bookings.UpdateAsync(booking);
             unitOfWork.SaveAsync();
             return new Response<bool>(true, true, null);
@@ -226,6 +232,18 @@ namespace LaborBLL.Service.Implementation
                 
         }
 
+        public async Task<Response<bool>> CompleteBookingByPosterAsync(int bookingId)
+        {
+            var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return (new Response<bool>(false, false, "Booking Not Found"));
+            }
+            booking.Status = BookingStatus.Completed;
 
+            unitOfWork.Bookings.UpdateAsync(booking);
+            unitOfWork.SaveAsync();
+            return new Response<bool>(true, true, null);
+        }
     }
 }

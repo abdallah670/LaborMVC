@@ -145,9 +145,8 @@ namespace LaborBLL.Service.Implementation
             var isWorker = booking.WorkerId == userId;
             if (!isWorker) return false;
 
-            // Check if booking is completed
+            // Check if booking is completed    
             if (booking.Status != BookingStatus.Completed) return false;
-
             // Check 48-hour window
             if (booking.EndTime.HasValue)
             {

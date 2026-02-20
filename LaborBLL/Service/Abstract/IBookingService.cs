@@ -12,7 +12,8 @@ namespace LaborBLL.Service.Abstract
         Task<Response<bool>> UpdateBookingAsync(UpdateBookingViewModel model);
         Task<Response<bool>> CancelBookingAsync(int bookingId);
         Task<Response<bool>> StartWorkBookingAsync(int bookingId);
-        Task<Response<bool>> CompleteBookingAsync(int bookingId);
+        Task<Response<bool>> CompleteBookingByWorkerAsync(int bookingId);
+        Task<Response<bool>> CompleteBookingByPosterAsync(int bookingId);
 
         Task<Response<List<BookingDashboardViewModel>>> GetBookingsByWorkerIdAsync(string workerId);
             Task<Response<List<BookingDashboardViewModel>>> GetBookingsByPosterIdAsync(string posterId);
