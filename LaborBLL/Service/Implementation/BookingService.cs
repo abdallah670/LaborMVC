@@ -85,16 +85,16 @@ namespace LaborBLL.Service.Implementation
             return new Response<List<BookingDetailViewModel>>(mappedBookings, true, null);
         }
             
-        public async Task<Response<BookingDetailViewModel>> GetBookingByIdAsync(int bookingId)
-        {
-            var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
-            if (booking == null)
+            public async Task<Response<BookingDetailViewModel>> GetBookingByIdAsync(int bookingId)
             {
-               return new Response<BookingDetailViewModel>(null, false, "Booking not found");
+                var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
+                if (booking == null)
+                {
+                   return new Response<BookingDetailViewModel>(null, false, "Booking not found");
+                }
+                var bookingDetails = mapper.Map<BookingDetailViewModel>(booking);
+                return new Response<BookingDetailViewModel>(bookingDetails, true, null);
             }
-            var bookingDetails = mapper.Map<BookingDetailViewModel>(booking);
-            return new Response<BookingDetailViewModel>(bookingDetails, true, null);
-        }
 
         public async Task<Response<List<BookingDashboardViewModel>>> GetBookingsByPosterIdAsync(string PosterId)
         {
@@ -175,6 +175,12 @@ namespace LaborBLL.Service.Implementation
         public async Task<Response<bool>> StartWorkBookingAsync(int bookingId)
         {
             var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            var chick1 = booking.PosterId;
+            var chick2= booking.WorkerId;
+            if(chick1==chick2)
+                {
+                return new Response<bool>(false, false, "Poster cannot start the work");
+            }
             if (booking == null)
             {
                 return new Response<bool>(false, false, "Booking Not Found");
@@ -189,7 +195,7 @@ namespace LaborBLL.Service.Implementation
             return new Response<bool>(true, true, null);
         }
 
-        public async Task<Response<bool>> CompleteBookingAsync(int bookingId)
+        public async Task<Response<bool>> CompleteBookingByWorkerAsync(int bookingId)
         {
             var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
             if (booking == null)
@@ -197,7 +203,7 @@ namespace LaborBLL.Service.Implementation
                 return (new Response<bool>(false, false, "Booking Not Found"));
             }
 
-            booking.Status = BookingStatus.Completed;
+            booking.Status = BookingStatus.CompletedfromWorker;
             unitOfWork.Bookings.UpdateAsync(booking);
             unitOfWork.SaveAsync();
             return new Response<bool>(true, true, null);
@@ -226,6 +232,18 @@ namespace LaborBLL.Service.Implementation
                 
         }
 
+        public async Task<Response<bool>> CompleteBookingByPosterAsync(int bookingId)
+        {
+            var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return (new Response<bool>(false, false, "Booking Not Found"));
+            }
+            booking.Status = BookingStatus.Completed;
 
+            unitOfWork.Bookings.UpdateAsync(booking);
+            unitOfWork.SaveAsync();
+            return new Response<bool>(true, true, null);
+        }
     }
 }

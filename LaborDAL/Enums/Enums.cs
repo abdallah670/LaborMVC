@@ -5,6 +5,8 @@ namespace LaborDAL.Enums
     {
             Scheduled,
             InProgress,
+            CompletedfromWorker,
+
             Completed,
             Cancelled,
             Disputed

@@ -15,6 +15,7 @@ namespace LaborDAL.Repo.Implementation
         public IAppUserRepository AppUsers { get; private set; }
 
         public IBookingRepo Bookings { get; private set; }
+        public IRepository<Rating> Ratings => new Repository<Rating>(_context);
 
         public ITaskRepository Tasks { get; private set; }
 

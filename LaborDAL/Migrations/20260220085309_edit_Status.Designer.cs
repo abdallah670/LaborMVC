@@ -4,6 +4,7 @@ using LaborDAL.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LaborDAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260220085309_edit_Status")]
+    partial class edit_Status
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,47 +321,6 @@ namespace LaborDAL.Migrations
                     b.HasIndex("ResolvedBy");
 
                     b.ToTable("Disputes");
-                });
-
-            modelBuilder.Entity("LaborDAL.Entities.Rating", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RateeId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RaterId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int")
-                        .HasAnnotation("Range", new[] { 1, 5 });
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("bookingId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RateeId");
-
-                    b.HasIndex("bookingId");
-
-                    b.HasIndex("RaterId", "RateeId", "bookingId")
-                        .IsUnique();
-
-                    b.ToTable("Rating");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
@@ -788,33 +750,6 @@ namespace LaborDAL.Migrations
                     b.Navigation("ResolvedByUser");
                 });
 
-            modelBuilder.Entity("LaborDAL.Entities.Rating", b =>
-                {
-                    b.HasOne("LaborDAL.Entities.AppUser", "Rated")
-                        .WithMany("RatingsReceived")
-                        .HasForeignKey("RateeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LaborDAL.Entities.AppUser", "Rater")
-                        .WithMany("RatingsGiven")
-                        .HasForeignKey("RaterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LaborDAL.Entities.Booking", "Booking")
-                        .WithMany("Ratings")
-                        .HasForeignKey("bookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-
-                    b.Navigation("Rated");
-
-                    b.Navigation("Rater");
-                });
-
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
                 {
                     b.HasOne("LaborDAL.Entities.TaskItem", "Task")
@@ -902,15 +837,6 @@ namespace LaborDAL.Migrations
                     b.Navigation("PostedBookings");
 
                     b.Navigation("PostedTasks");
-
-                    b.Navigation("RatingsGiven");
-
-                    b.Navigation("RatingsReceived");
-                });
-
-            modelBuilder.Entity("LaborDAL.Entities.Booking", b =>
-                {
-                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskItem", b =>
