@@ -5,7 +5,7 @@ namespace LaborDAL.Entities
     public class Booking
     {
 
-                protected Booking() { }
+         protected Booking() { }
         public Booking(decimal agreedRate,DateTime? startTime,DateTime? endTime,int taskId,string workerId,string posterId)
         {
             AgreedRate = agreedRate;

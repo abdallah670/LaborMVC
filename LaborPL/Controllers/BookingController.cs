@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-﻿
-=======
-﻿using LaborBLL.ModelVM;
+﻿﻿using LaborBLL.ModelVM;
 using LaborBLL.Service.Abstract;
 using LaborBLL.Service.Implementation;
 using LaborDAL.Entities;
@@ -10,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
->>>>>>> 6d9a1bdd13dff46e91f77821e657eb7a10a75bb9
 namespace LaborPL.Controllers
 {
     public class BookingController : Controller
