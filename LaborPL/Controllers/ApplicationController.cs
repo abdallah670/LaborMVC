@@ -43,7 +43,7 @@ namespace LaborPL.Controllers
         /// Displays the create application form
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Worker,Admin")]
+        [Authorize(Roles = "Worker,Both,Admin")]
         public async Task<IActionResult> Create(int taskId)
         {
             var userId = GetCurrentUserId();
@@ -83,7 +83,7 @@ namespace LaborPL.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Worker,Admin")]
+        [Authorize(Roles = "Worker,Both,Admin")]
         public async Task<IActionResult> Create(CreateApplicationViewModel model)
         {
             if (!ModelState.IsValid)
@@ -153,7 +153,7 @@ namespace LaborPL.Controllers
         /// Displays applications submitted by the current user (for worker)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Worker,Admin")]
+        [Authorize(Roles = "Worker,Both,Admin")]
         public async Task<IActionResult> ByWorker()
         {
             var userId = GetCurrentUserId();
@@ -172,7 +172,7 @@ namespace LaborPL.Controllers
         /// Displays applications for the current user's posted tasks (for poster)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Poster,Admin")]
+        [Authorize(Roles = "Poster,Both,Admin")]
         public async Task<IActionResult> ByPoster()
         {
             var userId = GetCurrentUserId();
@@ -250,7 +250,7 @@ namespace LaborPL.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Worker,Admin")]
+        [Authorize(Roles = "Worker,Both,Admin")]
         public async Task<IActionResult> Withdraw(int id)
         {
             var userId = GetCurrentUserId();
