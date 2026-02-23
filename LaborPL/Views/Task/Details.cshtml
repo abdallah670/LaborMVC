@@ -258,7 +258,7 @@
                                             <p class="mb-0 small">@app.Message</p>
                                         </div>
                                     }
-                                    @if (app.Status == ApplicationStatus.Pending && Model.Status == TaskStatus.Open)
+                                    @if (app.Status == ApplicationStatus.Pending && Model.Status == TaskStatus.Open && Model.PosterId == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier))
                                     {
                                         <div class="application-actions mt-3 d-flex gap-2">
                                             <form asp-controller="Application" asp-action="Accept" asp-route-id="@app.Id" method="post" class="d-inline">
@@ -348,10 +348,63 @@
                 <div class="card-header">
                     <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Similar Tasks</h6>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted text-center mb-0">
-                        <i class="bi bi-info-circle me-1"></i>Similar tasks will appear here
-                    </p>
+                <div class="card-body p-0">
+                    @if (Model.SimilarTasks.Any())
+                    {
+                        <div class="similar-tasks-list">
+                            @foreach (var similarTask in Model.SimilarTasks)
+                            {
+                                <a asp-action="Details" asp-route-id="@similarTask.Id" class="similar-task-item text-decoration-none">
+                                    <div class="p-3 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0 text-dark fw-semibold">@similarTask.Title</h6>
+                                            @if (similarTask.IsUrgent)
+                                            {
+                                                <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i></span>
+                                            }
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="text-muted small">
+                                                @if (similarTask.IsRemote)
+                                                {
+                                                    <span class="badge bg-info"><i class="bi bi-wifi me-1"></i>Remote</span>
+                                                }
+                                                else if (!string.IsNullOrEmpty(similarTask.City))
+                                                {
+                                                    <span><i class="bi bi-geo-alt me-1"></i>@similarTask.City</span>
+                                                }
+                                                else if (!string.IsNullOrEmpty(similarTask.Location))
+                                                {
+                                                    <span><i class="bi bi-geo-alt me-1"></i>@similarTask.Location</span>
+                                                }
+                                            </div>
+                                            <div class="text-primary fw-bold">
+                                                $@similarTask.Budget.ToString("N0")
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-secondary">@similarTask.CategoryDisplay</span>
+                                            @if (similarTask.ApplicationCount > 0)
+                                            {
+                                                <span class="badge bg-light text-dark ms-1">
+                                                    <i class="bi bi-person-lines-fill me-1"></i>@similarTask.ApplicationCount
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center">
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-info-circle me-1"></i>No similar tasks found
+                            </p>
+                            <small class="text-muted">Try browsing all tasks in this category</small>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

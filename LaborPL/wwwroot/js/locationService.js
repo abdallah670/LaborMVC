@@ -173,16 +173,63 @@ const LocationService = (function() {
                longitude >= -180 && longitude <= 180;
     }
     
-    // Public API
-    return {
-        isGeolocationAvailable,
-        isSecureContext,
-        getCurrentPosition,
-        generateGoogleMapsUrl,
-        generateGoogleMapsEmbedUrl,
-        generateOpenStreetMapUrl,
-        reverseGeocode,
-        formatCoordinates,
-        isValidCoordinates
-    };
+     /**
+      * Forward geocoding using Nominatim (OpenStreetMap) - Free
+      * Converts address to coordinates
+      * Note: Rate limited to 1 request per second
+      * @param {string} address - Address to geocode
+      * @returns {Promise<Object>} Promise resolving to {latitude, longitude, address}
+      */
+     async function geocode(address) {
+         try {
+             const response = await fetch(
+                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+                 {
+                     headers: {
+                         'Accept-Language': 'en'
+                     }
+                 }
+             );
+             
+             if (!response.ok) {
+                 throw new Error('Geocoding service unavailable');
+             }
+             
+             const data = await response.json();
+             
+             if (data && data.length > 0) {
+                 return {
+                     success: true,
+                     latitude: parseFloat(data[0].lat),
+                     longitude: parseFloat(data[0].lon),
+                     address: data[0].display_name || address
+                 };
+             } else {
+                 return {
+                     success: false,
+                     error: 'Address not found'
+                 };
+             }
+         } catch (error) {
+             console.error('Geocoding failed:', error);
+             return {
+                 success: false,
+                 error: error.message
+             };
+         }
+     }
+
+     // Public API
+     return {
+         isGeolocationAvailable,
+         isSecureContext,
+         getCurrentPosition,
+         generateGoogleMapsUrl,
+         generateGoogleMapsEmbedUrl,
+         generateOpenStreetMapUrl,
+         reverseGeocode,
+         geocode,
+         formatCoordinates,
+         isValidCoordinates
+     };
 })();

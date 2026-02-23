@@ -1115,6 +1115,41 @@ footer {
 }
 
 /* ============================================
+   Similar Tasks Section
+   ============================================ */
+
+.similar-tasks-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.similar-task-item {
+    display: block;
+    transition: background-color 0.2s ease;
+}
+
+.similar-task-item:hover {
+    background-color: #f8fafc;
+}
+
+.similar-task-item:last-child > div {
+    border-bottom: none !important;
+}
+
+.similar-task-item h6 {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.similar-task-item:hover h6 {
+    color: var(--primary-color);
+}
+
+/* ============================================
    Responsive Adjustments
    ============================================ */
 

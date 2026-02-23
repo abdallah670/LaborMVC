@@ -142,6 +142,7 @@ namespace LaborBLL.ModelVM
         public bool CanApply { get; set; }
         public bool HasApplied { get; set; }
         public List<TaskApplicationViewModel> Applications { get; set; } = new();
+        public List<TaskListViewModel> SimilarTasks { get; set; } = new();
     }
 
     /// <summary>

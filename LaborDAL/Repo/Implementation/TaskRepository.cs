@@ -155,6 +155,7 @@ namespace LaborDAL.Repo.Implementation
             decimal? minBudget = null,
             decimal? maxBudget = null,
             bool? isRemote = null,
+            bool?isUrgent = null,
             decimal? latitude = null,
             decimal? longitude = null,
             double? radiusKm = null,
@@ -186,9 +187,14 @@ namespace LaborDAL.Repo.Implementation
                 query = query.Where(t => t.Budget <= maxBudget.Value);
             }
 
+
             if (isRemote.HasValue)
             {
                 query = query.Where(t => t.IsRemote == isRemote.Value);
+            }
+            if (isUrgent.HasValue)
+            {
+                query = query.Where(t => t.IsUrgent == isUrgent.Value);
             }
 
             // Apply location filter if coordinates provided
@@ -242,6 +248,48 @@ namespace LaborDAL.Repo.Implementation
         {
             return await _dbSet
                 .CountAsync(t => t.Status == status && !t.IsDeleted);
+        }
+
+        /// <summary>
+        /// Get similar tasks based on category, budget range, and location
+        /// </summary>
+        public async Task<IEnumerable<TaskItem>> GetSimilarTasksAsync(
+            int taskId,
+            TaskCategory category,
+            decimal budget,
+            bool isRemote,
+            string? city = null,
+            int count = 5)
+        {
+            // Calculate budget range (±30%)
+            var minBudget = budget * 0.7m;
+            var maxBudget = budget * 1.3m;
+
+            // Get tasks with the same category, open status, excluding current task
+            var query = _dbSet
+                .Include(t => t.Poster)
+                .Where(t => t.Id != taskId &&
+                           t.Category == category &&
+                           t.Status == TaskStatus.Open &&
+                           !t.IsDeleted &&
+                           t.IsRemote == isRemote &&
+                           t.Budget >= minBudget &&
+                           t.Budget <= maxBudget);
+
+            // Get results and sort by relevance
+            var tasks = await query.ToListAsync();
+
+            // Sort by: Same city (if on-site), then budget proximity, then creation date
+            var sortedTasks = tasks
+                .OrderByDescending(t => !isRemote && !string.IsNullOrEmpty(city) &&
+                                        !string.IsNullOrEmpty(t.City) &&
+                                        t.City.Equals(city, StringComparison.OrdinalIgnoreCase))
+                .ThenBy(t => Math.Abs((double)(t.Budget - budget))) // Closest budget first
+                .ThenByDescending(t => t.CreatedAt) // Newest first
+                .Take(count)
+                .ToList();
+
+            return sortedTasks;
         }
     }
 }

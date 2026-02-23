@@ -44,7 +44,7 @@ namespace LaborBLL.Service.Implementation
                     return new Response<TaskDetailsViewModel>(null, false, "Task not found.");
                 }
 
-                var viewModel = MapToDetailsViewModel(task, currentUserId);
+                var viewModel = await MapToDetailsViewModelAsync(task, currentUserId);
                 return new Response<TaskDetailsViewModel>(viewModel, true, null);
             }
             catch (Exception ex)
@@ -67,6 +67,7 @@ namespace LaborBLL.Service.Implementation
                     search.MinBudget,
                     search.MaxBudget,
                     search.IsRemote,
+                    search.IsUrgent,
                     search.Latitude,
                     search.Longitude,
                     search.RadiusKm,
@@ -476,9 +477,41 @@ namespace LaborBLL.Service.Implementation
             }
         }
 
+        /// <summary>
+        /// Gets similar tasks based on the specified task
+        /// </summary>
+        public async Task<Response<IEnumerable<TaskListViewModel>>> GetSimilarTasksAsync(int taskId, int count = 5)
+        {
+            try
+            {
+                var task = await _taskRepository.GetByIdAsync(taskId);
+                
+                if (task == null)
+                {
+                    return new Response<IEnumerable<TaskListViewModel>>(null, false, "Task not found.");
+                }
+
+                var similarTasks = await _taskRepository.GetSimilarTasksAsync(
+                    taskId,
+                    task.Category,
+                    task.Budget,
+                    task.IsRemote,
+                    task.City,
+                    count);
+
+                var viewModels = similarTasks.Select(t => MapToListViewModel(t));
+                return new Response<IEnumerable<TaskListViewModel>>(viewModels, true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting similar tasks for task: {TaskId}", taskId);
+                return new Response<IEnumerable<TaskListViewModel>>(null, false, "An error occurred while retrieving similar tasks.");
+            }
+        }
+
         #region Private Helper Methods
 
-        private TaskDetailsViewModel MapToDetailsViewModel(TaskItem task, string? currentUserId)
+        private async Task<TaskDetailsViewModel> MapToDetailsViewModelAsync(TaskItem task, string? currentUserId)
         {
             var viewModel = new TaskDetailsViewModel
             {
@@ -552,6 +585,16 @@ namespace LaborBLL.Service.Implementation
                 }).ToList();
             }
 
+            // Load similar tasks
+            var similarTasks = await _taskRepository.GetSimilarTasksAsync(
+                task.Id,
+                task.Category,
+                task.Budget,
+                task.IsRemote,
+                task.City,
+                5);
+            viewModel.SimilarTasks = similarTasks.Select(t => MapToListViewModel(t)).ToList();
+
             return viewModel;
         }
 
@@ -609,6 +652,7 @@ namespace LaborBLL.Service.Implementation
                 search.MinBudget,
                 search.MaxBudget,
                 search.IsRemote,
+                search.IsUrgent,
                 search.Latitude,
                 search.Longitude,
                 search.RadiusKm,

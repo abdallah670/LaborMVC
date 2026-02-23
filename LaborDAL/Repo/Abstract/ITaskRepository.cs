@@ -85,6 +85,7 @@ namespace LaborDAL.Repo.Abstract
             decimal? minBudget = null,
             decimal? maxBudget = null,
             bool? isRemote = null,
+             bool?isUrgent = null,
             decimal? latitude = null,
             decimal? longitude = null,
             double? radiusKm = null,
@@ -110,5 +111,23 @@ namespace LaborDAL.Repo.Abstract
         /// <param name="status">Task status</param>
         /// <returns>Count of tasks</returns>
         Task<int> CountByStatusAsync(TaskStatus status);
+
+        /// <summary>
+        /// Get similar tasks based on category, budget range, and location
+        /// </summary>
+        /// <param name="taskId">Current task ID to exclude</param>
+        /// <param name="category">Task category</param>
+        /// <param name="budget">Task budget</param>
+        /// <param name="isRemote">Whether task is remote</param>
+        /// <param name="city">City name for location-based similarity</param>
+        /// <param name="count">Number of similar tasks to return</param>
+        /// <returns>Similar tasks ordered by relevance</returns>
+        Task<IEnumerable<TaskItem>> GetSimilarTasksAsync(
+            int taskId,
+            TaskCategory category,
+            decimal budget,
+            bool isRemote,
+            string? city = null,
+            int count = 5);
     }
 }

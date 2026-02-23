@@ -108,5 +108,13 @@ namespace LaborBLL.Service.Abstract
         /// <param name="cancelledBy">User ID who cancelled</param>
         /// <returns>Success indicator</returns>
         Task<Response<bool>> CancelTaskAsync(int taskId, string reason, string cancelledBy);
+
+        /// <summary>
+        /// Gets similar tasks based on the specified task
+        /// </summary>
+        /// <param name="taskId">Task ID to find similar tasks for</param>
+        /// <param name="count">Number of similar tasks to return</param>
+        /// <returns>List of similar tasks</returns>
+        Task<Response<IEnumerable<TaskListViewModel>>> GetSimilarTasksAsync(int taskId, int count = 5);
     }
 }
