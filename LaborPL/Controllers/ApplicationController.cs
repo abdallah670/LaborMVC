@@ -1,4 +1,4 @@
-using LaborBLL.ModelVM;
+﻿using LaborBLL.ModelVM;
 using LaborBLL.Response;
 using LaborBLL.Service.Abstract;
 using LaborDAL.Repo.Abstract;
@@ -205,6 +205,7 @@ namespace LaborPL.Controllers
         /// <summary>
         /// Accepts an application
         /// </summary>
+      
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Accept(int id, int taskId)
@@ -215,13 +216,11 @@ namespace LaborPL.Controllers
             if (!result.Success)
             {
                 TempData["Error"] = result.ErrorMessage;
-            }
-            else
-            {
-                TempData["Success"] = "Application accepted! A booking has been created.";
+                return RedirectToAction("Details", "Task", new { id = taskId });
             }
 
-            return RedirectToAction("Details", "Task", new { id = taskId });
+            // روح لصفحة الـ Checkout
+            return RedirectToAction("Checkout", "Payment", new { bookingId = result.Result });
         }
 
         /// <summary>

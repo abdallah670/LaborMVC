@@ -41,6 +41,10 @@ namespace LaborDAL.Entities
         public AppUser Poster { get; set; }
         public TaskItem? Task { get; set; }
 
+        public ICollection<Rating> Ratings { get; set; }
+        // Navigation Property
+        public virtual  Payment Payment { get; set; }
+
 
 
 

@@ -19,3 +19,4 @@ global using LaborBLL.ModelVM;
 
 global using LaborBLL.Service.Implementation;
 global using LaborBLL.Response;
+global using Microsoft.AspNetCore.SignalR;

@@ -9,7 +9,11 @@ namespace LaborDAL.Repo.Abstract
         Task RollbackTransactionAsync();
         IAppUserRepository AppUsers { get; }
         IBookingRepo Bookings { get; }
+        IRepository<Rating> Ratings { get; }
+
         ITaskRepository Tasks { get; }
         IDisputeRepo Disputes { get; }
+        IPaymentRepo Payments { get; }
+        IMessageRepo Messages { get; }
     }
 }

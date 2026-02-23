@@ -26,3 +26,5 @@ global using LaborDAL.Enums;
 
 // PL Models
 global using LaborPL.Models;
+global using LaborBLL.ModelVM.Rating;
+global using LaborBLL.Service.Abstract.Rating;

@@ -1,7 +1,9 @@
 using LaborBLL.Mapping;
 using LaborBLL.Service;
 using LaborBLL.Service.Abstract;
+using LaborBLL.Service.Abstract.Rating;
 using LaborBLL.Service.Implementation;
+using LaborBLL.Service.Implementation.Rating;
 
 namespace LaborBLL.Common
 {
@@ -25,6 +27,12 @@ namespace LaborBLL.Common
 
             // Dispute service
             services.AddScoped<IDisputeService, DisputeService>();
+            services.AddScoped<IRatingService, RatingService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IEscrowService, EscrowService>();
+
+            services.AddScoped<IMessageService, MessageService>();
+
 
 
             //  services.AddScoped<IEmailService, EmailService>();

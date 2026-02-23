@@ -52,7 +52,7 @@ namespace LaborBLL.Service.Abstract
         /// <param name="applicationId">Application ID</param>
         /// <param name="posterId">ID of the task poster</param>
         /// <returns>Success indicator</returns>
-        Task<Response<bool>> AcceptApplicationAsync(int applicationId, string posterId);
+        Task<Response<int>> AcceptApplicationAsync(int applicationId, string posterId);
 
         /// <summary>
         /// Rejects an application

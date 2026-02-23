@@ -18,6 +18,8 @@
         public int DisputedCount { get; set; }
        public string PosterId { get; set; }
         public string WorkerId { get; set; }
+        public bool WokerHasVisa { get; set; }
+        public bool PosterHasVisa { get; set; }
     }
 
 

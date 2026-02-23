@@ -1,0 +1,42 @@
+﻿@model PaymentStatusViewModel
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Payment Status</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Booking ID:</strong> @Model.BookingId</p>
+                    <p><strong>Amount:</strong> $@Model.Amount</p>
+                    <p><strong>Status:</strong> <span class="@GetStatusBadgeClass(Model.Status)">@Model.Status</span></p>
+                    <p><strong>Created At:</strong> @Model.CreatAt.ToString("MMM dd, yyyy HH:mm")</p>
+                    @if (Model.RealaseAt != null)
+                    {
+                        <p><strong>Released At:</strong> @Model.RealaseAt?.ToString("MMM dd, yyyy HH:mm")</p>
+                    }
+
+                    <div class="mt-4">
+                        <a asp-controller="Booking" asp-action="Dashboard" class="btn btn-primary w-100">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "succeeded" => "badge bg-success",
+            "pending" => "badge bg-warning",
+            "failed" => "badge bg-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+}

@@ -11,6 +11,7 @@ namespace LaborDAL.Entities
         /// User's first name
         /// </summary>
         public string? FirstName { get; set; }
+        public bool? HasVisa { get; set; } = false;
 
         /// <summary>
         /// User's last name
@@ -61,7 +62,8 @@ namespace LaborDAL.Entities
         /// User's average rating from reviews
         /// </summary>
         public decimal? AverageRating { get; set; }
-
+        public ICollection<Rating> RatingsGiven { get; set; }
+        public ICollection<Rating> RatingsReceived { get; set; }
         /// <summary>
         /// User's location URL (map link)
         /// </summary>

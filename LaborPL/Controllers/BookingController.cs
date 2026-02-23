@@ -1,11 +1,8 @@
-﻿﻿using LaborBLL.ModelVM;
-using LaborBLL.Service.Abstract;
+﻿
+
 using LaborBLL.Service.Implementation;
-using LaborDAL.Entities;
-using LaborDAL.Enums;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+using LaborDAL.Repo.Abstract;
+using LaborDAL.Repo.Implementation;
 
 namespace LaborPL.Controllers
 {
@@ -14,13 +11,18 @@ namespace LaborPL.Controllers
         private readonly IBookingService bookingService;
         private readonly IDisputeService disputeService;
         private readonly UserManager<AppUser> userManager;
+        private readonly IRatingService ratingService;
+        private readonly IEscrowService escrowService;
 
-        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager)
+        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService)
         {
             this.bookingService = bookingService;
             this.disputeService = disputeService;
             this.userManager = userManager;
+            this.ratingService = ratingService;
+            this.escrowService = escrowService;
         }
+        #region Creat Booking
         [HttpGet]
         [Authorize]
         public IActionResult Create()
@@ -33,6 +35,7 @@ namespace LaborPL.Controllers
 
             return View(model);
         }
+
 
         [Authorize]
         [HttpPost]
@@ -50,10 +53,12 @@ namespace LaborPL.Controllers
                 return View(model);
             }
 
-            return RedirectToAction("Dashboard");
+            return RedirectToAction("Checkout", "Payment", new { bookingId = result.Result });
         }
+        #endregion
 
 
+        #region Dashboard
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Dashboard(string filter = "all", string role = "all")
@@ -107,8 +112,10 @@ namespace LaborPL.Controllers
 
             return View(bookings.ToList());
         }
+        #endregion
 
 
+        #region Details
         public async Task<IActionResult> Details(int id)
         {
             var response = await bookingService.GetBookingByIdAsync(id);
@@ -116,40 +123,80 @@ namespace LaborPL.Controllers
             if (!response.Success || response.Result == null)
                 return NotFound();
 
+
+            decimal penalty = response.Result.AgreedRate * 0.10m;
+            ViewBag.Penalty = penalty;
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isPoster = currentUserId == response.Result.PosterId;
+            var rateeId = isPoster ? response.Result.WorkerId : response.Result.PosterId;
+
+            var existingRating = await ratingService.GetRatingAsync(currentUserId, rateeId, id);
+            ViewBag.ExistingScore = existingRating?.Score ?? 0;
+            ViewBag.RatedId = rateeId;
+
+
             return View(response.Result);
         }
+        #endregion
+        #region Cancell
         [HttpPost]
         public async Task<IActionResult> Cancel(int id)
-        {       
-            var result = await bookingService.CancelBookingAsync(id);
-            if (!result.Success)
-                return NotFound();
-            TempData["Message"] = "Booking cancelled successfully.";
-
-            return RedirectToAction("Details", new {id=id});
-        }
-        [HttpPost]
-        public async Task <IActionResult> Start( int id)
         {
-           var result = await bookingService.StartWorkBookingAsync(id);
+            await bookingService.CancelBookingAsync(id);
+            return RedirectToAction("Details", new { id = id });
+        }
+        #endregion
+
+        #region Start Work
+
+        [HttpPost]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> Start(int id)
+        {
+            var result = await bookingService.StartWorkBookingAsync(id);
+
+
             if (!result.Success)
                 return NotFound();
             TempData["Message"] = "Booking started successfully.";
             return RedirectToAction("Details", new { id = id });
 
         }
+        #endregion
+
+        #region Complete Work by worker
         [HttpPost]
+        [Authorize(Roles = "Worker")]
         public async Task<IActionResult> Complete(int id)
         {
-            var result = await bookingService.CompleteBookingAsync(id);
-            if (!result.Success)
+            var result = await bookingService.CompleteBookingByWorkerAsync(id);
+            if (result.Success == false)
                 return NotFound();
-            TempData["Message"] = "Booking completed successfully.";
+            TempData["Message"] = "Marked as completed. Waiting for poster confirmation.";
             return RedirectToAction("Details", new { id = id });
         }
-        public IActionResult ProfilePoster(string id)
+        #endregion
+
+        #region confirm Complete work by poster
+        [HttpPost]
+        [Authorize(Roles = "Poster")]
+        public async Task<IActionResult> ConfirmCompletion(int id)
         {
-            var user = userManager.FindByIdAsync(id).Result;
+            var result = await bookingService.CompleteBookingByPosterAsync(id);
+            if (result.Success == false)
+                return NotFound();
+            TempData["Message"] = "Booking confirmed as completed. Thank you for using our service!";
+            await escrowService.ReleasePaymentAsync(id);
+
+            return RedirectToAction("Details", new { id = id });
+        }
+
+        #endregion
+
+        #region poster and worker can see other profile
+        public async Task<IActionResult> ProfilePoster(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
             var model = new ProfileViewModel
@@ -159,11 +206,12 @@ namespace LaborPL.Controllers
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Bio = user.Bio,
-                Country= user.Country,
-
+                Country = user.Country,
+                AverageRating = user.AverageRating // ✅ أضف السطر ده
             };
             return View(model);
-        }
+        } 
+        #endregion
 
 
         #region Dispute Actions
@@ -224,7 +272,22 @@ namespace LaborPL.Controllers
         #endregion
 
 
-
+        #region Rating
+        public async Task<IActionResult> Rate(RatingViewModel model)
+        {
+            var userId = userManager.GetUserId(User);
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+            var result = await ratingService.SubmitOrUpdateRatingAsync(model, userId);
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = "Failed to submit rating. Please try again.";
+                return RedirectToAction(nameof(Details), new { id = model.bookingId });
+            }
+            TempData["SuccessMessage"] = "Your rating has been submitted successfully.";
+            return RedirectToAction(nameof(Details), new { id = model.bookingId });
+        } 
+        #endregion
 
         public IActionResult Index()
         {

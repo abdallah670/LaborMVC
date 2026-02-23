@@ -5,9 +5,18 @@ namespace LaborDAL.Enums
     {
             Scheduled,
             InProgress,
+            CompletedfromWorker,
+
             Completed,
             Cancelled,
             Disputed
 
+    }
+    public enum paymentStatus
+    {
+        Held,
+        Released,
+        Refunded,
+        PartiallyRefunded
     }
 }

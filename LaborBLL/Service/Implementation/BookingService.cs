@@ -12,12 +12,12 @@ namespace LaborBLL.Service.Implementation
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
         }
-        public async Task<Response<bool>> CreateBookingAsync(CreateBookingViewModel model)
+        public async Task<Response<int>> CreateBookingAsync(CreateBookingViewModel model)
                 {
             var worker = await unitOfWork.AppUsers.GetByIdAsync(model.WorkerId);
             if (worker == null)
             {
-                return new Response<bool>(false, false, "Worker not found");
+                return new Response<int>(0, false, "Worker not found");
             }
 
             var ovverlaping=await unitOfWork.Bookings.FindAsync(b=>
@@ -26,7 +26,7 @@ namespace LaborBLL.Service.Implementation
             && b.EndTime > model.StartTime);
             if (ovverlaping.Any())
             {
-                return new Response<bool>(false, false, "Worker is not available during the requested time");
+                return new Response<int>(0, false, "Worker is not available during the requested time");
             }
             var booking =mapper.Map<Booking>(model);
             booking.WorkerId=model.WorkerId;
@@ -34,7 +34,7 @@ namespace LaborBLL.Service.Implementation
             booking.CreatedAt=DateTime.UtcNow;
             await unitOfWork.Bookings .AddAsync(booking);
             await unitOfWork.SaveAsync();
-            return new Response<bool>(true, true, null);
+            return new Response<int>(booking.Id, true, null);
         }
         public async Task<Response<bool>> UpdateBookingAsync(UpdateBookingViewModel model)
         {
@@ -85,16 +85,16 @@ namespace LaborBLL.Service.Implementation
             return new Response<List<BookingDetailViewModel>>(mappedBookings, true, null);
         }
             
-        public async Task<Response<BookingDetailViewModel>> GetBookingByIdAsync(int bookingId)
-        {
-            var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
-            if (booking == null)
+            public async Task<Response<BookingDetailViewModel>> GetBookingByIdAsync(int bookingId)
             {
-               return new Response<BookingDetailViewModel>(null, false, "Booking not found");
+                var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
+                if (booking == null)
+                {
+                   return new Response<BookingDetailViewModel>(null, false, "Booking not found");
+                }
+                var bookingDetails = mapper.Map<BookingDetailViewModel>(booking);
+                return new Response<BookingDetailViewModel>(bookingDetails, true, null);
             }
-            var bookingDetails = mapper.Map<BookingDetailViewModel>(booking);
-            return new Response<BookingDetailViewModel>(bookingDetails, true, null);
-        }
 
         public async Task<Response<List<BookingDashboardViewModel>>> GetBookingsByPosterIdAsync(string PosterId)
         {
@@ -102,15 +102,21 @@ namespace LaborBLL.Service.Implementation
 
             var mapped = mapper.Map<List<BookingDashboardViewModel>>(bookings);
 
+            var pendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
+            var inProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
+            var completedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
+            var cancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
+            var disputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+
             mapped.ForEach(b =>
             {
-
-                b.PendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
-                b.InProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
-                b.CompletedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
-                b.CancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
-                b.DisputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+                b.PendingCount = pendingCount;
+                b.InProgressCount = inProgressCount;
+                b.CompletedCount = completedCount;
+                b.CancelledCount = cancelledCount;
+                b.DisputedCount = disputedCount;
             });
+
 
             return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
         }
@@ -121,15 +127,21 @@ namespace LaborBLL.Service.Implementation
 
             var mapped = mapper.Map<List<BookingDashboardViewModel>>(bookings);
 
+            var pendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
+            var inProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
+            var completedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
+            var cancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
+            var disputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+
             mapped.ForEach(b =>
             {
-                
-                b.PendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
-                b.InProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
-                b.CompletedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
-                b.CancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
-                b.DisputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+                b.PendingCount = pendingCount;
+                b.InProgressCount = inProgressCount;
+                b.CompletedCount = completedCount;
+                b.CancelledCount = cancelledCount;
+                b.DisputedCount = disputedCount;
             });
+
 
             return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
         }
@@ -183,27 +195,33 @@ namespace LaborBLL.Service.Implementation
             {
                 return new Response<bool>(false, false, "Only scheduled bookings can be started");
             }
+            
+            if(booking.PosterId==booking.WorkerId)
+            {
+                return new Response<bool>(false, false, "Poster cannot start the work");
+            }
             booking.Status= BookingStatus.InProgress;
             await unitOfWork.Bookings.UpdateAsync(booking);
             await unitOfWork.SaveAsync();
             return new Response<bool>(true, true, null);
         }
 
-        public async Task<Response<bool>> CompleteBookingAsync(int bookingId)
+        public async Task<Response<bool>> CompleteBookingByWorkerAsync(int bookingId)
         {
-            var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
             if (booking == null)
-            {
-                return (new Response<bool>(false, false, "Booking Not Found"));
-            }
+                return new Response<bool>(false, false, "Booking Not Found");
 
-            booking.Status = BookingStatus.Completed;
-            unitOfWork.Bookings.UpdateAsync(booking);
-            unitOfWork.SaveAsync();
+            // ضيف الـ check ده
+            if (booking.Status != BookingStatus.InProgress)
+                return new Response<bool>(false, false, "Only in-progress bookings can be completed");
+
+            booking.Status = BookingStatus.CompletedfromWorker;
+            await unitOfWork.Bookings.UpdateAsync(booking);
+            await unitOfWork.SaveAsync();
             return new Response<bool>(true, true, null);
         }
-        public async Task<Response<IEnumerable<BookingDashboardViewModel>>>
-    GetBookingsByUserIdAsync(string userId)
+        public async Task<Response<IEnumerable<BookingDashboardViewModel>>> GetBookingsByUserIdAsync(string userId)
         {
             var workerBookings = await GetBookingsByWorkerIdAsync(userId);
             var posterBookings = await GetBookingsByPosterIdAsync(userId);
@@ -226,6 +244,23 @@ namespace LaborBLL.Service.Implementation
                 
         }
 
+        public async Task<Response<bool>> CompleteBookingByPosterAsync(int bookingId)
+        {
+            var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return (new Response<bool>(false, false, "Booking Not Found"));
+            }
+            if(booking.Status != BookingStatus.CompletedfromWorker)
+            {
+                return new Response<bool>(false, false, "Booking must be marked as completed by worker first");
+            }
+            booking.Status = BookingStatus.Completed;
+
+           await unitOfWork.Bookings.UpdateAsync(booking);
+           await unitOfWork.SaveAsync();
+            return new Response<bool>(true, true, null);
+        }
 
     }
 }

@@ -21,6 +21,8 @@ namespace LaborDAL.Common
 
             // Add Unit of Work if you have it
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped< IPaymentRepo,PaymentRepo >();
+                services.AddScoped<IMessageRepo, MessageRepo>();
 
 
             return services;
