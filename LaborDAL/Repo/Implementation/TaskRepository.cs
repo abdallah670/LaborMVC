@@ -164,6 +164,7 @@ namespace LaborDAL.Repo.Implementation
         {
             var query = _dbSet
                 .Include(t => t.Poster)
+                .Include(t => t.Applications)
                 .Where(t => !t.IsDeleted);
 
             // Apply filters
@@ -268,6 +269,7 @@ namespace LaborDAL.Repo.Implementation
             // Get tasks with the same category, open status, excluding current task
             var query = _dbSet
                 .Include(t => t.Poster)
+                .Include(t => t.Applications)
                 .Where(t => t.Id != taskId &&
                            t.Category == category &&
                            t.Status == TaskStatus.Open &&
