@@ -1,0 +1,57 @@
+﻿@model CheckoutViewModel
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Checkout</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Amount to Pay: <strong>$@Model.Amount</strong></p>
+
+                    <!-- فورم الكارت من Stripe -->
+                    <div class="mb-3">
+                        <label for="card-element" class="form-label">Card Details</label>
+                        <div id="card-element" class="form-control"></div>
+                        <div id="card-errors" class="text-danger mt-2"></div>
+                    </div>
+
+                    <button id="pay-button" class="btn btn-primary w-100">Pay Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        var stripe = Stripe('@Model.PubishableKey');
+        var elements = stripe.elements();
+        var card = elements.create('card', {hidePostalCode: true});
+        card.mount('#card-element');
+
+        card.on('change', function(event) {
+            var displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        document.getElementById('pay-button').addEventListener('click', async function () {
+            const { error, paymentIntent } = await stripe.confirmCardPayment('@Model.ClientSecret', {
+                payment_method: { card: card }
+            });
+
+            if (error) {
+                document.getElementById('card-errors').textContent = error.message;
+            } else {
+                // بعد الدفع توجيه المستخدم لصفحة حالة الدفع
+                window.location.href = '/Payment/Status?bookingId=@Model.BookingId';
+            }
+        });
+    </script>
+}

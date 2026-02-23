@@ -17,6 +17,10 @@ namespace LaborDAL.DB.Configuration
              
 
                  .IsRequired(false);
+            builder.HasOne(b => b.Payment)
+    .WithOne(p => p.Booking)
+    .HasForeignKey<Payment>(p => p.BookingId)
+    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(b => b.StartTime)
       .IsRequired(false);

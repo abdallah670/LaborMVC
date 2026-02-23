@@ -7,7 +7,7 @@ namespace LaborBLL.Service.Abstract
         Task<Response<List<BookingDetailViewModel>>> GetAllBookingAsync();
 
 
-        Task<Response<bool>> CreateBookingAsync(CreateBookingViewModel model);
+        Task<Response<int>> CreateBookingAsync(CreateBookingViewModel model);
         Task<Response<bool>> DeleteBookingAsync(int BookingId);
         Task<Response<bool>> UpdateBookingAsync(UpdateBookingViewModel model);
         Task<Response<bool>> CancelBookingAsync(int bookingId);

@@ -12,4 +12,11 @@ namespace LaborDAL.Enums
             Disputed
 
     }
+    public enum paymentStatus
+    {
+        Held,
+        Released,
+        Refunded,
+        PartiallyRefunded
+    }
 }

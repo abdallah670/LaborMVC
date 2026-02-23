@@ -392,6 +392,17 @@ namespace LaborPL.Controllers
             return Json(new { success = result.Success, data = result.Result?.Results });
         }
 
+        /// <summary>
+        /// Gets similar tasks for a given task (for AJAX calls)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> SimilarTasks(int taskId)
+        {
+            var result = await _taskService.GetSimilarTasksAsync(taskId, 5);
+            return Json(new { success = result.Success, data = result.Result });
+        }
+
         #endregion
+
     }
 }

@@ -1,4 +1,5 @@
-using LaborBLL.Common;
+﻿using LaborBLL.Common;
+using LaborBLL.Hubs;
 using LaborBLL.Mapping;
 using LaborBLL.Service;
 using LaborBLL.Service.Abstract;
@@ -10,6 +11,7 @@ using LaborDAL.Repo.Implementation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Stripe;
 
 
 
@@ -19,9 +21,11 @@ var builder = WebApplication.CreateBuilder(args);
                 .CreateLogger();
            
 builder.Host.UseSerilog();
+builder.Services.AddSignalR();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -108,7 +112,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
-
 // 4. Global Error Handling
 //   app.UseGlobalExceptionMiddleware();
 
@@ -121,11 +124,13 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors("AllowSpecificOrigins"); // ✅ أضيف هنا
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllerRoute(
     name: "default",

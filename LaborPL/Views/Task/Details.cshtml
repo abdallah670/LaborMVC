@@ -219,18 +219,24 @@
                                 <div class="application-item p-3 border rounded mb-3">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="d-flex align-items-center">
-                                            @if (!string.IsNullOrEmpty(app.WorkerProfilePicture))
-                                            {
-                                                <img src="@app.WorkerProfilePicture" alt="" class="worker-avatar me-3">
-                                            }
-                                            else
-                                            {
-                                                <div class="worker-avatar-placeholder me-3">
-                                                    @(app.WorkerName?.FirstOrDefault().ToString().ToUpper() ?? "U")
-                                                </div>
-                                            }
+                                            <a asp-controller="Account" asp-action="Profile" asp-route-id="@app.WorkerId" class="text-decoration-none">
+                                                @if (!string.IsNullOrEmpty(app.WorkerProfilePicture))
+                                                {
+                                                    <img src="@app.WorkerProfilePicture" alt="" class="worker-avatar me-3">
+                                                }
+                                                else
+                                                {
+                                                    <div class="worker-avatar-placeholder me-3">
+                                                        @(app.WorkerName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                                    </div>
+                                                }
+                                            </a>
                                             <div>
-                                                <h6 class="mb-1">@app.WorkerName</h6>
+                                                <h6 class="mb-1">
+                                                    <a asp-controller="Account" asp-action="Profile" asp-route-id="@app.WorkerId" class="text-decoration-none text-dark">
+                                                        @app.WorkerName
+                                                    </a>
+                                                </h6>
                                                 @if (app.WorkerRating.HasValue)
                                                 {
                                                     <div class="worker-rating">
@@ -343,70 +349,28 @@
                 </div>
             </div>
 
-            <!-- Similar Tasks -->
-            <div class="card shadow">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Similar Tasks</h6>
-                </div>
-                <div class="card-body p-0">
-                    @if (Model.SimilarTasks.Any())
-                    {
-                        <div class="similar-tasks-list">
-                            @foreach (var similarTask in Model.SimilarTasks)
-                            {
-                                <a asp-action="Details" asp-route-id="@similarTask.Id" class="similar-task-item text-decoration-none">
-                                    <div class="p-3 border-bottom">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h6 class="mb-0 text-dark fw-semibold">@similarTask.Title</h6>
-                                            @if (similarTask.IsUrgent)
-                                            {
-                                                <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i></span>
-                                            }
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div class="text-muted small">
-                                                @if (similarTask.IsRemote)
-                                                {
-                                                    <span class="badge bg-info"><i class="bi bi-wifi me-1"></i>Remote</span>
-                                                }
-                                                else if (!string.IsNullOrEmpty(similarTask.City))
-                                                {
-                                                    <span><i class="bi bi-geo-alt me-1"></i>@similarTask.City</span>
-                                                }
-                                                else if (!string.IsNullOrEmpty(similarTask.Location))
-                                                {
-                                                    <span><i class="bi bi-geo-alt me-1"></i>@similarTask.Location</span>
-                                                }
-                                            </div>
-                                            <div class="text-primary fw-bold">
-                                                $@similarTask.Budget.ToString("N0")
-                                            </div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <span class="badge bg-secondary">@similarTask.CategoryDisplay</span>
-                                            @if (similarTask.ApplicationCount > 0)
-                                            {
-                                                <span class="badge bg-light text-dark ms-1">
-                                                    <i class="bi bi-person-lines-fill me-1"></i>@similarTask.ApplicationCount
-                                                </span>
-                                            }
-                                        </div>
-                                    </div>
-                                </a>
-                            }
+            <!-- Similar Tasks - Only for non-posters, loaded via AJAX -->
+            @{
+                var currentUserId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+                var isPoster = Model.PosterId == currentUserId;
+            }
+            @if (!isPoster)
+            {
+                <div class="card shadow" id="similarTasksCard">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Similar Tasks</h6>
+                    </div>
+                    <div class="card-body p-0" id="similarTasksContainer">
+                        <!-- Loading spinner -->
+                        <div class="p-4 text-center" id="similarTasksLoading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted mt-2 mb-0">Loading similar tasks...</p>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="p-4 text-center">
-                            <p class="text-muted mb-0">
-                                <i class="bi bi-info-circle me-1"></i>No similar tasks found
-                            </p>
-                            <small class="text-muted">Try browsing all tasks in this category</small>
-                        </div>
-                    }
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>
@@ -461,6 +425,95 @@
                     .bindPopup('@Model.Location')
                     .openPopup();
             });
+        </script>
+    }
+
+    @if (!isPoster)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                loadSimilarTasks();
+            });
+
+            async function loadSimilarTasks() {
+                const container = document.getElementById('similarTasksContainer');
+                const loadingEl = document.getElementById('similarTasksLoading');
+                
+                try {
+                    const response = await fetch('@Url.Action("SimilarTasks", "Task", new { taskId = Model.Id })');
+                    const result = await response.json();
+                    
+                    if (result.success && result.data && result.data.length > 0) {
+                        let html = '<div class="similar-tasks-list">';
+                        
+                        result.data.forEach(function(task) {
+                            html += `
+                                <a href="/Task/Details/${task.id}" class="similar-task-item text-decoration-none">
+                                    <div class="p-3 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0 text-dark fw-semibold">${escapeHtml(task.title)}</h6>
+                                            ${task.isUrgent ? '<span class="badge bg-danger"><i class="bi bi-lightning-fill"></i></span>' : ''}
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="text-muted small">
+                                                ${task.isRemote 
+                                                    ? '<span class="badge bg-info"><i class="bi bi-wifi me-1"></i>Remote</span>'
+                                                    : task.city 
+                                                        ? `<span><i class="bi bi-geo-alt me-1"></i>${escapeHtml(task.city)}</span>`
+                                                        : task.location
+                                                            ? `<span><i class="bi bi-geo-alt me-1"></i>${escapeHtml(task.location)}</span>`
+                                                            : ''
+                                                }
+                                            </div>
+                                            <div class="text-primary fw-bold">
+                                                $${task.budget.toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="badge bg-secondary">${escapeHtml(task.categoryDisplay)}</span>
+                                            ${task.applicationCount > 0 
+                                                ? `<span class="badge bg-light text-dark ms-1">
+                                                    <i class="bi bi-person-lines-fill me-1"></i>${task.applicationCount}
+                                                   </span>` 
+                                                : ''
+                                            }
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                            <div class="p-4 text-center">
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>No similar tasks found
+                                </p>
+                                <small class="text-muted">Try browsing all tasks in this category</small>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading similar tasks:', error);
+                    container.innerHTML = `
+                        <div class="p-4 text-center">
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Failed to load similar tasks
+                            </p>
+                            <small class="text-muted">Please try again later</small>
+                        </div>
+                    `;
+                }
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
         </script>
     }
 }

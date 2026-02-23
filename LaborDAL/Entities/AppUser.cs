@@ -11,6 +11,7 @@ namespace LaborDAL.Entities
         /// User's first name
         /// </summary>
         public string? FirstName { get; set; }
+        public bool? HasVisa { get; set; } = false;
 
         /// <summary>
         /// User's last name

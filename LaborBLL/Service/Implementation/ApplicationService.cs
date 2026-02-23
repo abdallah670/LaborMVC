@@ -227,7 +227,7 @@ namespace LaborBLL.Service.Implementation
         /// <summary>
         /// Accepts an application (creates a booking)
         /// </summary>
-        public async Task<Response<bool>> AcceptApplicationAsync(int applicationId, string posterId)
+        public async Task<Response<int>> AcceptApplicationAsync(int applicationId, string posterId)
         {
             try
             {
@@ -237,25 +237,25 @@ namespace LaborBLL.Service.Implementation
 
                 if (application == null)
                 {
-                    return new Response<bool>(false, false, "Application not found.");
+                    return new Response<int>(0, false, "Application not found.");
                 }
 
                 // Verify ownership
                 if (application.Task?.PosterId != posterId)
                 {
-                    return new Response<bool>(false, false, "You can only accept applications for your own tasks.");
+                    return new Response<int>(0, false, "You can only accept applications for your own tasks.");
                 }
 
                 // Check if application is pending
                 if (application.Status != ApplicationStatus.Pending)
                 {
-                    return new Response<bool>(false, false, "This application has already been processed.");
+                    return new Response<int>(0, false, "This application has already been processed.");
                 }
 
                 // Check if task is still open
                 if (application.Task.Status != TaskStatus.Open)
                 {
-                    return new Response<bool>(false, false, "This task is no longer available.");
+                    return new Response<int>(0, false, "This task is no longer available.");
                 }
 
                 // Accept the application
@@ -294,12 +294,12 @@ namespace LaborBLL.Service.Implementation
                 await _unitOfWork.SaveAsync();
 
                 _logger.LogInformation("Application accepted: {ApplicationId}", applicationId);
-                return new Response<bool>(true, true, null);
+                return new Response<int>(booking.Id, true, null);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error accepting application: {ApplicationId}", applicationId);
-                return new Response<bool>(false, false, "An error occurred while accepting the application.");
+                return new Response<int>(0, false, "An error occurred while accepting the application.");
             }
         }
 

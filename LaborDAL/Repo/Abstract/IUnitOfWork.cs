@@ -13,5 +13,7 @@ namespace LaborDAL.Repo.Abstract
 
         ITaskRepository Tasks { get; }
         IDisputeRepo Disputes { get; }
+        IPaymentRepo Payments { get; }
+        IMessageRepo Messages { get; }
     }
 }

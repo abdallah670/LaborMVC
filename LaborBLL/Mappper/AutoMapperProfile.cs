@@ -1,4 +1,7 @@
 ﻿
+using LaborBLL.ModelVM;
+using LaborDAL.DB;
+
 namespace LaborBLL.Mapping
 {
     public class AutoMapperProfile : Profile
@@ -125,10 +128,50 @@ namespace LaborBLL.Mapping
            .ForMember(dest => dest.InProgressCount, opt => opt.Ignore())
            .ForMember(dest => dest.CompletedCount, opt => opt.Ignore())
            .ForMember(dest => dest.CancelledCount, opt => opt.Ignore())
-           .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src=>src.PosterId))
+           .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src => src.PosterId))
+           .ForMember(dest => dest.PosterHasVisa, opt => opt.MapFrom(src => src.Poster.HasVisa))
+           .ForMember(dest => dest.WokerHasVisa, opt => opt.MapFrom(src => src.Worker.HasVisa))
            .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src=>src.WorkerId))
            
            .ForMember(dest => dest.DisputedCount, opt => opt.Ignore());
+
+
+
+
+
+            CreateMap<Message, MessageViewMode>()
+        .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+        .ForMember(dest => dest.BookingId, opt => opt.MapFrom(src => src.bookingId))
+        .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId))
+        .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"))
+        .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+        .ForMember(dest => dest.SentAt, opt => opt.MapFrom(src => src.SentAt))
+        .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.IsRead))
+        .ForMember(dest => dest.IsMyMessage, opt => opt.Ignore());
+
+            CreateMap<MessageSendViewModel, Message>()
+                .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.BookingId))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.SentAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => false))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.SenderId, opt => opt.Ignore())
+                .ForMember(dest => dest.Sender, opt => opt.Ignore())
+                .ForMember(dest => dest.Booking, opt => opt.Ignore());
+
+            CreateMap<MessageListViewModel, Message>()
+    .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.BookingId))
+    .ForMember(dest => dest.Id, opt => opt.Ignore())
+    .ForMember(dest => dest.Content, opt => opt.Ignore())
+    .ForMember(dest => dest.SenderId, opt => opt.Ignore())
+    .ForMember(dest => dest.SentAt, opt => opt.Ignore())
+    .ForMember(dest => dest.IsRead, opt => opt.Ignore())
+    .ForMember(dest => dest.Sender, opt => opt.Ignore())
+    .ForMember(dest => dest.Booking, opt => opt.Ignore());
+
+
+
+
 
 
 

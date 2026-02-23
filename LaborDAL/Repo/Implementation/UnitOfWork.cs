@@ -9,7 +9,7 @@ namespace LaborDAL.Repo.Implementation
         private IDbContextTransaction? _transaction;
         private readonly IMapper _mapper;
         private readonly ILoggerFactory _loggerFactory;
-
+        
 
         // Repositories
         public IAppUserRepository AppUsers { get; private set; }
@@ -20,13 +20,17 @@ namespace LaborDAL.Repo.Implementation
         public ITaskRepository Tasks { get; private set; }
 
         public IDisputeRepo Disputes { get; private set; }
+        public IPaymentRepo Payments { get; private set; }
+        public IMessageRepo Messages { get; private set; }
 
         public UnitOfWork(
             ApplicationDbContext context,
             UserManager<AppUser> userManager,
             IMapper mapper,
             ILoggerFactory loggerFactory,
-            IBookingRepo bookingRepo
+            IBookingRepo bookingRepo,
+             IPaymentRepo paymentRepo,
+             IMessageRepo messageRepo
             )
         {
             _context = context;
@@ -34,6 +38,8 @@ namespace LaborDAL.Repo.Implementation
             _mapper = mapper;
             _loggerFactory = loggerFactory;
             Bookings = bookingRepo;
+            Payments = paymentRepo;
+            Messages = messageRepo;
 
             // Initialize repositories
             InitializeRepositories();
