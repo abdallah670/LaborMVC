@@ -36,6 +36,9 @@ namespace LaborDAL.Entities
         [StringLength(50)]
         public string? TransactionId { get; set; }
 
+        [StringLength(100)]
+        public string? ClientSecret { get; set; }
+
         [Required]
         [StringLength(20)]
         public PaymentStatus Status { get; set; } = PaymentStatus.Held; // "Pending", "Completed", "Failed", "Refunded"

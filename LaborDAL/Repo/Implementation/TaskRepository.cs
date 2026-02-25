@@ -87,6 +87,7 @@ namespace LaborDAL.Repo.Implementation
             return await _dbSet
                 .Include(t => t.Poster)
                 .Include(t => t.AssignedWorker)
+                .Include(t => t.Applications)
                 .Where(t => t.PosterId == posterId && !t.IsDeleted)
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();

@@ -47,9 +47,9 @@ namespace LaborBLL.Service.Implementation
                 Metadata = new Dictionary<string, string>
         {
             { "bookingId", bookingId.ToString() }
-        },
-                // Optional: Platform fee
-                ApplicationFeeAmount = (long)(amount * 0.10 * 100), // 10% fee
+        }
+                // Note: ApplicationFeeAmount removed - requires Stripe Connect with destination account
+                // Platform fee will be handled separately through transfer logic after payment capture
             };
 
             var requestOptions = new RequestOptions();
@@ -67,5 +67,71 @@ namespace LaborBLL.Service.Implementation
                 PaymentIntentId = intent.Id
             };
         }
+
+        #region Stripe Connect
+
+        public async Task<string> CreateConnectAccountAsync(string email, string firstName, string lastName)
+        {
+            var options = new AccountCreateOptions
+            {
+                Type = "express",
+                Email = email,
+                BusinessType = "individual",
+                Individual = new AccountIndividualOptions
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                },
+                Capabilities = new AccountCapabilitiesOptions
+                {
+                    Transfers = new AccountCapabilitiesTransfersOptions { Requested = true },
+                },
+                Settings = new AccountSettingsOptions
+                {
+                    Payouts = new AccountSettingsPayoutsOptions
+                    {
+                        Schedule = new AccountSettingsPayoutsScheduleOptions
+                        {
+                            Interval = "manual",
+                        },
+                    },
+                },
+            };
+
+            var service = new AccountService();
+            var account = await service.CreateAsync(options);
+            return account.Id;
+        }
+
+        public async Task<string> CreateAccountLinkAsync(string accountId, string refreshUrl, string returnUrl)
+        {
+            var options = new AccountLinkCreateOptions
+            {
+                Account = accountId,
+                RefreshUrl = refreshUrl,
+                ReturnUrl = returnUrl,
+                Type = "account_onboarding",
+            };
+
+            var service = new AccountLinkService();
+            var link = await service.CreateAsync(options);
+            return link.Url;
+        }
+
+        public async Task<bool> IsAccountEnabledAsync(string accountId)
+        {
+            try
+            {
+                var service = new AccountService();
+                var account = await service.GetAsync(accountId);
+                return account.Capabilities.Transfers == "active" && account.ChargesEnabled;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        #endregion
     }
 }

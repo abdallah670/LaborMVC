@@ -4,7 +4,7 @@ namespace LaborBLL.Service.Abstract
     public interface IPaymentService
     {
      
-        Task<Response<bool>> CapturePaymentAsync(int bookingId);
+        Task<Response<bool>> CapturePaymentAsync(int bookingId, string? workerStripeAccountId = null);
         Task<Response<bool>> PartialRefundAsync(int Id, decimal amount);
         Task<Response<PaymentVM>> GetPaymentByBookingIdAsync(int bookingId);
         Task<Response<PaymentVM>> CreateAsync(PaymentVM model);

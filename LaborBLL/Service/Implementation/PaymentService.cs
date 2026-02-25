@@ -60,7 +60,8 @@ namespace LaborBLL.Service.Implementation
                         model.BookingId,
                         idempotencyKey);
                     
-                    model.TransactionId = Intent.PaymentIntentId; 
+                    model.TransactionId = Intent.PaymentIntentId;
+                    model.ClientSecret = Intent.ClientSecret; // Store the ClientSecret
                     var paymentEntity = Mapper.Map<Payment>(model);
                     paymentEntity.PaymentDate = DateTime.UtcNow;
                     paymentEntity.Status = PaymentStatus.Pending;
@@ -216,7 +217,7 @@ namespace LaborBLL.Service.Implementation
             }
         }
        
-        public async Task<Response<bool>> CapturePaymentAsync(int bookingId)
+        public async Task<Response<bool>> CapturePaymentAsync(int bookingId, string? workerStripeAccountId = null)
         {
             try
             {
@@ -225,11 +226,25 @@ namespace LaborBLL.Service.Implementation
                 {
                     return new Response<bool>(false, false, "Payment not found for the given Booking ID.");
                 }
-                if (payment.Status != PaymentStatus.Held)
+                if (payment.Status != PaymentStatus.Held && payment.Status != PaymentStatus.Pending)
                 {
-                    return new Response<bool>(false, false, "Only payments in 'Held' status can be captured.");
+                    return new Response<bool>(false, false, "Only payments in 'Held' or 'Pending' status can be captured.");
                 }
+                
+                // Capture the payment (full amount comes to platform account)
                 await _stripeService.CapturePaymentIntentAsync(payment.TransactionId);
+                
+                // Transfer 90% to worker if Stripe account ID is provided
+                if (!string.IsNullOrEmpty(workerStripeAccountId))
+                {
+                    var transferResult = await TransferToWorkerAsync(payment.Id, workerStripeAccountId);
+                    if (!transferResult.Success)
+                    {
+                        // Log the error but don't fail the capture - transfer can be retried later
+                        payment.Notes = $"{payment.Notes}\nTransfer failed: {transferResult.ErrorMessage}";
+                    }
+                }
+                
                 payment.Status = PaymentStatus.Released;
                 payment.ReleasedAt = DateTime.UtcNow;
                 await UnitOfWork.Payments.UpdateAsync(payment);

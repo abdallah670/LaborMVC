@@ -34,6 +34,9 @@ namespace LaborBLL.ModelVM
         [StringLength(50)]
         public string? TransactionId { get; set; }
 
+        [StringLength(100)]
+        public string? ClientSecret { get; set; }
+
         [StringLength(20)]
         public string Status { get; set; } = "Pending";
 

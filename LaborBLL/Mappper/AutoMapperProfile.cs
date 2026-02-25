@@ -1,6 +1,6 @@
-﻿
-using LaborBLL.ModelVM;
+﻿using LaborBLL.ModelVM;
 using LaborDAL.DB;
+using LaborDAL.Entities;
 
 namespace LaborBLL.Mapping
 {
@@ -58,18 +58,16 @@ namespace LaborBLL.Mapping
 
             // Booking mappings
             CreateMap<Booking, BookingDetailViewModel>()
-    .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
-    .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
-    .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
-    .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
-    .ForMember(dest => dest.TaskId, opt => opt.MapFrom(src => src.TaskItemId))
-    .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
-    .ForMember(dest => dest.PosterName, opt => opt.MapFrom(src => src.Task.Poster.FirstName + " " + src.Task.Poster.LastName))
-    .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src => src.Task.PosterId))
-    .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src => src.Worker.FirstName + " " + src.Worker.LastName)) // ✅ أضف السطر ده
-    .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
-
-
+                .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
+                .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.TaskId, opt => opt.MapFrom(src => src.TaskItemId))
+                .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
+                .ForMember(dest => dest.PosterName, opt => opt.MapFrom(src => src.Task.Poster.FirstName + " " + src.Task.Poster.LastName))
+                .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src => src.Task.PosterId))
+                .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src => src.Worker.FirstName + " " + src.Worker.LastName))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
             // TaskItem mappings
             CreateMap<CreateTaskViewModel, TaskItem>()
@@ -101,7 +99,6 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.AssignedWorker, opt => opt.Ignore())
                 .ForMember(dest => dest.Applications, opt => opt.Ignore());
 
-
             CreateMap<CreateBookingViewModel, Booking>()
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
@@ -111,43 +108,39 @@ namespace LaborBLL.Mapping
                 .ForMember(d => d.PosterId, opt => opt.MapFrom(src => src.PosterId))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            CreateMap <BookingListViewModel,Booking>()
+            CreateMap<BookingListViewModel, Booking>()
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
                 .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+
             CreateMap<Booking, BookingDashboardViewModel>()
-           .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-           .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Worker.UserName)) 
-           .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
-           .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
-           .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
-           .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
-           .ForMember(dest => dest.PendingCount, opt => opt.Ignore())
-           .ForMember(dest => dest.InProgressCount, opt => opt.Ignore())
-           .ForMember(dest => dest.CompletedCount, opt => opt.Ignore())
-           .ForMember(dest => dest.CancelledCount, opt => opt.Ignore())
-           .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src => src.PosterId))
-           .ForMember(dest => dest.PosterHasVisa, opt => opt.MapFrom(src => src.Poster.HasVisa))
-           .ForMember(dest => dest.WokerHasVisa, opt => opt.MapFrom(src => src.Worker.HasVisa))
-           .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src=>src.WorkerId))
-           
-           .ForMember(dest => dest.DisputedCount, opt => opt.Ignore());
-
-
-
-
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Worker.UserName))
+                .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
+                .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.PendingCount, opt => opt.Ignore())
+                .ForMember(dest => dest.InProgressCount, opt => opt.Ignore())
+                .ForMember(dest => dest.CompletedCount, opt => opt.Ignore())
+                .ForMember(dest => dest.CancelledCount, opt => opt.Ignore())
+                .ForMember(dest => dest.PosterId, opt => opt.MapFrom(src => src.PosterId))
+                .ForMember(dest => dest.PosterHasVisa, opt => opt.MapFrom(src => src.Poster.HasVisa))
+                .ForMember(dest => dest.WokerHasVisa, opt => opt.MapFrom(src => src.Worker.HasVisa))
+                .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
+                .ForMember(dest => dest.DisputedCount, opt => opt.Ignore());
 
             CreateMap<Message, MessageViewMode>()
-        .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-        .ForMember(dest => dest.BookingId, opt => opt.MapFrom(src => src.bookingId))
-        .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId))
-        .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"))
-        .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
-        .ForMember(dest => dest.SentAt, opt => opt.MapFrom(src => src.SentAt))
-        .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.IsRead))
-        .ForMember(dest => dest.IsMyMessage, opt => opt.Ignore());
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.BookingId, opt => opt.MapFrom(src => src.bookingId))
+                .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId))
+                .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.SentAt, opt => opt.MapFrom(src => src.SentAt))
+                .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.IsRead))
+                .ForMember(dest => dest.IsMyMessage, opt => opt.Ignore());
 
             CreateMap<MessageSendViewModel, Message>()
                 .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.BookingId))
@@ -160,25 +153,62 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.Booking, opt => opt.Ignore());
 
             CreateMap<MessageListViewModel, Message>()
-    .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.BookingId))
-    .ForMember(dest => dest.Id, opt => opt.Ignore())
-    .ForMember(dest => dest.Content, opt => opt.Ignore())
-    .ForMember(dest => dest.SenderId, opt => opt.Ignore())
-    .ForMember(dest => dest.SentAt, opt => opt.Ignore())
-    .ForMember(dest => dest.IsRead, opt => opt.Ignore())
-    .ForMember(dest => dest.Sender, opt => opt.Ignore())
-    .ForMember(dest => dest.Booking, opt => opt.Ignore());
+                .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.BookingId))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Content, opt => opt.Ignore())
+                .ForMember(dest => dest.SenderId, opt => opt.Ignore())
+                .ForMember(dest => dest.SentAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsRead, opt => opt.Ignore())
+                .ForMember(dest => dest.Sender, opt => opt.Ignore())
+                .ForMember(dest => dest.Booking, opt => opt.Ignore());
 
+            // Payment mappings
+            CreateMap<PaymentVM, Payment>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.BookingId, opt => opt.MapFrom(src => src.BookingId))
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount))
+                .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.PaymentType, opt => opt.MapFrom(src => src.PaymentType))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.TransactionId))
+                .ForMember(dest => dest.ClientSecret, opt => opt.MapFrom(src => src.ClientSecret))
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.PaymentDate, opt => opt.MapFrom(src => src.PaymentDate))
+                .ForMember(dest => dest.ProcessedDate, opt => opt.MapFrom(src => src.ProcessedDate))
+                .ForMember(dest => dest.DueDate, opt => opt.MapFrom(src => src.DueDate))
+                .ForMember(dest => dest.BillingAddress, opt => opt.MapFrom(src => src.BillingAddress))
+                .ForMember(dest => dest.BillingEmail, opt => opt.MapFrom(src => src.BillingEmail))
+                .ForMember(dest => dest.BillingName, opt => opt.MapFrom(src => src.BillingName))
+                .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Booking, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.ReleasedAt, opt => opt.Ignore());
 
-
-
-
-
-
-
-
-
-
+            CreateMap<Payment, PaymentVM>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.BookingId, opt => opt.MapFrom(src => src.BookingId))
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount))
+                .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.PaymentType, opt => opt.MapFrom(src => src.PaymentType))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.TransactionId))
+                .ForMember(dest => dest.ClientSecret, opt => opt.MapFrom(src => src.ClientSecret))
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.PaymentDate, opt => opt.MapFrom(src => src.PaymentDate))
+                .ForMember(dest => dest.ProcessedDate, opt => opt.MapFrom(src => src.ProcessedDate))
+                .ForMember(dest => dest.DueDate, opt => opt.MapFrom(src => src.DueDate))
+                .ForMember(dest => dest.BillingAddress, opt => opt.MapFrom(src => src.BillingAddress))
+                .ForMember(dest => dest.BillingEmail, opt => opt.MapFrom(src => src.BillingEmail))
+                .ForMember(dest => dest.BillingName, opt => opt.MapFrom(src => src.BillingName))
+                .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
+                .ForMember(dest => dest.AgreedRate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsActive, opt => opt.Ignore());
         }
     }
 }

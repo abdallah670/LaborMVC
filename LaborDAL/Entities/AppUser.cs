@@ -144,6 +144,12 @@ namespace LaborDAL.Entities
         /// ID of user who created this record
         /// </summary>
         public string? CreatedBy { get; set; }
+
+        /// <summary>
+        /// Stripe Connect Account ID for receiving payments (workers only)
+        /// </summary>
+        public string? StripeAccountId { get; set; }
+
         public virtual ICollection<Booking> PostedBookings { get; set; } = new List<Booking>();
 
 

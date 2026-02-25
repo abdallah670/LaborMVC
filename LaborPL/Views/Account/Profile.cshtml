@@ -215,6 +215,101 @@
                                 </button>
                             </div>
                         </form>
+
+                        @if (Model.IsWorker)
+                        {
+                            <!-- Stripe Connect Section for Workers -->
+                            <div class="card mt-4 border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payment Settings</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="stripeConnectSection">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-stripe fs-1 me-3 text-primary"></i>
+                                            <div>
+                                                <h6 class="mb-1">Receive Payments via Stripe</h6>
+                                                <p class="mb-0 text-muted small">Connect your Stripe account to receive payments directly to your bank account.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="stripeStatusContainer" class="mb-3">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <span class="ms-2 text-muted">Checking connection status...</span>
+                                        </div>
+
+                                        <a href="/Account/ConnectStripe" class="btn btn-primary" id="connectStripeBtn">
+                                            <i class="bi bi-link me-1"></i>Connect Stripe Account
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    // Handle Connect Stripe button click explicitly
+                                    document.getElementById('connectStripeBtn').addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        window.location.href = '/Account/ConnectStripe';
+                                    });
+
+                                    // Check Stripe connection status
+                                    fetch('/Account/StripeStatus')
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            const container = document.getElementById('stripeStatusContainer');
+                                            const btn = document.getElementById('connectStripeBtn');
+                                            
+                                            if (data.connected && data.enabled) {
+                                                container.innerHTML = `
+                                                    <div class="alert alert-success d-flex align-items-center mb-0" role="alert">
+                                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                                        <div>
+                                                            <strong>Connected!</strong> Your Stripe account is active and ready to receive payments.
+                                                            <div class="small text-muted mt-1">Account ID: ${data.accountId}</div>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Reconnect Stripe Account';
+                                                btn.classList.remove('btn-primary');
+                                                btn.classList.add('btn-outline-primary');
+                                            } else if (data.connected && !data.enabled) {
+                                                container.innerHTML = `
+                                                    <div class="alert alert-warning d-flex align-items-center mb-0" role="alert">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <div>
+                                                            <strong>Pending Verification</strong> Your Stripe account is connected but pending verification.
+                                                            <div class="small text-muted mt-1">Account ID: ${data.accountId}</div>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Complete Stripe Setup';
+                                            } else {
+                                                container.innerHTML = `
+                                                    <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
+                                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                                        <div>
+                                                            <strong>Not Connected</strong> Connect your Stripe account to start receiving payments.
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error checking Stripe status:', error);
+                                            document.getElementById('stripeStatusContainer').innerHTML = `
+                                                <div class="alert alert-secondary d-flex align-items-center mb-0" role="alert">
+                                                    <i class="bi bi-question-circle-fill me-2"></i>
+                                                    <div>Unable to check Stripe status. Please try again later.</div>
+                                                </div>
+                                            `;
+                                        });
+                                });
+                            </script>
+                        }
                     }
                     else
                     {

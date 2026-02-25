@@ -103,33 +103,46 @@ namespace LaborPL.Controllers
 
             // Check if payment already exists
             var existingPayment = await _paymentService.GetPaymentByBookingIdAsync(bookingId);
+            PaymentVM payment;
+            
             if (existingPayment.Success && existingPayment.Result != null)
             {
-                TempData["Error"] = "Payment already exists for this booking.";
-                return RedirectToAction("Details", "Booking", new { id = bookingId });
+                // Use existing payment
+                payment = existingPayment.Result;
+            }
+            else
+            {
+                // Create new payment
+                var paymentVM = new PaymentVM
+                {
+                    BookingId = bookingId,
+                    UserId = userId,
+                    Amount = booking.AgreedRate,
+                    PaymentType = "Booking",
+                    Description = $"Payment for booking #{bookingId}",
+                    Currency = "USD",
+                    PaymentMethod = "CreditCard"
+                };
+
+                var createResponse = await _paymentService.CreateAsync(paymentVM);
+                if (!createResponse.Success)
+                {
+                    TempData["Error"] = createResponse.ErrorMessage;
+                    return RedirectToAction("Details", "Booking", new { id = bookingId });
+                }
+                payment = createResponse.Result;
             }
 
-            // Create payment
-            var paymentVM = new PaymentVM
+            // Show Stripe checkout form
+            var viewModel = new CheckoutViewModel
             {
                 BookingId = bookingId,
-                UserId = userId,
                 Amount = booking.AgreedRate,
-                PaymentType = "Booking",
-                Description = $"Payment for booking #{bookingId}",
-                Currency = "USD",
-                PaymentMethod = "CreditCard"
+                ClientSecret = payment.ClientSecret, // Use the actual ClientSecret from Stripe
+                PubishableKey = _configuration["Stripe:PublishableKey"]
             };
 
-            var createResponse = await _paymentService.CreateAsync(paymentVM);
-            if (!createResponse.Success)
-            {
-                TempData["Error"] = createResponse.ErrorMessage;
-                return RedirectToAction("Details", "Booking", new { id = bookingId });
-            }
-
-            TempData["Success"] = "Payment initiated successfully. Please complete the payment through Stripe.";
-            return RedirectToAction("Details", "Booking", new { id = bookingId });
+            return View(viewModel);
         }
 
         [Authorize(Roles = "Admin")]

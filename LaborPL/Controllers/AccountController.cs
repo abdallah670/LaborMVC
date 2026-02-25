@@ -1,6 +1,7 @@
 using LaborBLL.ModelVM;
 using LaborBLL.Response;
 using LaborBLL.Service.Abstract;
+using LaborDAL.Repo.Abstract;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +12,15 @@ namespace LaborPL.Controllers
     public class AccountController : Controller
     {
         private readonly IUserService _userService;
+        private readonly IStripeService _stripeService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService, ILogger<AccountController> logger)
+        public AccountController(IUserService userService, IStripeService stripeService, IUnitOfWork unitOfWork, ILogger<AccountController> logger)
         {
             _userService = userService;
+            _stripeService = stripeService;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -204,6 +209,132 @@ namespace LaborPL.Controllers
             }
 
             return View(profile);
+        }
+
+        #endregion
+
+        #region Stripe Connect Onboarding
+
+        /// <summary>
+        /// Starts Stripe Connect onboarding for workers to receive payments
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> ConnectStripe()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // If user already has a connected account, check if it's enabled
+            if (!string.IsNullOrEmpty(user.StripeAccountId))
+            {
+                var isEnabled = await _stripeService.IsAccountEnabledAsync(user.StripeAccountId);
+                if (isEnabled)
+                {
+                    TempData["SuccessMessage"] = "Your Stripe account is already connected and enabled.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Account exists but not enabled, create new onboarding link
+                var refreshUrl = Url.Action("ConnectStripe", "Account", null, Request.Scheme);
+                var returnUrl = Url.Action("StripeConnectReturn", "Account", null, Request.Scheme);
+                var accountLinkUrl = await _stripeService.CreateAccountLinkAsync(user.StripeAccountId, refreshUrl!, returnUrl!);
+                return Redirect(accountLinkUrl);
+            }
+
+            // Create new Stripe Connect account
+            try
+            {
+                var accountId = await _stripeService.CreateConnectAccountAsync(
+                    user.Email!,
+                    user.FirstName ?? "",
+                    user.LastName ?? ""
+                );
+
+                // Save the account ID to user
+                user.StripeAccountId = accountId;
+                await _unitOfWork.AppUsers.UpdateAsync(user);
+                await _unitOfWork.SaveAsync();
+
+                // Create onboarding link
+                var refreshUrl = Url.Action("ConnectStripe", "Account", null, Request.Scheme);
+                var returnUrl = Url.Action("StripeConnectReturn", "Account", null, Request.Scheme);
+                var accountLinkUrl = await _stripeService.CreateAccountLinkAsync(accountId, refreshUrl!, returnUrl!);
+
+                return Redirect(accountLinkUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating Stripe Connect account for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Failed to create Stripe Connect account. Please try again.";
+                return RedirectToAction(nameof(Profile));
+            }
+        }
+
+        /// <summary>
+        /// Return URL after Stripe Connect onboarding
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> StripeConnectReturn()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.StripeAccountId))
+            {
+                TempData["ErrorMessage"] = "Stripe account connection failed.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            // Check if account is enabled
+            var isEnabled = await _stripeService.IsAccountEnabledAsync(user.StripeAccountId);
+            if (isEnabled)
+            {
+                TempData["SuccessMessage"] = "Your Stripe account has been successfully connected! You can now receive payments.";
+            }
+            else
+            {
+                TempData["WarningMessage"] = "Your Stripe account is pending verification. You will be able to receive payments once verification is complete.";
+            }
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        /// <summary>
+        /// Check Stripe Connect status
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> StripeStatus()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { connected = false, enabled = false });
+            }
+
+            var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.StripeAccountId))
+            {
+                return Json(new { connected = false, enabled = false });
+            }
+
+            var isEnabled = await _stripeService.IsAccountEnabledAsync(user.StripeAccountId);
+            return Json(new { connected = true, enabled = isEnabled, accountId = user.StripeAccountId });
         }
 
         #endregion

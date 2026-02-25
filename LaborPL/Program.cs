@@ -24,11 +24,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 builder.Services.AddSignalR();
 
-
-RecurringJob.AddOrUpdate<PaymentReleaseJob>(
-    "auto-release-payments",
-    job => job.AutoReleasePayments(),
-    Cron.Hourly);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -131,6 +126,13 @@ if (!app.Environment.IsDevelopment())
 // And this:
 app.UseHangfireDashboard();
 app.UseHangfireServer();
+
+// Schedule recurring jobs after Hangfire is initialized
+RecurringJob.AddOrUpdate<PaymentReleaseJob>(
+    "auto-release-payments",
+    job => job.AutoReleasePayments(),
+    Cron.Hourly);
+
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowSpecificOrigins"); // ✅ أضيف هنا

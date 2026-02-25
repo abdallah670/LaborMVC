@@ -1,5 +1,10 @@
 ﻿
 using Hangfire.Server;
+using LaborBLL.ModelVM;
+using LaborBLL.Response;
+using LaborDAL.Entities;
+using LaborDAL.Enums;
+using LaborDAL.Repo.Abstract;
 
 namespace LaborBLL.Service.Implementation
 {
@@ -91,7 +96,22 @@ namespace LaborBLL.Service.Implementation
             {
                 return new Response<bool>(false, false, "Booking must be completed by both parties");
             }
-            var result=await paymentService.CapturePaymentAsync(bookingId);
+            
+            // Get worker's Stripe account ID for transfer
+            string? workerStripeAccountId = null;
+            if (booking.Worker != null)
+            {
+                workerStripeAccountId = booking.Worker.StripeAccountId;
+            }
+            else
+            {
+                // Load worker if not included
+                var worker = await unitOfWork.AppUsers.GetByIdAsync(booking.WorkerId);
+                workerStripeAccountId = worker?.StripeAccountId;
+            }
+            
+            // Capture payment and transfer 90% to worker (10% platform fee retained)
+            var result=await paymentService.CapturePaymentAsync(bookingId, workerStripeAccountId);
             if (!result.Success)
             {
                 return new Response<bool>(false, false, $"Failed to release payment: {result.ErrorMessage}");
