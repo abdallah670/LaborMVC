@@ -1,4 +1,5 @@
-﻿using LaborBLL.Common;
+﻿using Hangfire;
+using LaborBLL.Common;
 using LaborBLL.Hubs;
 using LaborBLL.Mapping;
 using LaborBLL.Service;
@@ -19,10 +20,15 @@ var builder = WebApplication.CreateBuilder(args);
  Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
                 .CreateLogger();
-           
+
 builder.Host.UseSerilog();
 builder.Services.AddSignalR();
 
+
+RecurringJob.AddOrUpdate<PaymentReleaseJob>(
+    "auto-release-payments",
+    job => job.AutoReleasePayments(),
+    Cron.Hourly);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -88,12 +94,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add logging
 builder.Services.AddLogging();
-
- builder.Services.AddModularDataAccessLayer();
+builder.Services.AddHangfire(x => x.UseSqlServerStorage(connectionString));
+builder.Services.AddHangfireServer();
+builder.Services.AddModularDataAccessLayer();
 builder.Services.AddModularBusinessLogicLayer();
              
 var app = builder.Build();
@@ -121,7 +128,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-
+// And this:
+app.UseHangfireDashboard();
+app.UseHangfireServer();
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowSpecificOrigins"); // ✅ أضيف هنا

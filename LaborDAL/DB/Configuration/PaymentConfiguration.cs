@@ -8,12 +8,8 @@
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
-        builder.Property(p => p.StripePaymentIntentId)
-            .IsRequired()
-            .HasMaxLength(255);
-
-        builder.Property(p => p.Status)
-            .IsRequired();
+        builder.Property(p => p.Status).HasConversion<string>();
+           
 
         // العلاقة مع الـ Booking
         builder.HasOne(p => p.Booking)

@@ -1,3 +1,11 @@
+using LaborBLL.ModelVM;
+using LaborBLL.Response;
+using LaborBLL.Service.Abstract;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
 namespace LaborPL.Controllers
 {
     public class AccountController : Controller
@@ -167,6 +175,35 @@ namespace LaborPL.Controllers
 
             ModelState.AddModelError(string.Empty, response.ErrorMessage ?? "Failed to update profile.");
             return View(model);
+        }
+
+        /// <summary>
+        /// View another user's profile (read-only) - used for viewing applicant/worker profiles
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> ViewProfile(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("User ID is required.");
+            }
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            // If user is viewing their own profile, redirect to the editable profile page
+            if (id == currentUserId)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var profile = await _userService.GetProfileAsync(id);
+            if (profile == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            return View(profile);
         }
 
         #endregion

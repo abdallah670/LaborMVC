@@ -1,0 +1,77 @@
+﻿@model IEnumerable<LaborBLL.ModelVM.PaymentVM>
+
+@{
+    ViewData["Title"] = "Payments";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1" style="color: var(--ink); font-weight: 700;">Payments</h1>
+            <p style="color: var(--muted); opacity: 0.9; margin-bottom: 0;">Manage financial transactions and history</p>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm" style="border-radius: var(--radius); overflow: hidden; background: var(--tile); border: 1px solid var(--frame) !important;">
+        <div class="card-header py-3" style="background: var(--frame); border-bottom: 1px solid var(--rule);">
+            <h6 class="m-0 font-weight-bold" style="color: var(--ink);">Transaction History</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="color: var(--ink); border-color: var(--rule); background: transparent;">
+                    <thead style="background: var(--frame);">
+                        <tr>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase text-center" style="color: var(--ink); opacity: 0.8;">ID</th>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase" style="color: var(--ink); opacity: 0.8;">Member ID</th>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase" style="color: var(--ink); opacity: 0.8;">Type</th>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase text-center" style="color: var(--ink); opacity: 0.8;">Amount</th>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase text-center" style="color: var(--ink); opacity: 0.8;">Status</th>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase" style="color: var(--ink); opacity: 0.8;">Date</th>
+                            <th class="px-4 py-3 border-0 small fw-bold text-uppercase text-end" style="color: var(--ink); opacity: 0.8;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr style="border-bottom: 1px solid var(--rule); background: transparent;">
+                                <td class="px-4 py-3 text-center" style="color: var(--ink); opacity: 0.7; font-family: monospace;">#@item.Id</td>
+                                <td class="px-4 py-3">
+                                    <code class="small px-2 py-1 rounded" style="background: var(--frame); color: var(--muted);">@item.BookingId</code>
+                                </td>
+                                <td class="px-4 py-3" style="color: var(--ink); opacity: 0.9;">@item.PaymentType</td>
+                                <td class="px-4 py-3 text-center fw-bold" style="color: var(--main-color);">@item.Amount @item.Currency</td>
+                                <td class="px-4 py-3 text-center">
+                                    @if (item.Status == "Completed")
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3" style="font-weight: 600;">@item.Status</span>
+                                    }
+                                    else if (item.Status == "Pending")
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3" style="font-weight: 600;">@item.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3" style="font-weight: 600;">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="px-4 py-3" style="color: var(--ink); opacity: 0.8;">@item.PaymentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="px-4 py-3 text-end">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm rounded-pill px-3 shadow-sm border-0" style="background: var(--frame);">
+                                        <i class="fas fa-info-circle me-1"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

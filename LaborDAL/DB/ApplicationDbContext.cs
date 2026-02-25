@@ -31,6 +31,8 @@ namespace LaborDAL.DB
         /// Disputes DbSet
         /// </summary>
         public DbSet<Dispute> Disputes { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
 
 
         /// <summary>

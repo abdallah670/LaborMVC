@@ -1,4 +1,4 @@
-namespace GymBLL.Common
+namespace LaborBLL.Common
 {
     public class StripeSettings
     {

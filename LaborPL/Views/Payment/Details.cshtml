@@ -1,0 +1,77 @@
+﻿@model LaborBLL.ModelVM.PaymentVM
+
+@{
+    ViewData["Title"] = "Payment Details";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Payment Details</h1>
+        <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Transaction #@Model.TransactionId</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Payment ID</dt>
+                        <dd class="col-sm-9">@Model.Id</dd>
+
+                        <dt class="col-sm-3">User ID</dt>
+                        <dd class="col-sm-9">@Model.UserId</dd>
+
+                        <dt class="col-sm-3">Description</dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
+
+                        <dt class="col-sm-3">Amount</dt>
+                        <dd class="col-sm-9">@Model.Amount @Model.Currency</dd>
+
+                        <dt class="col-sm-3">Payment Method</dt>
+                        <dd class="col-sm-9">@Model.PaymentMethod</dd>
+
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Status == "Completed")
+                            {
+                                <span class="badge badge-success">@Model.Status</span>
+                            }
+                            else if (Model.Status == "Pending")
+                            {
+                                <span class="badge badge-warning">@Model.Status</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">@Model.Status</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Date</dt>
+                        <dd class="col-sm-9">@Model.PaymentDate.ToString("F")</dd>
+
+                        <dt class="col-sm-3">Notes</dt>
+                        <dd class="col-sm-9">@Model.Notes</dd>
+
+                        <dt class="col-sm-3">Billing Name</dt>
+                        <dd class="col-sm-9">@Model.BillingName</dd>
+
+                        <dt class="col-sm-3">Billing Email</dt>
+                        <dd class="col-sm-9">@Model.BillingEmail</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

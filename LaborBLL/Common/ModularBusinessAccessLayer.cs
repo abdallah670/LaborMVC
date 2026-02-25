@@ -31,6 +31,12 @@ namespace LaborBLL.Common
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IEscrowService, EscrowService>();
 
+            // Payment-related services
+            services.AddScoped<IPaymentAuditService, PaymentAuditService>();
+            services.AddScoped<IPaymentRetryService, PaymentRetryService>();
+            services.AddScoped<IPaymentReceiptService, PaymentReceiptService>();
+            services.AddScoped<IStripeService, StripeService>();
+
             services.AddScoped<IMessageService, MessageService>();
 
 
