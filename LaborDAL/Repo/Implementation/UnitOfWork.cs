@@ -22,6 +22,7 @@ namespace LaborDAL.Repo.Implementation
         public IDisputeRepo Disputes { get; private set; }
         public IPaymentRepo Payments { get; private set; }
         public IMessageRepo Messages { get; private set; }
+        public IchatRepo chatrepo { get; private set; }
 
         public UnitOfWork(
             ApplicationDbContext context,
@@ -30,7 +31,8 @@ namespace LaborDAL.Repo.Implementation
             ILoggerFactory loggerFactory,
             IBookingRepo bookingRepo,
              IPaymentRepo paymentRepo,
-             IMessageRepo messageRepo
+             IMessageRepo messageRepo,
+            IchatRepo chatRepo
             )
         {
             _context = context;
@@ -40,6 +42,7 @@ namespace LaborDAL.Repo.Implementation
             Bookings = bookingRepo;
             Payments = paymentRepo;
             Messages = messageRepo;
+            chatrepo = chatRepo;
 
             // Initialize repositories
             InitializeRepositories();

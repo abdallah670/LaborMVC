@@ -1,0 +1,363 @@
+﻿@* Views/Shared/_ChatFloatingIcon.cshtml *@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> UserManager
+
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+
+@if (isAuthenticated)
+{
+    <!-- أيقونة المحادثات الفاخرة في النافبار -->
+    <li class="nav-item chat-nav-item">
+        <a asp-controller="Chat" asp-action="Index" class="nav-link chat-nav-link" id="chatNavIcon">
+            <div class="chat-icon-wrapper">
+                <i class="bi bi-chat-heart-fill chat-icon"></i>
+                <span class="chat-text">Contacts</span>
+                <span class="chat-badge" id="unreadMessagesBadge">0</span>
+
+                <!-- التأثيرات الحركية -->
+                <span class="chat-ripple"></span>
+                <span class="chat-glow"></span>
+            </div>
+
+            <!-- Tooltip صغير للموبايل -->
+            <span class="chat-mobile-tooltip">المحادثات</span>
+        </a>
+    </li>
+
+    <style>
+        /* حاوية الأيقونة */
+        .chat-nav-item {
+            position: relative;
+            margin: 0 2px;
+        }
+
+        /* رابط المحادثات */
+        .chat-nav-link {
+            position: relative;
+            padding: 8px 15px !important;
+            border-radius: 40px !important;
+            transition: all 0.3s ease !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 5px 0;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+            /* التأثير عند الهوفر */
+            .chat-nav-link:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            }
+
+            /* التأثير عند الضغط */
+            .chat-nav-link:active {
+                transform: translateY(1px);
+                box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+            }
+
+        /* الحاوية الداخلية */
+        .chat-icon-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        /* أيقونة القلب */
+        .chat-icon {
+            font-size: 1.3rem;
+            color: white;
+            animation: heartbeat 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+        }
+
+        /* نص المحادثات */
+        .chat-text {
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* البادج (عداد المسجات) */
+        /* البادج (عداد المسجات) */
+        .chat-badge {
+            position: absolute;
+            top: -8px; /* عدلت من -12 لـ -8 */
+            right: -8px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 11px;
+            display: none; /* مخفي افتراضياً */
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(245, 87, 108, 0.5);
+            animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+        /* تأثير التموج (ripple) */
+        .chat-ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .chat-nav-link:active .chat-ripple {
+            animation: ripple 0.4s ease-out;
+        }
+
+        /* تأثير التوهج (glow) */
+        .chat-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 40px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .chat-nav-link:hover .chat-glow {
+            animation: glow 2s infinite;
+        }
+
+        /* Tooltip للموبايل */
+        .chat-mobile-tooltip {
+            display: none;
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+            .chat-mobile-tooltip::before {
+                content: '';
+                position: absolute;
+                top: -5px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-bottom: 5px solid #333;
+            }
+
+        /* animations */
+        @@keyframes heartbeat {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.1);
+            }
+
+            35% {
+                transform: scale(1);
+            }
+
+            45% {
+                transform: scale(1.05);
+            }
+
+            55% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @@keyframes badgePop {
+            0% {
+                transform: scale(0);
+            }
+
+            80% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @@keyframes ripple {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+
+        @@keyframes glow {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* للشاشات الصغيرة */
+        @@media (max-width: 768px) {
+            .chat-nav-link {
+                padding: 8px 12px !important;
+            }
+
+            .chat-text {
+                display: none;
+            }
+
+            .chat-icon {
+                font-size: 1.5rem;
+                margin: 0;
+            }
+
+            .chat-badge {
+                top: -8px;
+                right: -8px;
+            }
+
+            .chat-mobile-tooltip {
+                display: block;
+            }
+
+            .chat-nav-link:hover .chat-mobile-tooltip {
+                display: block;
+            }
+        }
+
+        /* للشاشات الصغيرة جداً */
+        @@media (max-width: 480px) {
+            .chat-nav-link {
+                padding: 6px 10px !important;
+            }
+
+            .chat-icon {
+                font-size: 1.3rem;
+            }
+
+            .chat-badge {
+                min-width: 18px;
+                height: 18px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+
+    <script>
+        // تحديث عداد المسجات غير المقروءة
+        function updateUnreadCount() {
+            fetch('/Chat/GetUnreadCount')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('unreadMessagesBadge');
+
+                    // استخراج العدد من البيانات
+                    let count = 0;
+
+                    if (data === null || data === undefined) {
+                        count = 0;
+                    }
+                    else if (typeof data === 'number') {
+                        count = data;  // ✅ لو البيانات رقم صريح
+                    }
+                    else if (typeof data === 'object') {
+                        // لو البيانات object، جرب الخصائص المختلفة
+                        count = data.count ?? data.result ?? data.data ?? 0;
+                    }
+
+                    console.log('Unread count:', count); // للتأكد
+
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = 'flex';
+                        badge.style.visibility = 'visible';
+
+                        // تشغيل أنيميشن عند وصول مسج جديد
+                        badge.style.animation = 'badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        setTimeout(() => {
+                            badge.style.animation = '';
+                        }, 300);
+
+                        // تشغيل أنيميشن القلب عند وصول مسج جديد
+                        const icon = document.querySelector('.chat-icon');
+                        if (icon) {
+                            icon.style.animation = 'heartbeat 0.5s ease-in-out';
+                            setTimeout(() => {
+                                icon.style.animation = 'heartbeat 1.5s ease-in-out infinite';
+                            }, 500);
+                        }
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error fetching unread count:', error));
+        }
+
+        // تحديث العداد كل 15 ثانية
+        setInterval(updateUnreadCount, 15000);
+
+        // تحديث عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', updateUnreadCount);
+
+        // تحديث عند العودة للصفحة
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                updateUnreadCount();
+            }
+        });
+
+        // إضافة تأثيرات حركية إضافية
+        document.getElementById('chatNavIcon')?.addEventListener('mouseenter', function() {
+            const icon = this.querySelector('.chat-icon');
+            if (icon) {
+                icon.style.animation = 'heartbeat 0.8s ease-in-out';
+            }
+        });
+
+        document.getElementById('chatNavIcon')?.addEventListener('mouseleave', function() {
+            const icon = this.querySelector('.chat-icon');
+            if (icon) {
+                setTimeout(() => {
+                    icon.style.animation = 'heartbeat 1.5s ease-in-out infinite';
+                }, 100);
+            }
+        });
+    </script>
+}

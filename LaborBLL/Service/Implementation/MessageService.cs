@@ -18,6 +18,53 @@ namespace LaborBLL.Service.Implementation
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
         }
+        public async Task<int> GetLastBookingIdAsync(string userId, string otherUserId)
+        {
+            return await unitOfWork.Messages.GetLastBookingIdAsync(userId, otherUserId);
+        }
+        public async Task<List<ContactViewModel>> GetContactsAsync(string userId)
+        {
+            var messages = await unitOfWork.Messages.GetMessagesUserIdAsync(userId);
+
+            var contacts = messages
+                .GroupBy(m => m.Booking.PosterId == userId
+                    ? m.Booking.WorkerId
+                    : m.Booking.PosterId)
+                .Select(g =>
+                {
+                    var lastMessage = g.OrderByDescending(m => m.SentAt).First();
+                    var otherUser = lastMessage.Booking.PosterId == userId
+                        ? lastMessage.Booking.Worker
+                        : lastMessage.Booking.Poster;
+
+                    return new ContactViewModel
+                    {
+                        OtherUserId = g.Key??"", // هنا بقى userId مش bookingId
+                        FullName = $"{otherUser?.FirstName} {otherUser?.LastName}",
+                        LastMessage = lastMessage.Content ?? "",
+                        LastMessageAt = lastMessage.SentAt,
+                        UnreadCount = g.Count(m => m.SenderId != userId && !m.IsRead)
+                    };
+                })
+                .OrderByDescending(c => c.LastMessageAt)
+                .ToList();
+
+            return contacts;
+        }
+
+        // جلب محادثة كاملة بين مستخدمين
+        public async Task<List<Message>> GetConversationAsync(string userId, string otherUserId)
+        {
+           
+                var messages = await unitOfWork.Messages.GetConversationAsync(userId, otherUserId);
+
+            // تحويل الرسائل من ChatUsers إلى MessageViewMode
+
+
+            return messages;
+          
+        }
+
         public async Task<Response<IEnumerable<MessageViewMode>>> GetMessagesByBookingIdAsync(int bookingId, string userId)
         {
             var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
@@ -34,17 +81,19 @@ namespace LaborBLL.Service.Implementation
             return new Response<IEnumerable<MessageViewMode>>(mes, true, null);
         }
 
+     
+
         public async Task<Response<int>> GetUnreadCountAsync(string userId)
         {
             var count =await unitOfWork.Messages.GetUnreadCountAsync(userId);
-            return new Response<int>(count, false, null);
+            return new Response<int>(count, true, null);
         }
 
         public async Task<Response<bool>> MarkAsReadAsync(int bookingId, string userId)
         {
             await unitOfWork.Messages.MarkAsReadAsync(bookingId,userId);
             await unitOfWork.SaveAsync();   
-            return new Response<bool>(true,false, null);
+            return new Response<bool>(true,true, null);
         }
 
         public async Task<Response<bool>> SendMessageAsync(int bookingId, string SenderId, string Content)

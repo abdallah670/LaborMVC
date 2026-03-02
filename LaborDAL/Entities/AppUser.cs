@@ -26,6 +26,9 @@ namespace LaborDAL.Entities
         /// <summary>
         /// Current verification tier level
         /// </summary>
+        public ICollection<ChatUsers> SentMessages { get; set; } = new List<ChatUsers>();
+        public ICollection<ChatUsers> ReceivedMessages { get; set; } = new List<ChatUsers>();
+
         public VerificationTier VerificationTier { get; set; } = VerificationTier.Unverified;
 
         /// <summary>

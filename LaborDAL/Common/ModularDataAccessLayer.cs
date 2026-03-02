@@ -1,4 +1,5 @@
-﻿using LaborDAL.Repo.Abstract;
+﻿using LaborDAL.Repo;
+using LaborDAL.Repo.Abstract;
 using LaborDAL.Repo.Implementation;
 
 namespace LaborDAL.Common
@@ -12,6 +13,7 @@ namespace LaborDAL.Common
 
             // Booking Repository
             services.AddScoped<IBookingRepo, BookingRepo>();
+            services.AddScoped<IchatRepo, chatRepo>();
 
             // Task Repository
             services.AddScoped<ITaskRepository, TaskRepository>();

@@ -142,6 +142,7 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapHub<ChatHub>("/chatHub");
+app.MapHub<DirectChatHub>("/DirectChatHub");
 
 app.MapControllerRoute(
     name: "default",

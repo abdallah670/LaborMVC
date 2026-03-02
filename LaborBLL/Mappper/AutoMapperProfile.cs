@@ -134,13 +134,12 @@ namespace LaborBLL.Mapping
 
             CreateMap<Message, MessageViewMode>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.BookingId, opt => opt.MapFrom(src => src.bookingId))
                 .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.SenderId))
                 .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => $"{src.Sender.FirstName} {src.Sender.LastName}"))
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.SentAt, opt => opt.MapFrom(src => src.SentAt))
-                .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.IsRead))
-                .ForMember(dest => dest.IsMyMessage, opt => opt.Ignore());
+                .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.IsRead));
+        
 
             CreateMap<MessageSendViewModel, Message>()
                 .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.BookingId))
@@ -161,6 +160,19 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.IsRead, opt => opt.Ignore())
                 .ForMember(dest => dest.Sender, opt => opt.Ignore())
                 .ForMember(dest => dest.Booking, opt => opt.Ignore());
+
+
+
+
+        
+
+
+
+
+
+
+
+
 
             // Payment mappings
             CreateMap<PaymentVM, Payment>()

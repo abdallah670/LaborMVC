@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/LaborPL.styles.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column min-vh-100" style="padding-bottom:120px;">
+<body class="d-flex flex-column min-vh-100">
 
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white box-shadow mb-3">
@@ -93,7 +93,21 @@
                         </li>
                     </ul>
 
+                    <!-- القائمة اليمين (حطينا الأيقونة هنا) -->
                     <ul class="navbar-nav">
+                        <!-- أيقونة المحادثات - أول حاجة في القائمة اليمين -->
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                @await Html.PartialAsync("_ChatFloatingIcon")
+                            </li>
+                        }
+
+                        <!-- User Info -->
+                        <li class="nav-item">
+                            @await Html.PartialAsync("UserInfoPartial")
+                        </li>
+
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">

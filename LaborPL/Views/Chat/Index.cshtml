@@ -1,0 +1,454 @@
+﻿@model List<LaborBLL.ModelVM.ContactViewModel>
+@{
+    var NewContacts = ViewBag.NewContacts as List<ContactViewModel>;
+    var unreadCount = ViewBag.Conversation as int? ?? 0;
+    ViewData["Title"] = "Messages";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // عدل المسار حسب الـ Layout الخاص بك
+}
+
+<!-- CSS مباشرة بدون Section -->
+<style>
+    .contacts-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    /* Header */
+    .contacts-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px 25px;
+        color: white;
+    }
+
+        .contacts-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .contacts-header h1 i {
+                font-size: 32px;
+                opacity: 0.9;
+            }
+
+        .contacts-header p {
+            font-size: 15px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+    /* Search Bar */
+    .search-wrapper {
+        padding: 20px 25px;
+        background: white;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+            .search-box input:focus {
+                outline: none;
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+            .search-box input::placeholder {
+                color: #a0aec0;
+            }
+
+    /* Contacts List */
+    .contacts-list {
+        background: white;
+        max-height: 450px;
+        overflow-y: auto;
+    }
+
+    .section-label {
+        padding: 15px 25px 8px;
+        color: #718096;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #fafafa;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 25px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid #f1f5f9;
+        position: relative;
+    }
+
+        .contact-item:hover {
+            background: #f7fafc;
+            transform: translateX(5px);
+        }
+
+        .contact-item:active {
+            background: #edf2f7;
+        }
+
+    /* Avatar */
+    .contact-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        font-weight: 600;
+        margin-right: 15px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+    }
+
+    /* Contact Info */
+    .contact-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .contact-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .online-indicator {
+        width: 8px;
+        height: 8px;
+        background: #48bb78;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .contact-preview {
+        font-size: 13px;
+        color: #718096;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .contact-preview i {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+    .time-ago {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Badge */
+    .unread-badge {
+        background: #667eea;
+        color: white;
+        border-radius: 30px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 24px;
+        text-align: center;
+        margin-left: 12px;
+        box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .new-badge {
+        background: #48bb78;
+        color: white;
+        border-radius: 30px;
+        padding: 4px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 12px;
+        box-shadow: 0 3px 8px rgba(72, 187, 120, 0.3);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 50px 25px;
+        color: #a0aec0;
+    }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #cbd5e0;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .empty-state small {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+    /* New Contacts Section */
+    .new-contacts-section {
+        margin-top: 25px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .new-contacts-header {
+        background: #f8f9ff;
+        padding: 18px 25px;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+        .new-contacts-header h3 {
+            font-size: 16px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+            .new-contacts-header h3 i {
+                color: #667eea;
+            }
+
+    .new-contacts-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+        /* Scrollbar */
+        .contacts-list::-webkit-scrollbar,
+        .new-contacts-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .contacts-list::-webkit-scrollbar-track,
+        .new-contacts-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .contacts-list::-webkit-scrollbar-thumb,
+        .new-contacts-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+            .contacts-list::-webkit-scrollbar-thumb:hover,
+            .new-contacts-list::-webkit-scrollbar-thumb:hover {
+                background: #a0aec0;
+            }
+
+  
+
+        .contact-item {
+            padding: 12px 15px;
+        }
+
+        .contact-avatar {
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
+
+        .contacts-header {
+            padding: 20px;
+        }
+
+            .contacts-header h1 {
+                font-size: 24px;
+            }
+    }
+
+    /* Font Import */
+
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Active Chats Section -->
+    <div class="contacts-container mb-4">
+        <div class="contacts-header">
+            <h1>
+                <i class="fas fa-comments"></i>
+                Messages
+            </h1>
+            <p>Connect with your contacts</p>
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrapper">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search conversations...">
+            </div>
+        </div>
+
+        <!-- Contacts List -->
+        <div class="contacts-list" id="contactsList">
+            <div class="section-label">
+                <i class="fas fa-circle me-2" style="color: #667eea; font-size: 8px;"></i>
+                ACTIVE CHATS
+            </div>
+
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var contact in Model)
+                {
+                    <a asp-action="Conversation" asp-route-otherUserId="@contact.OtherUserId" class="contact-item">
+                        <div class="contact-avatar">
+                            @if (!string.IsNullOrEmpty(contact.FullName))
+                            {
+                                @contact.FullName.Substring(0, 1).ToUpper()
+                            }
+                            else
+                            {
+                                <i class="fas fa-user"></i>
+                            }
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name">
+                                @contact.FullName
+                                <span class="online-indicator"></span>
+                            </div>
+                            <div class="contact-preview">
+                                <span class="time-ago">
+                                    <i class="far fa-clock"></i>
+                                    Active now
+                                </span>
+                            </div>
+                        </div>
+                        @if (unreadCount > 0)
+                        {
+
+                            <span class="unread-badge">@unreadCount</span>
+                        }
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="far fa-comment-dots"></i>
+                    <p>No active conversations</p>
+                    <small>Start a new chat from contacts below</small>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- New Contacts Section -->
+    @if (NewContacts != null && NewContacts.Any())
+    {
+        <div class="new-contacts-section">
+            <div class="new-contacts-header">
+                <h3>
+                    <i class="fas fa-user-plus"></i>
+                    New Contacts
+                </h3>
+            </div>
+            <div class="new-contacts-list">
+                @foreach (var contact in NewContacts)
+                {
+                    <a asp-action="Conversation" asp-route-otherUserId="@contact.OtherUserId" class="contact-item">
+                        <div class="contact-avatar" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                            @if (!string.IsNullOrEmpty(contact.FullName))
+                            {
+                                @contact.FullName.Substring(0, 1).ToUpper()
+                            }
+                            else
+                            {
+                                <i class="fas fa-user"></i>
+                            }
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name">
+                                @contact.FullName
+                            </div>
+                            <div class="contact-preview">
+                                <span>
+                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                    New contact
+                                </span>
+                            </div>
+                        </div>
+                        <span class="new-badge">NEW</span>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Scripts مباشرة بدون Section -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Live search functionality
+        $("#searchInput").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#contactsList .contact-item").filter(function() {
+                var name = $(this).find(".contact-name").text().toLowerCase();
+                $(this).toggle(name.indexOf(value) > -1);
+            });
+        });
+
+        // Optional: Add click animation
+        $(".contact-item").on("click", function(e) {
+            $(this).css("background", "#edf2f7");
+            setTimeout(() => {
+                $(this).css("background", "");
+            }, 200);
+        });
+    });
+</script>

@@ -1,0 +1,280 @@
+﻿@model ChatViewModel
+@{
+    ViewData["Title"] = "المحادثة";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-chat-dots-fill me-2"></i>
+                محادثة  #@Model.OtherUserName
+            </h5>
+            <a href="@Url.Action("Contacts")" class="btn btn-sm btn-light">
+                <i class="bi bi-arrow-right"></i> الرجوع
+            </a>
+        </div>
+
+        <div class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;" id="chatBox">
+            @if (Model.Messages != null && Model.Messages.Any())
+            {
+                @foreach (var msg in Model.Messages)
+                {
+                    <div class="message-wrapper @(msg.SenderId == currentUserId ? "message-sent" : "message-received")">
+                        <div class="message-bubble">
+                            <div class="message-sender">@(msg.SenderName ?? "مستخدم")</div>
+                            <div class="message-content">@msg.Content</div>
+                            <div class="message-time">@msg.SentAt.ToString("hh:mm tt")</div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted mt-5">
+                    <i class="bi bi-chat fs-1"></i>
+                    <p class="mt-3">لا توجد رسائل بعد، ابدأ المحادثة الآن!</p>
+                </div>
+            }
+        </div>
+
+        <div class="card-footer bg-white">
+            <div class="input-group">
+                <input type="text" id="messageInput" class="form-control" placeholder="اكتب رسالتك..."
+                       onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button class="btn btn-primary" onclick="sendMessage()" id="sendButton">
+                    <i class="bi bi-send"></i> إرسال
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .message-wrapper {
+        margin-bottom: 15px;
+        display: flex;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .message-sent {
+        justify-content: flex-end;
+    }
+
+    .message-received {
+        justify-content: flex-start;
+    }
+
+    .message-bubble {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        position: relative;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .message-sent .message-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+
+    .message-received .message-bubble {
+        background-color: white;
+        color: #333;
+        border-bottom-left-radius: 5px;
+    }
+
+    .message-sender {
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-bottom: 3px;
+        opacity: 0.8;
+    }
+
+    .message-content {
+        font-size: 1rem;
+        word-wrap: break-word;
+    }
+
+    .message-time {
+        font-size: 0.7rem;
+        margin-top: 3px;
+        opacity: 0.7;
+    }
+
+    .message-sent .message-time {
+        text-align: left;
+    }
+
+    .message-received .message-time {
+        text-align: right;
+    }
+
+    #chatBox::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #chatBox::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    #chatBox::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+        #chatBox::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    const currentUserId = "@currentUserId";
+    const bookingId = @Model.OtherUserId;
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("ReceiveMessage", function(message) {
+        if (message.bookingId === bookingId) {
+            addMessageToChat(message);
+            updateUnreadCount();
+        }
+    });
+
+    function addMessageToChat(message) {
+        const chatBox = document.getElementById("chatBox");
+        const isMyMessage = message.senderId === currentUserId;
+
+        // لو فاضية نمسح رسالة "لا توجد رسائل"
+        if (chatBox.children.length === 1 && chatBox.children[0].classList.contains('text-muted')) {
+            chatBox.innerHTML = '';
+        }
+
+        const div = document.createElement("div");
+        div.className = `message-wrapper ${isMyMessage ? 'message-sent' : 'message-received'}`;
+
+        const time = message.sentAt ? new Date(message.sentAt).toLocaleTimeString('ar-EG', {
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+        div.innerHTML = `
+            <div class="message-bubble">
+                <div class="message-sender">${message.senderName || 'مستخدم'}</div>
+                <div class="message-content">${message.content}</div>
+                <div class="message-time">${time}</div>
+            </div>
+        `;
+
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    connection.start().then(function() {
+        console.log("Connected to SignalR");
+        connection.invoke("JoinBookingGroup", bookingId).catch(err => console.error(err));
+    }).catch(function(err) {
+        console.error("Connection failed: ", err);
+    });
+
+       function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const content = input.value.trim();
+        if (!content) return;
+
+        const sendButton = document.getElementById("sendButton");
+        sendButton.disabled = true;
+
+        fetch('/Message/SendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bookingId: 0,
+                otherUserId: '@Model.OtherUserId',
+                content: content
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+            } else {
+                alert(data.message);
+            }
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+            input.focus();
+        });
+    }
+
+       function loadMessages() {
+        fetch(`/Message/GetConversation?otherUserId=@Model.OtherUserId`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.messages) {
+                    const chatBox = document.getElementById("chatBox");
+                    chatBox.innerHTML = '';
+                    if (data.messages.length === 0) {
+                        chatBox.innerHTML = `<div class="text-center text-muted mt-5"><i class="bi bi-chat fs-1"></i><p class="mt-3">لا توجد رسائل بعد</p></div>`;
+                    } else {
+                        data.messages.forEach(msg => addMessageToChat(msg));
+                    }
+                }
+            });
+    }
+    function updateUnreadCount() {
+        fetch('/Message/UnReadCount')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('unreadMessagesBadge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => console.error('Error updating unread count:', error));
+    }
+
+    // تحميل الرسائل عند فتح الصفحة
+    loadMessages();
+
+    // تحديث كل 10 ثواني
+    setInterval(loadMessages, 10000);
+
+    // عند مغادرة الصفحة
+    window.addEventListener("beforeunload", function() {
+        connection.invoke("LeaveBookingGroup", bookingId);
+        connection.stop();
+    });
+
+    // إرسال بالضغط على Enter
+    document.getElementById("messageInput").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>

@@ -1,0 +1,38 @@
+﻿@inject UserManager<AppUser> userManager
+@{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var user = userManager.FindByIdAsync(userId).Result;
+}
+
+@if (user != null)
+{
+    <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center">
+            <span class="badge text-bg-primary text-white  me-1 ms-2" style="min-width:40px; text-align:center;">
+                My Rating: @user.AverageRating?.ToString("0.0")
+            </span>
+            @{
+                var rating = user.AverageRating ?? 0m;
+                var fullStar = (int)Math.Floor(rating);
+                var hasHalfStar = rating - fullStar >= 0.5m;
+            }
+
+            @for (int i = 1; i <= 5; i++)
+            {
+                if (i <= fullStar)
+                {
+                    <i class="bi bi-star-fill text-warning fs-4 me-1"></i>
+                }
+                else if (i == fullStar + 1 && hasHalfStar)
+                {
+                    <i class="bi bi-star-half text-warning fs-4 me-1"></i>
+                }
+                else
+                {
+                    <i class="bi bi-star text-warning fs-4 me-1"></i>
+                }
+            }
+
+        </div>
+    </div>
+}

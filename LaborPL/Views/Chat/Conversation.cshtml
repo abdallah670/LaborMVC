@@ -1,0 +1,471 @@
+﻿@model LaborBLL.ModelVM.ChatViewModel
+@using System.Security.Claims
+@{
+    ViewData["Title"] = $"Chat with {Model.OtherUserName}";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+<!-- CSS بسيط للشات -->
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f0f2f5;
+        margin: 0; /* تأكد إنها 0 */
+        padding: 0; /* تأكد إنها 0 */
+    }
+
+    .chat-container {
+        max-width: 800px;
+        margin: 0 auto; /* خليها 0 auto مش 20px auto */
+        background: white;
+        border-radius: 16px 16px 0 0; /* خلي الركن تحت عادي */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        height: calc(90vh - 140px); /* نزل الرقم حسب ارتفاع النافبار والفوتر بتوعك */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-header {
+        background: #075e54;
+        color: white;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+    .back-button {
+        color: white;
+        text-decoration: none;
+        font-size: 20px;
+        opacity: 0.9;
+    }
+
+        .back-button:hover {
+            opacity: 1;
+        }
+
+    .online-status {
+        font-size: 13px;
+        opacity: 0.8;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .online-dot {
+        width: 8px;
+        height: 8px;
+        background: #4caf50;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .messages-area {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #e5ddd5;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .message-wrapper {
+        display: flex;
+        width: 100%;
+    }
+
+        .message-wrapper.sent {
+            justify-content: flex-end;
+        }
+
+        .message-wrapper.received {
+            justify-content: flex-start;
+        }
+
+    .message-bubble {
+        max-width: 65%;
+        padding: 10px 14px;
+        border-radius: 16px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .sent .message-bubble {
+        background: #dcf8c6;
+        border-bottom-right-radius: 4px;
+    }
+
+    .received .message-bubble {
+        background: white;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .message-content {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #111;
+    }
+
+    .message-time {
+        font-size: 11px;
+        color: #667781;
+        margin-top: 4px;
+        text-align: left;
+    }
+
+    .sent .message-time {
+        text-align: right;
+        color: #60766d;
+    }
+
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 12px 18px;
+        background: white;
+        border-radius: 18px;
+        width: fit-content;
+        margin-bottom: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: #8696a0;
+        border-radius: 50%;
+        animation: typingBounce 1.3s infinite;
+    }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+   
+    .input-area {
+        background: #f0f2f5;
+        padding: 15px 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .message-input-wrapper {
+        flex: 1;
+        position: relative;
+    }
+
+    #messageInput {
+        width: 100%;
+        padding: 12px 18px;
+        border: 1px solid #ddd;
+        border-radius: 24px;
+        font-size: 15px;
+        font-family: inherit;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+        #messageInput:focus {
+            border-color: #075e54;
+            box-shadow: 0 0 0 2px rgba(7, 94, 84, 0.1);
+        }
+
+        #messageInput::placeholder {
+            color: #999;
+        }
+
+    .send-button {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #075e54;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: all 0.3s;
+    }
+
+        .send-button:hover {
+            background: #0b7a6b;
+            transform: scale(1.05);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+    .date-separator {
+        text-align: center;
+        margin: 15px 0;
+    }
+
+        .date-separator span {
+            background: rgba(225, 245, 254, 0.92);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #3b4a54;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        color: #8696a0;
+    }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #b0b9c0;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+        }
+
+    /* Scrollbar */
+    .messages-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .messages-area::-webkit-scrollbar-track {
+        background: #d9d9d9;
+    }
+
+    .messages-area::-webkit-scrollbar-thumb {
+        background: #b3b3b3;
+        border-radius: 3px;
+    }
+</style>
+
+<div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header">
+        <a href="javascript:history.back()" class="back-button">←</a>
+        <div style="flex: 1;">
+            <h3>@Model.OtherUserName</h3>
+            <div class="online-status">
+                <span class="online-dot"></span>
+                <span>Online</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="messages-area" id="messagesArea">
+        @if (Model.Messages != null && Model.Messages.Any())
+        {
+            DateTime? lastDate = null;
+            foreach (var msg in Model.Messages.OrderBy(m => m.SentAt))
+            {
+                var msgDate = msg.SentAt.ToLocalTime().Date;
+
+                @if (lastDate != msgDate)
+                {
+                    <div class="date-separator">
+                        <span>@msg.SentAt.ToLocalTime().ToString("dddd, MMM d")</span>
+                    </div>
+                    lastDate = msgDate;
+                }
+
+                var isSentByMe = msg.SenderId == currentUserId;
+
+                <div class="message-wrapper @(isSentByMe ? "sent" : "received")">
+                    <div class="message-bubble">
+                        <div class="message-content">@msg.Content</div>
+                        <div class="message-time">
+                            @msg.SentAt.ToLocalTime().ToString("hh:mm tt")
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="far fa-comment-dots"></i>
+                <p>No messages yet. Start the conversation!</p>
+            </div>
+        }
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typingIndicator" class="typing-indicator" style="display: none; margin: 0 20px 10px;">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span style="font-size: 12px; color: #667781; margin-right: 5px;">@Model.OtherUserName is typing...</span>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+        <div class="message-input-wrapper">
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+        </div>
+        <button class="send-button" id="sendBtn">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            const currentUserId = '@currentUserId';
+            const otherUserId = '@Model.OtherUserId';
+            const messagesArea = document.getElementById('messagesArea');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const typingIndicator = document.getElementById('typingIndicator');
+
+            // Scroll to bottom on load
+            function scrollToBottom() {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
+            scrollToBottom();
+
+            // SignalR Connection
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/DirectChatHub")
+                .withAutomaticReconnect()
+                .build();
+
+            // Start connection
+            connection.start().then(function () {
+                console.log('✅ Connected to chat hub');
+                // Join direct room
+                connection.invoke("JoinDirectRoom", currentUserId, otherUserId);
+
+                // Mark messages as read
+                connection.invoke("MarkMessagesAsRead", otherUserId, currentUserId);
+            }).catch(function (err) {
+                console.error('❌ Connection failed: ', err);
+            });
+
+            // Receive message
+            connection.on("ReceiveMessage", function (senderId, content, sentAt) {
+                console.log('📩 Message received:', { senderId, content, sentAt });
+
+                const isSentByMe = senderId === currentUserId;
+
+                const messageHtml = `
+                    <div class="message-wrapper ${isSentByMe ? 'sent' : 'received'}">
+                        <div class="message-bubble">
+                            <div class="message-content">${content}</div>
+                            <div class="message-time">
+                                ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                messagesArea.insertAdjacentHTML('beforeend', messageHtml);
+                scrollToBottom();
+            });
+
+            // Typing indicator
+            let typingTimeout;
+
+            connection.on("UserTyping", function (userId) {
+                console.log('✍️ User typing:', userId);
+                if (userId === otherUserId) {
+                    typingIndicator.style.display = 'flex';
+                    clearTimeout(typingTimeout);
+                    typingTimeout = setTimeout(() => {
+                        typingIndicator.style.display = 'none';
+                    }, 2000);
+                }
+            });
+
+            // Send typing notification
+            let typingTimer;
+            messageInput.addEventListener('input', function() {
+                clearTimeout(typingTimer);
+                connection.invoke("UserTyping", currentUserId, otherUserId);
+
+                typingTimer = setTimeout(function() {
+                    // Stop typing
+                }, 2000);
+            });
+
+            // Send message function
+            async function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                try {
+                    console.log('📤 Sending message:', message);
+
+                    const response = await fetch('@Url.Action("SendMessage", "Chat")', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            receiverId: otherUserId,
+                            content: message
+                        })
+                    });
+
+                    if (response.ok) {
+                        messageInput.value = '';
+                        console.log('✅ Message sent successfully');
+                    } else {
+                        console.error('❌ Failed to send message');
+                    }
+                } catch (error) {
+                    console.error('❌ Error sending message:', error);
+                }
+            }
+
+            // Send on button click
+            sendBtn.addEventListener('click', sendMessage);
+
+            // Send on Enter
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Reconnection handling
+            connection.onreconnected(function() {
+                console.log('🔄 Reconnected to chat hub');
+                connection.invoke("JoinDirectRoom", currentUserId, otherUserId);
+            });
+        });
+    </script>
+}
