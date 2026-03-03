@@ -30,7 +30,8 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.UseNetTopologySuite()));
 
 // Configure Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
