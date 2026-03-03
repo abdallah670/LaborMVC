@@ -42,7 +42,8 @@ namespace LaborDAL.Repo.Implementation
 
         public async Task<IEnumerable<Payment>> GetPaymentsPendingReleaseAsync(TimeSpan timeSpan)
         {
-            var payments = await _dbSet.Where(p => p.Status == PaymentStatus.Pending && p.CreatedAt.ToShortTimeString() == timeSpan.ToString()).ToListAsync();
+            var cutoffTime = DateTime.UtcNow.Subtract(timeSpan);
+            var payments = await _dbSet.Where(p => p.Status == PaymentStatus.Held && p.CreatedAt <= cutoffTime).ToListAsync();
             return payments;
         }
 

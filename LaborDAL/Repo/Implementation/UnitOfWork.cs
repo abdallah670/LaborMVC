@@ -24,6 +24,11 @@ namespace LaborDAL.Repo.Implementation
         public IMessageRepo Messages { get; private set; }
         public IchatRepo chatrepo { get; private set; }
 
+        // Distributed transaction repositories
+        public IOutboxMessageRepository OutboxMessages { get; private set; }
+        public IPendingTransferRepository PendingTransfers { get; private set; }
+        public ISagaRepository Sagas { get; private set; }
+
         public UnitOfWork(
             ApplicationDbContext context,
             UserManager<AppUser> userManager,
@@ -51,14 +56,19 @@ namespace LaborDAL.Repo.Implementation
         private void InitializeRepositories()
         {
             AppUsers = new AppUserRepository(
-                _context, 
-                _userManager, 
-                _mapper, 
+                _context,
+                _userManager,
+                _mapper,
                 _loggerFactory.CreateLogger<AppUserRepository>());
 
             Tasks = new TaskRepository(_context);
 
             Disputes = new DisputeRepo(_context);
+
+            // Initialize distributed transaction repositories
+            OutboxMessages = new OutboxMessageRepository(_context);
+            PendingTransfers = new PendingTransferRepository(_context);
+            Sagas = new SagaRepository(_context);
         }
 
         public async Task<int> SaveAsync()

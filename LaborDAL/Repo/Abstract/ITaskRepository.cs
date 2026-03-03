@@ -1,5 +1,6 @@
 using LaborDAL.Entities;
 using LaborDAL.Enums;
+using System.Linq.Expressions;
 using TaskStatus = LaborDAL.Enums.TaskStatus;
 
 namespace LaborDAL.Repo.Abstract
@@ -129,5 +130,34 @@ namespace LaborDAL.Repo.Abstract
             bool isRemote,
             string? city = null,
             int count = 5);
+
+        /// <summary>
+        /// Get filtered tasks with pagination and total count
+        /// </summary>
+        Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetFilteredPagedAsync(
+            TaskCategory? category = null,
+            TaskStatus? status = null,
+            decimal? minBudget = null,
+            decimal? maxBudget = null,
+            bool? isRemote = null,
+            bool? isUrgent = null,
+            decimal? latitude = null,
+            decimal? longitude = null,
+            double? radiusKm = null,
+            string? searchKeyword = null,
+            string? sortBy = null,
+            string? sortDirection = "asc",
+            int page = 1,
+            int pageSize = 20);
+
+        /// <summary>
+        /// Get filtered tasks with custom filter expression
+        /// </summary>
+        Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetFilteredPagedAsync(
+            System.Linq.Expressions.Expression<Func<TaskItem, bool>>? filter,
+            int page,
+            int pageSize,
+            Func<IQueryable<TaskItem>, IOrderedQueryable<TaskItem>>? orderBy,
+            bool ascending = true);
     }
 }

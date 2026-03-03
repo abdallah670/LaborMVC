@@ -3,6 +3,7 @@ using LaborDAL.Entities;
 using LaborDAL.Enums;
 using LaborDAL.Repo.Abstract;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TaskStatus = LaborDAL.Enums.TaskStatus;
 
 namespace LaborDAL.Repo.Implementation
@@ -293,6 +294,182 @@ namespace LaborDAL.Repo.Implementation
                 .ToList();
 
             return sortedTasks;
+        }
+
+        /// <summary>
+        /// Get filtered tasks with pagination and total count
+        /// </summary>
+        public async Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetFilteredPagedAsync(
+            TaskCategory? category = null,
+            TaskStatus? status = null,
+            decimal? minBudget = null,
+            decimal? maxBudget = null,
+            bool? isRemote = null,
+            bool? isUrgent = null,
+            decimal? latitude = null,
+            decimal? longitude = null,
+            double? radiusKm = null,
+            string? searchKeyword = null,
+            string? sortBy = null,
+            string? sortDirection = "asc",
+            int page = 1,
+            int pageSize = 20)
+        {
+            // Validate pagination parameters
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
+            var query = _dbSet
+                .Include(t => t.Poster)
+                .Where(t => !t.IsDeleted);
+
+            // Apply filters
+            if (category.HasValue)
+            {
+                query = query.Where(t => t.Category == category.Value);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(t => t.Status == status.Value);
+            }
+
+            if (minBudget.HasValue)
+            {
+                query = query.Where(t => t.Budget >= minBudget.Value);
+            }
+
+            if (maxBudget.HasValue)
+            {
+                query = query.Where(t => t.Budget <= maxBudget.Value);
+            }
+
+            if (isRemote.HasValue)
+            {
+                query = query.Where(t => t.IsRemote == isRemote.Value);
+            }
+
+            if (isUrgent.HasValue)
+            {
+                query = query.Where(t => t.IsUrgent == isUrgent.Value);
+            }
+
+            // Apply keyword search
+            if (!string.IsNullOrWhiteSpace(searchKeyword))
+            {
+                var lowerKeyword = searchKeyword.ToLower();
+                query = query.Where(t =>
+                    t.Title.ToLower().Contains(lowerKeyword) ||
+                    t.Description.ToLower().Contains(lowerKeyword));
+            }
+
+            // Apply location filter if coordinates provided
+            if (latitude.HasValue && longitude.HasValue && radiusKm.HasValue)
+            {
+                var tasksInRadius = await GetTasksWithinRadiusAsync(latitude.Value, longitude.Value, radiusKm.Value);
+                var taskIds = tasksInRadius.Select(t => t.Id).ToHashSet();
+                query = query.Where(t => taskIds.Contains(t.Id));
+            }
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply sorting
+            query = ApplySorting(query, sortBy, sortDirection);
+
+            // Apply pagination
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
+        /// <summary>
+        /// Get filtered tasks with custom filter expression
+        /// </summary>
+        public async Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetFilteredPagedAsync(
+            System.Linq.Expressions.Expression<Func<TaskItem, bool>>? filter,
+            int page,
+            int pageSize,
+            Func<IQueryable<TaskItem>, IOrderedQueryable<TaskItem>>? orderBy,
+            bool ascending = true)
+        {
+            // Validate pagination parameters
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 1000);
+
+            var query = _dbSet
+                .Include(t => t.Poster)
+                .Where(t => !t.IsDeleted);
+
+            // Apply custom filter
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply ordering
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+            else
+            {
+                query = query.OrderByDescending(t => t.CreatedAt);
+            }
+
+            // Apply pagination
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
+        /// <summary>
+        /// Apply dynamic sorting to task query
+        /// </summary>
+        private IQueryable<TaskItem> ApplySorting(IQueryable<TaskItem> query, string? sortBy, string? sortDirection)
+        {
+            var isDescending = sortDirection?.ToLower() == "desc";
+
+            switch (sortBy?.ToLower())
+            {
+                case "budget":
+                    return isDescending
+                        ? query.OrderByDescending(t => t.Budget)
+                        : query.OrderBy(t => t.Budget);
+                
+                case "createdat":
+                case "date":
+                    return isDescending
+                        ? query.OrderByDescending(t => t.CreatedAt)
+                        : query.OrderBy(t => t.CreatedAt);
+                
+                case "title":
+                    return isDescending
+                        ? query.OrderByDescending(t => t.Title)
+                        : query.OrderBy(t => t.Title);
+                
+                case "viewcount":
+                case "views":
+                    return isDescending
+                        ? query.OrderByDescending(t => t.ViewCount)
+                        : query.OrderBy(t => t.ViewCount);
+                
+                default:
+                    // Default: Featured first, then urgent, then newest
+                    return query
+                        .OrderByDescending(t => t.IsFeatured)
+                        .ThenByDescending(t => t.IsUrgent)
+                        .ThenByDescending(t => t.CreatedAt);
+            }
         }
     }
 }

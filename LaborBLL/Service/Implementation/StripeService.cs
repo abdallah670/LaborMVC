@@ -17,16 +17,21 @@ namespace LaborBLL.Service.Implementation
             StripeConfiguration.ApiKey = _config["Stripe:SecretKey"];
         }
 
-        public  Task CapturePaymentIntentAsync(string? transactionId)
+        public async Task CapturePaymentIntentAsync(string? transactionId)
         {
+            if (string.IsNullOrEmpty(transactionId))
+            {
+                throw new ArgumentException("Transaction ID is required", nameof(transactionId));
+            }
+            
             try
             {
                 var service = new PaymentIntentService();
-                return service.CaptureAsync(transactionId);
+                await service.CaptureAsync(transactionId);
             }
-            catch (Exception ex)
+            catch (StripeException ex)
             {
-                throw new Exception($"Error capturing payment intent: {ex.Message}");
+                throw new InvalidOperationException($"Failed to capture payment: {ex.Message}", ex);
             }
         }
 

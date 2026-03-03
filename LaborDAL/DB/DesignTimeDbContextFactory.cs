@@ -1,4 +1,6 @@
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace LaborDAL.DB
 {
@@ -10,15 +12,19 @@ namespace LaborDAL.DB
         public ApplicationDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            
+
             // Use a connection string for design-time operations
             // This can be overridden by command line arguments
-            var connectionString = args.Length > 0 
-                ? args[0] 
+            var connectionString = args.Length > 0
+                ? args[0]
                 : "Server=.;Database=LaborMVC;Integrated Security=SSPI;TrustServerCertificate=True";
-            
-            optionsBuilder.UseSqlServer(connectionString);
-            
+
+            // Enable NetTopologySuite for spatial data support
+            optionsBuilder.UseSqlServer(connectionString, options =>
+            {
+                options.UseNetTopologySuite();
+            });
+
             return new ApplicationDbContext(optionsBuilder.Options);
         }
     }

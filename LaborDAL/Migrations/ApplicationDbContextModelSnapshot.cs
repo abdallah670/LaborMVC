@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
@@ -65,9 +66,14 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SenderId");
+                    b.HasIndex("IsRead")
+                        .HasDatabaseName("IX_Messages_IsRead");
 
-                    b.HasIndex("bookingId");
+                    b.HasIndex("SenderId")
+                        .HasDatabaseName("IX_Messages_SenderId");
+
+                    b.HasIndex("bookingId", "SentAt")
+                        .HasDatabaseName("IX_Messages_BookingId_SentAt");
 
                     b.ToTable("Message");
                 });
@@ -296,13 +302,21 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("CreatedAt");
 
-                    b.HasIndex("PosterId");
-
                     b.HasIndex("Status");
 
-                    b.HasIndex("TaskItemId");
+                    b.HasIndex("TaskItemId")
+                        .HasDatabaseName("IX_Bookings_TaskItemId");
 
                     b.HasIndex("WorkerId");
+
+                    b.HasIndex("PosterId", "Status")
+                        .HasDatabaseName("IX_Bookings_PosterId_Status");
+
+                    b.HasIndex("WorkerId", "Status")
+                        .HasDatabaseName("IX_Bookings_WorkerId_Status");
+
+                    b.HasIndex("WorkerId", "StartTime", "EndTime", "Status")
+                        .HasDatabaseName("IX_Bookings_Worker_Time_Status");
 
                     b.ToTable("Bookings", (string)null);
                 });
@@ -401,6 +415,76 @@ namespace LaborDAL.Migrations
                     b.ToTable("Disputes");
                 });
 
+            modelBuilder.Entity("LaborDAL.Entities.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("AggregateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AggregateType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ErrorStackTrace")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Headers")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("LockExpiryAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LockToken")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MaxRetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OutboxMessages");
+                });
+
             modelBuilder.Entity("LaborDAL.Entities.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -447,6 +531,10 @@ namespace LaborDAL.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -489,9 +577,22 @@ namespace LaborDAL.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookingId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payments_BookingId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payments_IdempotencyKey")
+                        .HasFilter("[IdempotencyKey] IS NOT NULL");
+
+                    b.HasIndex("TransactionId")
+                        .HasDatabaseName("IX_Payments_TransactionId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Payments_UserId");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_Payments_Status_CreatedAt");
 
                     b.ToTable("Payments");
                 });
@@ -543,6 +644,86 @@ namespace LaborDAL.Migrations
                     b.ToTable("PaymentAuditLogs");
                 });
 
+            modelBuilder.Entity("LaborDAL.Entities.PendingTransfer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LockExpiryAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LockToken")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MaxRetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PlatformFeeAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StripeTransferId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TransferGroup")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("WorkerStripeAccountId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PendingTransfers");
+                });
+
             modelBuilder.Entity("LaborDAL.Entities.Rating", b =>
                 {
                     b.Property<int>("Id")
@@ -582,6 +763,121 @@ namespace LaborDAL.Migrations
                         .IsUnique();
 
                     b.ToTable("Rating");
+                });
+
+            modelBuilder.Entity("LaborDAL.Entities.SagaInstance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("AggregateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AggregateType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CompensatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentStepIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ErrorStackTrace")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LockExpiryAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LockToken")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SagaData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SagaType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalSteps")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SagaInstances");
+                });
+
+            modelBuilder.Entity("LaborDAL.Entities.SagaStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompensatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ErrorStackTrace")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExecutedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InputData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCompensated")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsExecuted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ResultData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SagaInstanceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StepName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SagaInstanceId");
+
+                    b.ToTable("SagaSteps");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
@@ -648,15 +944,24 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_TaskApplications_CreatedAt");
+
                     b.HasIndex("Status");
 
                     b.HasIndex("TaskItemId");
 
                     b.HasIndex("WorkerId");
 
+                    b.HasIndex("TaskItemId", "Status")
+                        .HasDatabaseName("IX_TaskApplications_TaskItemId_Status");
+
                     b.HasIndex("TaskItemId", "WorkerId")
                         .IsUnique()
                         .HasFilter("[WorkerId] IS NOT NULL");
+
+                    b.HasIndex("WorkerId", "Status")
+                        .HasDatabaseName("IX_TaskApplications_WorkerId_Status");
 
                     b.ToTable("TaskApplications", (string)null);
                 });
@@ -748,6 +1053,9 @@ namespace LaborDAL.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<Point>("LocationGeography")
+                        .HasColumnType("geography");
+
                     b.Property<string>("LocationUrl")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -807,7 +1115,13 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("Latitude", "Longitude");
 
+                    b.HasIndex("PosterId", "Status")
+                        .HasDatabaseName("IX_Tasks_PosterId_Status");
+
                     b.HasIndex("Status", "Category");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_Tasks_Status_CreatedAt");
 
                     b.ToTable("Tasks", (string)null);
                 });
@@ -1085,6 +1399,17 @@ namespace LaborDAL.Migrations
                     b.Navigation("Payment");
                 });
 
+            modelBuilder.Entity("LaborDAL.Entities.PendingTransfer", b =>
+                {
+                    b.HasOne("LaborDAL.Entities.Payment", "Payment")
+                        .WithMany()
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("LaborDAL.Entities.Rating", b =>
                 {
                     b.HasOne("LaborDAL.Entities.AppUser", "Rated")
@@ -1110,6 +1435,17 @@ namespace LaborDAL.Migrations
                     b.Navigation("Rated");
 
                     b.Navigation("Rater");
+                });
+
+            modelBuilder.Entity("LaborDAL.Entities.SagaStep", b =>
+                {
+                    b.HasOne("LaborDAL.Entities.SagaInstance", "SagaInstance")
+                        .WithMany("Steps")
+                        .HasForeignKey("SagaInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SagaInstance");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
@@ -1215,6 +1551,11 @@ namespace LaborDAL.Migrations
                         .IsRequired();
 
                     b.Navigation("Ratings");
+                });
+
+            modelBuilder.Entity("LaborDAL.Entities.SagaInstance", b =>
+                {
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskItem", b =>

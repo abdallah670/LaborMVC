@@ -39,6 +39,12 @@ namespace LaborDAL.Entities
         [StringLength(100)]
         public string? ClientSecret { get; set; }
 
+        /// <summary>
+        /// Idempotency key to prevent duplicate payments
+        /// </summary>
+        [StringLength(100)]
+        public string? IdempotencyKey { get; set; }
+
         [Required]
         [StringLength(20)]
         public PaymentStatus Status { get; set; } = PaymentStatus.Held; // "Pending", "Completed", "Failed", "Refunded"

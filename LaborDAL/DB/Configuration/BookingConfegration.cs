@@ -45,7 +45,18 @@ namespace LaborDAL.DB.Configuration
             builder.HasIndex(b => b.TaskItemId);
             builder.HasIndex(b => b.WorkerId);
             builder.HasIndex(b => b.Status);
-
+            
+            // Index for double-booking prevention queries
+            builder.HasIndex(b => new { b.WorkerId, b.StartTime, b.EndTime, b.Status })
+                .HasDatabaseName("IX_Bookings_Worker_Time_Status");
+            
+            // Additional performance indexes
+            builder.HasIndex(b => new { b.WorkerId, b.Status })
+                .HasDatabaseName("IX_Bookings_WorkerId_Status");
+            builder.HasIndex(b => new { b.PosterId, b.Status })
+                .HasDatabaseName("IX_Bookings_PosterId_Status");
+            builder.HasIndex(b => b.TaskItemId)
+                .HasDatabaseName("IX_Bookings_TaskItemId");
 
             // Global query filter for soft delete
             builder.HasQueryFilter(b => b.Status != BookingStatus.Cancelled);

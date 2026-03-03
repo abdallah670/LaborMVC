@@ -7,7 +7,7 @@ namespace LaborBLL.ModelVM
     /// <summary>
     /// ViewModel for creating a new task
     /// </summary>
-    public class CreateTaskViewModel
+    public class CreateTaskViewModel : IValidatableObject
     {
         [Required(ErrorMessage = "Title is required")]
         [StringLength(200, MinimumLength = 5, ErrorMessage = "Title must be between 5 and 200 characters")]
@@ -80,6 +80,34 @@ namespace LaborBLL.ModelVM
 
         [Display(Name = "Is Urgent")]
         public bool IsUrgent { get; set; } = false;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (StartDate.HasValue && DueDate.HasValue)
+            {
+                if (DueDate.Value < StartDate.Value)
+                {
+                    yield return new ValidationResult(
+                        "Due date must be after start date",
+                        new[] { nameof(DueDate) });
+                }
+            }
+
+            if (DueDate.HasValue && DueDate.Value < DateTime.Now.Date)
+            {
+                yield return new ValidationResult(
+                    "Due date cannot be in the past",
+                    new[] { nameof(DueDate) });
+            }
+
+            if (!IsRemote && string.IsNullOrWhiteSpace(Location) &&
+                (!Latitude.HasValue || !Longitude.HasValue))
+            {
+                yield return new ValidationResult(
+                    "Location is required for non-remote tasks",
+                    new[] { nameof(Location) });
+            }
+        }
     }
 
     /// <summary>

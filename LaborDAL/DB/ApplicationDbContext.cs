@@ -33,6 +33,10 @@ namespace LaborDAL.DB
         public DbSet<Dispute> Disputes { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
+        public DbSet<OutboxMessage> OutboxMessages { get; set; }
+        public DbSet<PendingTransfer> PendingTransfers { get; set; }
+        public DbSet<SagaInstance> SagaInstances { get; set; }
+        public DbSet<SagaStep> SagaSteps { get; set; }
 
 
         /// <summary>

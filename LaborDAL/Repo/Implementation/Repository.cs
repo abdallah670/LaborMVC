@@ -69,22 +69,70 @@ namespace LaborDAL.Repo.Implementation
             return query;
         }
 
-        public async Task UpdateAsync(T entity)
+        public Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
+            // Note: SaveChanges is called by UnitOfWork to ensure atomic transactions
+            return Task.CompletedTask;
         }
 
-        public async Task RemoveAsync(T entity)
+        public Task RemoveAsync(T entity)
         {
             _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
+            // Note: SaveChanges is called by UnitOfWork to ensure atomic transactions
+            return Task.CompletedTask;
         }
 
-        public async Task RemoveRangeAsync(IEnumerable<T> entities)
+        public Task RemoveRangeAsync(IEnumerable<T> entities)
         {
             _dbSet.RemoveRange(entities);
-            await _context.SaveChangesAsync();
+            // Note: SaveChanges is called by UnitOfWork to ensure atomic transactions
+            return Task.CompletedTask;
+        }
+
+        public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedWithCountAsync(
+            int page,
+            int pageSize,
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        {
+            // Ensure valid pagination parameters
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
+            IQueryable<T> query = _dbSet;
+
+            // Apply filter if provided
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply ordering if provided, otherwise default to Id
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+            else
+            {
+                // Try to order by Id if available
+                var idProperty = typeof(T).GetProperty("Id");
+                if (idProperty != null)
+                {
+                    query = query.OrderBy(e => EF.Property<object>(e, "Id"));
+                }
+            }
+
+            // Apply pagination
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

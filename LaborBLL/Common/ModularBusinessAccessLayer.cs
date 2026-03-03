@@ -13,6 +13,17 @@ namespace LaborBLL.Common
         {
             services.AddAutoMapper(x => x.AddProfile(new AutoMapperProfile()));
 
+            // Register caching service
+            services.AddScoped<ICacheService, CacheService>();
+
+            // Register notification services
+            services.AddScoped<IEmailService, SendGridEmailService>();
+            services.AddScoped<ISmsService, TwilioSmsService>();
+
+            // Register verification limit service (M6)
+            // Note: ITaskRepository is already registered in AddModularDataAccessLayer
+            services.AddScoped<IVerificationLimitService, VerificationLimitService>();
+
             // Register services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
@@ -40,11 +51,14 @@ namespace LaborBLL.Common
 
             services.AddScoped<IMessageService, MessageService>();
 
+            // Distributed Transaction Services (C1 - Saga Pattern Implementation)
+            services.AddScoped<ISagaOrchestrator, SagaOrchestrator>();
+            services.AddScoped<ICompensationService, CompensationService>();
+            services.AddScoped<IDistributedTransactionService, DistributedTransactionService>();
 
-
-            //  services.AddScoped<IEmailService, EmailService>();
-
-            //   services.AddScoped<IStripePaymentService, StripePaymentService>();
+            // Background Jobs (C1 - Outbox Pattern & Transfer Queue)
+            services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
+            services.AddScoped<ITransferProcessorJob, TransferProcessorJob>();
 
             return services;
         }
