@@ -1,4 +1,5 @@
-﻿using LaborDAL.Enums;
+﻿using LaborBLL.Common;
+using LaborDAL.Enums;
 using Microsoft.Extensions.Configuration;
 using Stripe;
 
@@ -175,7 +176,7 @@ namespace LaborBLL.Service.Implementation
         {
             try
             {
-                var payment = UnitOfWork.Payments.GetByIdAsync(id).Result;
+                var payment = await UnitOfWork.Payments.GetByIdAsync(id);
                 if (payment == null)
                 {
                     return new Response<bool>(false, false, "Payment not found.");
@@ -200,10 +201,15 @@ namespace LaborBLL.Service.Implementation
                 {
                     return new Response<bool>(false,false, "Payment not found.");
                 }
-                if (payment.Status != PaymentStatus.Held)
+                
+                // Validate state transition using state machine
+                if (!PaymentStateMachine.CanTransition(payment.Status, PaymentStatus.Released))
                 {
-                    return new Response<bool>(false,false, "Only payments in 'Held' status can be processed.");
+                    return new Response<bool>(false, false,
+                        $"Cannot transition payment from '{payment.Status}' to 'Released'. " +
+                        $"Valid transitions from '{payment.Status}': {string.Join(", ", PaymentStateMachine.GetValidTransitions(payment.Status))}");
                 }
+                
                 await _stripeService.CapturePaymentIntentAsync(payment.TransactionId);
                 payment.Status = PaymentStatus.Released;
                 payment.ReleasedAt = DateTime.UtcNow;
@@ -226,9 +232,13 @@ namespace LaborBLL.Service.Implementation
                 {
                     return new Response<bool>(false, false, "Payment not found for the given Booking ID.");
                 }
-                if (payment.Status != PaymentStatus.Held && payment.Status != PaymentStatus.Pending)
+                
+                // Validate state transition using state machine
+                if (!PaymentStateMachine.CanTransition(payment.Status, PaymentStatus.Released))
                 {
-                    return new Response<bool>(false, false, "Only payments in 'Held' or 'Pending' status can be captured.");
+                    return new Response<bool>(false, false,
+                        $"Cannot transition payment from '{payment.Status}' to 'Released'. " +
+                        $"Valid transitions from '{payment.Status}': {string.Join(", ", PaymentStateMachine.GetValidTransitions(payment.Status))}");
                 }
                 
                 // Capture the payment (full amount comes to platform account)
@@ -267,10 +277,15 @@ namespace LaborBLL.Service.Implementation
                 {
                     return new Response<bool>(false, false, "Payment not found.");
                 }
-                if (payment.Status != PaymentStatus.Held && payment.Status != PaymentStatus.Released)
+                
+                // Validate state transition using state machine
+                if (!PaymentStateMachine.CanTransition(payment.Status, PaymentStatus.PartiallyRefunded))
                 {
-                    return new Response<bool>(false, false, "Payment cannot be refunded. Invalid status.");
+                    return new Response<bool>(false, false,
+                        $"Cannot transition payment from '{payment.Status}' to 'PartiallyRefunded'. " +
+                        $"Valid transitions from '{payment.Status}': {string.Join(", ", PaymentStateMachine.GetValidTransitions(payment.Status))}");
                 }
+                
                 var refundOptions = new RefundCreateOptions
                 {
                     PaymentIntent = payment.TransactionId,
@@ -278,7 +293,7 @@ namespace LaborBLL.Service.Implementation
                 };
                 var refundService = new RefundService();
                 await refundService.CreateAsync(refundOptions);
-                payment.Status = PaymentStatus.Refunded;
+                payment.Status = PaymentStatus.PartiallyRefunded;
                 payment.UpdatedAt = DateTime.UtcNow;
                 await UnitOfWork.Payments.UpdateAsync(payment);
                 await UnitOfWork.SaveAsync();
@@ -298,10 +313,15 @@ namespace LaborBLL.Service.Implementation
                 {
                     return new Response<bool>(false, false, "Payment not found.");
                 }
-                if (payment.Status != PaymentStatus.Held && payment.Status != PaymentStatus.Released)
+                
+                // Validate state transition using state machine
+                if (!PaymentStateMachine.CanTransition(payment.Status, PaymentStatus.Refunded))
                 {
-                    return new Response<bool>(false, false, "Payment cannot be refunded. Invalid status.");
+                    return new Response<bool>(false, false,
+                        $"Cannot transition payment from '{payment.Status}' to 'Refunded'. " +
+                        $"Valid transitions from '{payment.Status}': {string.Join(", ", PaymentStateMachine.GetValidTransitions(payment.Status))}");
                 }
+                
                 var refundOptions = new RefundCreateOptions
                 {
                     PaymentIntent = payment.TransactionId,

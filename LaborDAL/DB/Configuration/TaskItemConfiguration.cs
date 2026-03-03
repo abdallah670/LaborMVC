@@ -67,7 +67,6 @@ namespace LaborDAL.DB.Configuration
 
             // Indexes
             builder.HasIndex(t => t.PosterId);
-         
             builder.HasIndex(t => t.Status);
             builder.HasIndex(t => t.Category);
             builder.HasIndex(t => t.DueDate);
@@ -76,6 +75,12 @@ namespace LaborDAL.DB.Configuration
             builder.HasIndex(t => t.IsUrgent);
             builder.HasIndex(t => new { t.Status, t.Category });
             builder.HasIndex(t => new { t.Latitude, t.Longitude });
+            
+            // Additional indexes for performance
+            builder.HasIndex(t => new { t.PosterId, t.Status })
+                   .HasDatabaseName("IX_Tasks_PosterId_Status");
+            builder.HasIndex(t => new { t.Status, t.CreatedAt })
+                   .HasDatabaseName("IX_Tasks_Status_CreatedAt");
 
             // Spatial index for location-based queries (SQL Server specific)
             // Note: For true spatial queries, consider using NetTopologySuite

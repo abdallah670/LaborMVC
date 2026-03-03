@@ -1,4 +1,5 @@
 using LaborDAL.Enums;
+using NetTopologySuite.Geometries;
 using TaskStatus = LaborDAL.Enums.TaskStatus;
 
 namespace LaborDAL.Entities
@@ -72,6 +73,11 @@ namespace LaborDAL.Entities
         /// Geographic longitude of the task location (-180 to 180)
         /// </summary>
         public decimal? Longitude { get; set; }
+
+        /// <summary>
+        /// SQL Server GEOGRAPHY point for spatial queries (SRID 4326 - WGS 84)
+        /// </summary>
+        public Point? LocationGeography { get; set; }
 
         /// <summary>
         /// Country where the task is located

@@ -15,5 +15,10 @@ namespace LaborDAL.Repo.Abstract
         IDisputeRepo Disputes { get; }
         IPaymentRepo Payments { get; }
         IMessageRepo Messages { get; }
+
+        // Distributed transaction repositories
+        IOutboxMessageRepository OutboxMessages { get; }
+        IPendingTransferRepository PendingTransfers { get; }
+        ISagaRepository Sagas { get; }
     }
 }

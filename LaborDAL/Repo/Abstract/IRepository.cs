@@ -18,6 +18,15 @@ namespace LaborDAL.Repo.Abstract
         Task<int> CountAsync();
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
         Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize);
+        
+        /// <summary>
+        /// Gets paginated results with total count for proper pagination metadata
+        /// </summary>
+        Task<(IEnumerable<T> Items, int TotalCount)> GetPagedWithCountAsync(
+            int page,
+            int pageSize,
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
         IQueryable<T> Get(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
             Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null);
     }

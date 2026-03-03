@@ -13,28 +13,51 @@ namespace LaborBLL.Service.Implementation
             this.mapper = mapper;
         }
         public async Task<Response<int>> CreateBookingAsync(CreateBookingViewModel model)
+        {
+            // Begin transaction for atomic operation
+            await unitOfWork.BeginTransactionAsync();
+            
+            try
+            {
+                var worker = await unitOfWork.AppUsers.GetByIdAsync(model.WorkerId);
+                if (worker == null)
                 {
-            var worker = await unitOfWork.AppUsers.GetByIdAsync(model.WorkerId);
-            if (worker == null)
-            {
-                return new Response<int>(0, false, "Worker not found");
-            }
+                    await unitOfWork.RollbackTransactionAsync();
+                    return new Response<int>(0, false, "Worker not found");
+                }
 
-            var ovverlaping=await unitOfWork.Bookings.FindAsync(b=>
-            b.WorkerId==model.WorkerId
-            && b.StartTime < model.EndTime
-            && b.EndTime > model.StartTime);
-            if (ovverlaping.Any())
-            {
-                return new Response<int>(0, false, "Worker is not available during the requested time");
+                // Check for overlapping bookings with locking
+                var ovverlaping = await unitOfWork.Bookings.FindAsync(b =>
+                    b.WorkerId == model.WorkerId
+                    && b.Status != BookingStatus.Cancelled
+                    && b.StartTime < model.EndTime
+                    && b.EndTime > model.StartTime);
+                    
+                if (ovverlaping.Any())
+                {
+                    await unitOfWork.RollbackTransactionAsync();
+                    return new Response<int>(0, false, "Worker is not available during the requested time");
+                }
+                
+                var booking = mapper.Map<Booking>(model);
+                booking.WorkerId = model.WorkerId;
+                booking.Status = BookingStatus.Scheduled;
+                booking.CreatedAt = DateTime.UtcNow;
+                
+                await unitOfWork.Bookings.AddAsync(booking);
+                await unitOfWork.SaveAsync();
+                
+                // Commit transaction
+                await unitOfWork.CommitTransactionAsync();
+                
+                return new Response<int>(booking.Id, true, null);
             }
-            var booking =mapper.Map<Booking>(model);
-            booking.WorkerId=model.WorkerId;
-            booking.Status=BookingStatus.Scheduled;
-            booking.CreatedAt=DateTime.UtcNow;
-            await unitOfWork.Bookings .AddAsync(booking);
-            await unitOfWork.SaveAsync();
-            return new Response<int>(booking.Id, true, null);
+            catch (Exception ex)
+            {
+                // Rollback on any error
+                await unitOfWork.RollbackTransactionAsync();
+                return new Response<int>(0, false, $"Failed to create booking: {ex.Message}");
+            }
         }
         public async Task<Response<bool>> UpdateBookingAsync(UpdateBookingViewModel model)
         {
@@ -102,11 +125,17 @@ namespace LaborBLL.Service.Implementation
 
             var mapped = mapper.Map<List<BookingDashboardViewModel>>(bookings);
 
-            var pendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
-            var inProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
-            var completedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
-            var cancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
-            var disputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+            // Optimize: Use single GroupBy to get all counts in one pass
+            var statusCounts = bookings
+                .GroupBy(b => b.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Status, x => x.Count);
+
+            var pendingCount = statusCounts.GetValueOrDefault(BookingStatus.Scheduled);
+            var inProgressCount = statusCounts.GetValueOrDefault(BookingStatus.InProgress);
+            var completedCount = statusCounts.GetValueOrDefault(BookingStatus.Completed);
+            var cancelledCount = statusCounts.GetValueOrDefault(BookingStatus.Cancelled);
+            var disputedCount = statusCounts.GetValueOrDefault(BookingStatus.Disputed);
 
             mapped.ForEach(b =>
             {
@@ -116,7 +145,6 @@ namespace LaborBLL.Service.Implementation
                 b.CancelledCount = cancelledCount;
                 b.DisputedCount = disputedCount;
             });
-
 
             return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
         }
@@ -127,11 +155,17 @@ namespace LaborBLL.Service.Implementation
 
             var mapped = mapper.Map<List<BookingDashboardViewModel>>(bookings);
 
-            var pendingCount = bookings.Count(x => x.Status == BookingStatus.Scheduled);
-            var inProgressCount = bookings.Count(x => x.Status == BookingStatus.InProgress);
-            var completedCount = bookings.Count(x => x.Status == BookingStatus.Completed);
-            var cancelledCount = bookings.Count(x => x.Status == BookingStatus.Cancelled);
-            var disputedCount = bookings.Count(x => x.Status == BookingStatus.Disputed);
+            // Optimize: Use single GroupBy to get all counts in one pass
+            var statusCounts = bookings
+                .GroupBy(b => b.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Status, x => x.Count);
+
+            var pendingCount = statusCounts.GetValueOrDefault(BookingStatus.Scheduled);
+            var inProgressCount = statusCounts.GetValueOrDefault(BookingStatus.InProgress);
+            var completedCount = statusCounts.GetValueOrDefault(BookingStatus.Completed);
+            var cancelledCount = statusCounts.GetValueOrDefault(BookingStatus.Cancelled);
+            var disputedCount = statusCounts.GetValueOrDefault(BookingStatus.Disputed);
 
             mapped.ForEach(b =>
             {
@@ -141,7 +175,6 @@ namespace LaborBLL.Service.Implementation
                 b.CancelledCount = cancelledCount;
                 b.DisputedCount = disputedCount;
             });
-
 
             return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
         }

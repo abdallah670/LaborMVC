@@ -45,6 +45,14 @@ namespace LaborDAL.DB.Configuration
             builder.HasIndex(ta => ta.WorkerId);
             builder.HasIndex(ta => ta.Status);
             builder.HasIndex(ta => new { ta.TaskItemId, ta.WorkerId }).IsUnique();
+            
+            // Additional performance indexes
+            builder.HasIndex(ta => new { ta.TaskItemId, ta.Status })
+                   .HasDatabaseName("IX_TaskApplications_TaskItemId_Status");
+            builder.HasIndex(ta => new { ta.WorkerId, ta.Status })
+                   .HasDatabaseName("IX_TaskApplications_WorkerId_Status");
+            builder.HasIndex(ta => ta.CreatedAt)
+                   .HasDatabaseName("IX_TaskApplications_CreatedAt");
         }
     }
 }

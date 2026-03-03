@@ -61,7 +61,8 @@ namespace LaborBLL.Service.Implementation
         {
             try
             {
-                var tasks = await _taskRepository.GetFilteredAsync(
+                // Use the new paginated repository method for efficient database-level pagination
+                var (tasks, totalCount) = await _taskRepository.GetFilteredPagedAsync(
                     search.Category,
                     search.Status ?? TaskStatus.Open,
                     search.MinBudget,
@@ -71,31 +72,13 @@ namespace LaborBLL.Service.Implementation
                     search.Latitude,
                     search.Longitude,
                     search.RadiusKm,
+                    search.Keyword,
+                    search.SortBy,
+                    search.SortOrder,
                     search.Page,
                     search.PageSize);
 
-                // Apply keyword search if provided
-                if (!string.IsNullOrWhiteSpace(search.Keyword))
-                {
-                    var keyword = search.Keyword.ToLower();
-                    tasks = tasks.Where(t => 
-                        t.Title.ToLower().Contains(keyword) || 
-                        t.Description.ToLower().Contains(keyword));
-                }
-
-                // Apply urgent filter
-                if (search.IsUrgent == true)
-                {
-                    tasks = tasks.Where(t => t.IsUrgent);
-                }
-
-                // Apply sorting
-                tasks = ApplySorting(tasks, search.SortBy);
-
                 var taskList = tasks.Select(t => MapToListViewModel(t)).ToList();
-
-                // Get total count for pagination
-                var totalCount = await GetTotalCountAsync(search);
 
                 search.Results = taskList;
                 search.TotalCount = totalCount;
