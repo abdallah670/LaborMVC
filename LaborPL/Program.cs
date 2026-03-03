@@ -9,6 +9,7 @@ using LaborDAL.DB;
 using LaborDAL.Entities;
 using LaborDAL.Repo.Abstract;
 using LaborDAL.Repo.Implementation;
+using LaborPL.Middleware;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -116,7 +117,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 // 4. Global Error Handling
-//   app.UseGlobalExceptionMiddleware();
+app.UseGlobalExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
