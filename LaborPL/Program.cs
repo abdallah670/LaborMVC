@@ -175,6 +175,11 @@ builder.Services.AddModularBusinessLogicLayer();
 
 // Register Notification Service
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Register File Upload Validation Service
+builder.Services.Configure<FileUploadSecuritySettings>(
+    builder.Configuration.GetSection("FileUpload"));
+builder.Services.AddScoped<IFileUploadValidationService, FileUploadValidationService>();
              
 var app = builder.Build();
 
