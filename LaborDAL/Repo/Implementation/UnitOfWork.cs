@@ -28,6 +28,9 @@ namespace LaborDAL.Repo.Implementation
         public IOutboxMessageRepository OutboxMessages { get; private set; }
         public IPendingTransferRepository PendingTransfers { get; private set; }
         public ISagaRepository Sagas { get; private set; }
+        
+        // Notification system
+        public INotificationRepo Notifications { get; private set; }
 
         public UnitOfWork(
             ApplicationDbContext context,
@@ -69,6 +72,9 @@ namespace LaborDAL.Repo.Implementation
             OutboxMessages = new OutboxMessageRepository(_context);
             PendingTransfers = new PendingTransferRepository(_context);
             Sagas = new SagaRepository(_context);
+            
+            // Initialize notification repository
+            Notifications = new NotificationRepo(_context);
         }
 
         public async Task<int> SaveAsync()

@@ -37,6 +37,7 @@ namespace LaborDAL.DB
         public DbSet<PendingTransfer> PendingTransfers { get; set; }
         public DbSet<SagaInstance> SagaInstances { get; set; }
         public DbSet<SagaStep> SagaSteps { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
         /// <summary>

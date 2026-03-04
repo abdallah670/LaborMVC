@@ -4,6 +4,7 @@ using LaborBLL.Hubs;
 using LaborBLL.Mapping;
 using LaborBLL.Service;
 using LaborBLL.Service.Abstract;
+using LaborBLL.Service.Implementation;
 using LaborDAL.Common;
 using LaborDAL.DB;
 using LaborDAL.Entities;
@@ -33,10 +34,18 @@ builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
-// Configure DbContext
+// Configure DbContext with resilience
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.UseNetTopologySuite()));
+        sqlOptions =>
+        {
+            sqlOptions.UseNetTopologySuite();
+            // Enable retry on failure for transient faults
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        }));
 
 // Configure Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
@@ -163,6 +172,9 @@ builder.Services.AddHealthChecks()
 
 builder.Services.AddModularDataAccessLayer();
 builder.Services.AddModularBusinessLogicLayer();
+
+// Register Notification Service
+builder.Services.AddScoped<INotificationService, NotificationService>();
              
 var app = builder.Build();
 
@@ -182,6 +194,9 @@ using (var scope = app.Services.CreateScope())
 }
 // 4. Global Error Handling
 app.UseGlobalExceptionHandler();
+
+// 6. Audit Logging - Log all requests
+app.UseAuditLogging();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -208,6 +223,12 @@ RecurringJob.AddOrUpdate<PaymentReleaseJob>(
     "auto-release-payments",
     job => job.AutoReleasePayments(),
     Cron.Hourly);
+
+// Schedule notification processing job
+RecurringJob.AddOrUpdate<INotificationService>(
+    "process-notifications",
+    service => service.ProcessPendingNotificationsAsync(50),
+    Cron.Minutely);
 
 app.UseHttpsRedirection();
 app.UseRouting();

@@ -21,5 +21,8 @@ namespace LaborDAL.Repo.Abstract
         IOutboxMessageRepository OutboxMessages { get; }
         IPendingTransferRepository PendingTransfers { get; }
         ISagaRepository Sagas { get; }
+        
+        // Notification system
+        INotificationRepo Notifications { get; }
     }
 }

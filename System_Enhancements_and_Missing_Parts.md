@@ -87,7 +87,7 @@ builder.Services.AddHealthChecks()
 
 ---
 
-## 6. Structured Logging with Correlation IDs
+## 6. Structured Logging with Correlation IDs  xx
 
 ### Current State
 - Basic logging exists
@@ -113,7 +113,7 @@ options.UseSqlServer(connectionString, sqlOptions =>
 
 ---
 
-## 8. File Upload Security
+## 8. File Upload Security  xx
 
 ### Current Gap
 - No file type validation
