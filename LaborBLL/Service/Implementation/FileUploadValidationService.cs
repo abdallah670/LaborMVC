@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using LaborBLL.Common;
@@ -19,6 +21,11 @@ namespace LaborBLL.Service.Implementation
     {
         private readonly FileUploadSecuritySettings _settings;
         private readonly ILogger<FileUploadValidationService> _logger;
+        private readonly IZipSecurityValidator? _zipValidator;
+        private readonly IImageValidationService? _imageValidator;
+        private readonly IUserUploadRateLimiter? _rateLimiter;
+        private readonly IFileUploadAuditService? _auditService;
+        private readonly IContentInspector? _contentInspector;
 
         // File signatures (magic numbers) for common file types
         private static readonly Dictionary<string, List<byte[]>> FileSignatures = new()
@@ -49,85 +56,272 @@ namespace LaborBLL.Service.Implementation
 
         public FileUploadValidationService(
             IOptions<FileUploadSecuritySettings> settings,
-            ILogger<FileUploadValidationService> logger)
+            ILogger<FileUploadValidationService> logger,
+            IZipSecurityValidator? zipValidator = null,
+            IImageValidationService? imageValidator = null,
+            IUserUploadRateLimiter? rateLimiter = null,
+            IFileUploadAuditService? auditService = null,
+            IContentInspector? contentInspector = null)
         {
             _settings = settings.Value;
             _logger = logger;
+            _zipValidator = zipValidator;
+            _imageValidator = imageValidator;
+            _rateLimiter = rateLimiter;
+            _auditService = auditService;
+            _contentInspector = contentInspector;
         }
 
-        public async Task<FileValidationResult> ValidateFileAsync(IFormFile file)
+        public async Task<FileValidationResult> ValidateFileAsync(
+            IFormFile file,
+            string? userId = null,
+            string? ipAddress = null,
+            string? userAgent = null)
         {
-            if (file == null || file.Length == 0)
-            {
-                return FileValidationResult.Failure("No file uploaded.");
-            }
+            var stopwatch = Stopwatch.StartNew();
+            var correlationId = Guid.NewGuid().ToString("N")[..8];
 
-            // Check file size
-            if (file.Length > _settings.MaxFileSize)
+            try
             {
-                var maxSizeMB = _settings.MaxFileSize / (1024 * 1024);
-                return FileValidationResult.Failure($"File size exceeds maximum allowed size of {maxSizeMB}MB.");
-            }
-
-            // Sanitize file name
-            var sanitizedFileName = SanitizeFileName(file.FileName);
-            if (string.IsNullOrEmpty(sanitizedFileName))
-            {
-                return FileValidationResult.Failure("Invalid file name.");
-            }
-
-            // Check file extension
-            if (!IsAllowedExtension(sanitizedFileName))
-            {
-                var allowedExts = string.Join(", ", _settings.AllowedExtensions);
-                return FileValidationResult.Failure($"File type not allowed. Allowed types: {allowedExts}");
-            }
-
-            // Check MIME type
-            if (!_settings.AllowedMimeTypes.Contains(file.ContentType?.ToLowerInvariant()))
-            {
-                _logger.LogWarning("File {FileName} has disallowed MIME type: {MimeType}",
-                    sanitizedFileName, file.ContentType);
-                return FileValidationResult.Failure("File MIME type not allowed.");
-            }
-
-            // Validate file signature
-            if (_settings.ValidateFileSignature)
-            {
-                if (!await ValidateFileSignatureAsync(file))
+                // Basic validation
+                if (file == null || file.Length == 0)
                 {
-                    return FileValidationResult.Failure("File signature validation failed. File may be corrupted or have incorrect extension.");
+                    return await FailAndLogAsync(file, "NO_FILE", "No file uploaded.", userId, ipAddress, userAgent, correlationId, stopwatch);
                 }
-            }
 
-            // Check for executable content
-            if (_settings.BlockExecutables)
-            {
-                if (await IsExecutableFileAsync(file))
+                // Rate limiting check
+                if (_settings.EnableRateLimiting && _rateLimiter != null)
                 {
-                    _logger.LogWarning("Executable file upload attempted: {FileName}", sanitizedFileName);
-                    return FileValidationResult.Failure("Executable files are not allowed.");
-                }
-            }
+                    var rateLimitResult = await _rateLimiter.CheckRateLimitAsync(userId, ipAddress, file.Length);
+                    if (!rateLimitResult.IsAllowed)
+                    {
+                        var ex = new UploadRateLimitExceededException(
+                            rateLimitResult.ErrorMessage ?? "Rate limit exceeded",
+                            rateLimitResult.RetryAfter,
+                            rateLimitResult.HourlyUploads,
+                            _settings.AllowedExtensions.Count > 0 ? _settings.AllowedExtensions.Count * 100 : 100,
+                            userId,
+                            ipAddress);
 
-            // Scan for malicious content
-            if (_settings.ScanForMaliciousContent)
-            {
-                if (!await ScanForMaliciousContentAsync(file))
+                        await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                        return FileValidationResult.Failure(rateLimitResult.ErrorMessage ?? "Rate limit exceeded.");
+                    }
+                }
+
+                // Check file size
+                if (file.Length > _settings.MaxFileSize)
                 {
-                    return FileValidationResult.Failure("File contains potentially malicious content.");
+                    var maxSizeMB = _settings.MaxFileSize / (1024 * 1024);
+                    return await FailAndLogAsync(file, "FILE_TOO_LARGE",
+                        $"File size exceeds maximum allowed size of {maxSizeMB}MB.",
+                        userId, ipAddress, userAgent, correlationId, stopwatch);
                 }
-            }
 
-            return FileValidationResult.Success(sanitizedFileName, file.ContentType ?? "application/octet-stream");
+                // Sanitize file name
+                var sanitizedFileName = SanitizeFileName(file.FileName);
+                if (string.IsNullOrEmpty(sanitizedFileName))
+                {
+                    return await FailAndLogAsync(file, "INVALID_FILENAME", "Invalid file name.",
+                        userId, ipAddress, userAgent, correlationId, stopwatch);
+                }
+
+                // Check for null bytes in filename (null byte injection)
+                if (file.FileName.Contains('\0'))
+                {
+                    var ex = new FileValidationException("Null byte detected in filename",
+                        FileUploadViolationType.NullByteInjection, file.FileName, userId, ipAddress);
+                    await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                    return FileValidationResult.Failure("Invalid characters in filename.");
+                }
+
+                // Check file extension
+                if (!IsAllowedExtension(sanitizedFileName))
+                {
+                    var allowedExts = string.Join(", ", _settings.AllowedExtensions);
+                    return await FailAndLogAsync(file, "EXTENSION_NOT_ALLOWED",
+                        $"File type not allowed. Allowed types: {allowedExts}",
+                        userId, ipAddress, userAgent, correlationId, stopwatch);
+                }
+
+                // Check for double extensions
+                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sanitizedFileName);
+                var dangerousExtensions = new[] { ".exe", ".dll", ".bat", ".cmd", ".sh", ".php", ".jsp", ".asp", ".aspx" };
+                if (dangerousExtensions.Any(ext => fileNameWithoutExt.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var detectedExts = string.Join(", ", dangerousExtensions.Where(ext => fileNameWithoutExt.EndsWith(ext, StringComparison.OrdinalIgnoreCase)));
+                    var ex = new DoubleExtensionDetectedException(
+                        "Double extension detected - potential spoofing attempt",
+                        detectedExts, file.FileName, userId, ipAddress);
+                    await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                    return FileValidationResult.Failure("Double file extensions are not allowed.");
+                }
+
+                // Check MIME type
+                if (!_settings.AllowedMimeTypes.Contains(file.ContentType?.ToLowerInvariant() ?? ""))
+                {
+                    _logger.LogWarning("File {FileName} has disallowed MIME type: {MimeType}. User: {UserId}, IP: {IpAddress}",
+                        sanitizedFileName, file.ContentType, userId, ipAddress);
+                    return await FailAndLogAsync(file, "MIME_TYPE_NOT_ALLOWED", "File MIME type not allowed.",
+                        userId, ipAddress, userAgent, correlationId, stopwatch);
+                }
+
+                // Validate file signature
+                if (_settings.ValidateFileSignature)
+                {
+                    if (!await ValidateFileSignatureAsync(file))
+                    {
+                        return await FailAndLogAsync(file, "SIGNATURE_MISMATCH",
+                            "File signature validation failed. File may be corrupted or have incorrect extension.",
+                            userId, ipAddress, userAgent, correlationId, stopwatch);
+                    }
+                }
+
+                // Check for executable content
+                if (_settings.BlockExecutables)
+                {
+                    if (await IsExecutableFileAsync(file))
+                    {
+                        _logger.LogWarning("Executable file upload attempted: {FileName}. User: {UserId}, IP: {IpAddress}",
+                            sanitizedFileName, userId, ipAddress);
+                        var ex = new FileValidationException("Executable file detected",
+                            FileUploadViolationType.ExecutableDetected, file.FileName, userId, ipAddress);
+                        await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                        return FileValidationResult.Failure("Executable files are not allowed.");
+                    }
+                }
+
+                // ZIP bomb protection
+                if (_settings.ValidateZipFiles && _zipValidator != null)
+                {
+                    try
+                    {
+                        await _zipValidator.ValidateZipFileAsync(file, userId, ipAddress);
+                    }
+                    catch (ZipBombDetectedException ex)
+                    {
+                        await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                        return FileValidationResult.Failure("ZIP file failed security validation - potential zip bomb detected.");
+                    }
+                }
+
+                // Image dimension validation
+                int? imageWidth = null;
+                int? imageHeight = null;
+                if (_settings.ValidateImageDimensions && _imageValidator != null)
+                {
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (extension is ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp")
+                    {
+                        try
+                        {
+                            var imageResult = await _imageValidator.ValidateImageAsync(file, userId, ipAddress);
+                            if (!imageResult.IsValid)
+                            {
+                                return await FailAndLogAsync(file, "IMAGE_VALIDATION_FAILED",
+                                    imageResult.ErrorMessage ?? "Image validation failed.",
+                                    userId, ipAddress, userAgent, correlationId, stopwatch);
+                            }
+                            imageWidth = imageResult.Width;
+                            imageHeight = imageResult.Height;
+                        }
+                        catch (ImageDimensionExceededException ex)
+                        {
+                            await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                            return FileValidationResult.Failure($"Image dimensions exceed maximum allowed limits.");
+                        }
+                        catch (PixelFloodAttackException ex)
+                        {
+                            await LogBlockedAsync(file, ex, userId, ipAddress, userAgent, correlationId, stopwatch);
+                            return FileValidationResult.Failure("Image pixel count too high - potential pixel flood attack.");
+                        }
+                    }
+                }
+
+                // Deep content inspection
+                List<string>? detectedThreats = null;
+                if (_settings.EnableContentInspection && _contentInspector != null)
+                {
+                    try
+                    {
+                        var inspectionResult = await _contentInspector.InspectAsync(file, userId, ipAddress);
+                        if (!inspectionResult.IsClean)
+                        {
+                            detectedThreats = inspectionResult.DetectedThreats;
+                            var ex = new MaliciousContentDetectedException(
+                                "Malicious content detected during deep inspection",
+                                inspectionResult.DetectedThreats,
+                                file.FileName, userId, ipAddress);
+                            await LogBlockedAsync(file, ex, detectedThreats, userId, ipAddress, userAgent, correlationId, stopwatch);
+                            return FileValidationResult.Failure($"Security threat detected: {string.Join(", ", inspectionResult.DetectedThreats)}");
+                        }
+                    }
+                    catch (PolyglotFileDetectedException ex)
+                    {
+                        await LogBlockedAsync(file, ex, ex.ValidFormats, userId, ipAddress, userAgent, correlationId, stopwatch);
+                        return FileValidationResult.Failure("Polyglot file detected - file is valid as multiple formats.");
+                    }
+                    catch (VirusDetectedException ex)
+                    {
+                        await LogBlockedAsync(file, ex, new List<string> { $"{ex.VirusName} ({ex.ScanEngine})" },
+                            userId, ipAddress, userAgent, correlationId, stopwatch);
+                        return FileValidationResult.Failure("Virus or malware detected.");
+                    }
+                }
+
+                // Scan for malicious content (original implementation)
+                if (_settings.ScanForMaliciousContent)
+                {
+                    if (!await ScanForMaliciousContentAsync(file))
+                    {
+                        return await FailAndLogAsync(file, "MALICIOUS_CONTENT",
+                            "File contains potentially malicious content.",
+                            userId, ipAddress, userAgent, correlationId, stopwatch);
+                    }
+                }
+
+                // Calculate file hash
+                string? fileHash = null;
+                if (_settings.EnableAuditLogging && _auditService != null)
+                {
+                    fileHash = await CalculateFileHashAsync(file);
+                }
+
+                // Record successful upload for rate limiting
+                if (_settings.EnableRateLimiting && _rateLimiter != null)
+                {
+                    await _rateLimiter.RecordUploadAsync(userId, ipAddress, file.Length);
+                }
+
+                // Log successful upload
+                stopwatch.Stop();
+                if (_settings.EnableAuditLogging && _auditService != null)
+                {
+                    await _auditService.LogUploadSuccessAsync(
+                        file, sanitizedFileName, file.ContentType, fileHash,
+                        imageWidth, imageHeight, stopwatch.ElapsedMilliseconds,
+                        userId, null, ipAddress, userAgent, correlationId);
+                }
+
+                _logger.LogInformation(
+                    "File {FileName} validated successfully for user {UserId} from IP {IpAddress} in {ElapsedMs}ms",
+                    sanitizedFileName, userId, ipAddress, stopwatch.ElapsedMilliseconds);
+
+                return FileValidationResult.Success(sanitizedFileName, file.ContentType ?? "application/octet-stream");
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Unexpected error validating file {FileName}", file?.FileName);
+                return FileValidationResult.Failure("An error occurred during file validation.");
+            }
         }
 
-        public async Task<List<FileValidationResult>> ValidateFilesAsync(IEnumerable<IFormFile> files)
+        public async Task<List<FileValidationResult>> ValidateFilesAsync(IEnumerable<IFormFile> files, string? userId = null, string? ipAddress = null, string? userAgent = null)
         {
             var results = new List<FileValidationResult>();
             foreach (var file in files)
             {
-                results.Add(await ValidateFileAsync(file));
+                results.Add(await ValidateFileAsync(file, userId, ipAddress, userAgent));
             }
             return results;
         }
@@ -165,16 +359,8 @@ namespace LaborBLL.Service.Implementation
         {
             // Check for common malicious patterns in text-based files
             var dangerousExtensions = new[] { ".exe", ".dll", ".bat", ".cmd", ".sh", ".php", ".jsp", ".asp", ".aspx" };
-            
+
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            
-            // Block double extensions (e.g., file.jpg.exe)
-            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
-            if (dangerousExtensions.Any(ext => fileNameWithoutExt.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-            {
-                _logger.LogWarning("Double extension detected in file: {FileName}", file.FileName);
-                return false;
-            }
 
             // For text-based files, scan for script tags and dangerous content
             if (extension == ".txt" || extension == ".html" || extension == ".xml")
@@ -197,7 +383,7 @@ namespace LaborBLL.Service.Implementation
                     "<asp:"
                 };
 
-                if (dangerousPatterns.Any(pattern => 
+                if (dangerousPatterns.Any(pattern =>
                     content.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     _logger.LogWarning("Potentially malicious content detected in file: {FileName}", file.FileName);
@@ -250,6 +436,86 @@ namespace LaborBLL.Service.Implementation
 
             return ExecutableSignatures.Any(signature =>
                 headerBytes.Take(signature.Length).SequenceEqual(signature));
+        }
+
+        private async Task<string?> CalculateFileHashAsync(IFormFile file)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                using var sha256 = SHA256.Create();
+                var hash = await sha256.ComputeHashAsync(stream);
+                return Convert.ToHexString(hash);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to calculate file hash for {FileName}", file.FileName);
+                return null;
+            }
+        }
+
+        private async Task<FileValidationResult> FailAndLogAsync(
+            IFormFile? file,
+            string errorCode,
+            string errorMessage,
+            string? userId,
+            string? ipAddress,
+            string? userAgent,
+            string correlationId,
+            Stopwatch stopwatch)
+        {
+            stopwatch.Stop();
+
+            if (file != null && _settings.EnableAuditLogging && _auditService != null)
+            {
+                await _auditService.LogUploadFailureAsync(
+                    file, errorCode, errorMessage,
+                    stopwatch.ElapsedMilliseconds,
+                    userId, null, ipAddress, userAgent, correlationId);
+            }
+
+            return FileValidationResult.Failure(errorMessage);
+        }
+
+        private async Task LogBlockedAsync(
+            IFormFile file,
+            FileUploadSecurityException exception,
+            string? userId,
+            string? ipAddress,
+            string? userAgent,
+            string correlationId,
+            Stopwatch stopwatch)
+        {
+            stopwatch.Stop();
+
+            if (_settings.EnableAuditLogging && _auditService != null)
+            {
+                await _auditService.LogUploadBlockedAsync(
+                    file, exception, null,
+                    stopwatch.ElapsedMilliseconds,
+                    userId, null, ipAddress, userAgent, correlationId);
+            }
+        }
+
+        private async Task LogBlockedAsync(
+            IFormFile file,
+            FileUploadSecurityException exception,
+            List<string>? detectedThreats,
+            string? userId,
+            string? ipAddress,
+            string? userAgent,
+            string correlationId,
+            Stopwatch stopwatch)
+        {
+            stopwatch.Stop();
+
+            if (_settings.EnableAuditLogging && _auditService != null)
+            {
+                await _auditService.LogUploadBlockedAsync(
+                    file, exception, detectedThreats,
+                    stopwatch.ElapsedMilliseconds,
+                    userId, null, ipAddress, userAgent, correlationId);
+            }
         }
     }
 }

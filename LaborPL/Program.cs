@@ -179,7 +179,25 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // Register File Upload Validation Service
 builder.Services.Configure<FileUploadSecuritySettings>(
     builder.Configuration.GetSection("FileUpload"));
+builder.Services.Configure<ZipValidationSettings>(
+    builder.Configuration.GetSection("FileUpload:ZipValidation"));
+builder.Services.Configure<ImageValidationSettings>(
+    builder.Configuration.GetSection("FileUpload:ImageValidation"));
+builder.Services.Configure<UploadRateLimitSettings>(
+    builder.Configuration.GetSection("FileUpload:RateLimiting"));
+builder.Services.Configure<FileUploadAuditSettings>(
+    builder.Configuration.GetSection("FileUpload:Audit"));
+
+// Register File Upload Security Services
 builder.Services.AddScoped<IFileUploadValidationService, FileUploadValidationService>();
+builder.Services.AddScoped<IZipSecurityValidator, ZipSecurityValidator>();
+builder.Services.AddScoped<IImageValidationService, ImageValidationService>();
+builder.Services.AddScoped<IUserUploadRateLimiter, UserUploadRateLimiter>();
+builder.Services.AddScoped<IFileUploadAuditService, FileUploadAuditService>();
+builder.Services.AddScoped<IContentInspector, ContentInspector>();
+
+// Add Memory Cache for rate limiting
+builder.Services.AddMemoryCache();
              
 var app = builder.Build();
 

@@ -24,5 +24,8 @@ namespace LaborDAL.Repo.Abstract
         
         // Notification system
         INotificationRepo Notifications { get; }
+        
+        // File upload audit
+        IFileUploadAuditRepo FileUploadAudits { get; }
     }
 }

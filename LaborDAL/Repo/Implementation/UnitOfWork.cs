@@ -31,6 +31,9 @@ namespace LaborDAL.Repo.Implementation
         
         // Notification system
         public INotificationRepo Notifications { get; private set; }
+        
+        // File upload audit
+        public IFileUploadAuditRepo FileUploadAudits { get; private set; }
 
         public UnitOfWork(
             ApplicationDbContext context,
@@ -75,6 +78,9 @@ namespace LaborDAL.Repo.Implementation
             
             // Initialize notification repository
             Notifications = new NotificationRepo(_context);
+            
+            // Initialize file upload audit repository
+            FileUploadAudits = new FileUploadAuditRepo(_context);
         }
 
         public async Task<int> SaveAsync()

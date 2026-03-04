@@ -38,14 +38,22 @@ namespace LaborBLL.Service.Abstract
     public interface IFileUploadValidationService
     {
         /// <summary>
-        /// Validate a single file upload
+        /// Validate a single file upload with security context
         /// </summary>
-        Task<FileValidationResult> ValidateFileAsync(IFormFile file);
+        Task<FileValidationResult> ValidateFileAsync(
+            IFormFile file,
+            string? userId = null,
+            string? ipAddress = null,
+            string? userAgent = null);
 
         /// <summary>
         /// Validate multiple file uploads
         /// </summary>
-        Task<List<FileValidationResult>> ValidateFilesAsync(IEnumerable<IFormFile> files);
+        Task<List<FileValidationResult>> ValidateFilesAsync(
+            IEnumerable<IFormFile> files,
+            string? userId = null,
+            string? ipAddress = null,
+            string? userAgent = null);
 
         /// <summary>
         /// Check if file extension is allowed

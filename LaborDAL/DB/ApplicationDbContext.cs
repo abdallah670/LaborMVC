@@ -38,6 +38,7 @@ namespace LaborDAL.DB
         public DbSet<SagaInstance> SagaInstances { get; set; }
         public DbSet<SagaStep> SagaSteps { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<FileUploadAuditLog> FileUploadAuditLogs { get; set; }
 
 
         /// <summary>
