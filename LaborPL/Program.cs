@@ -9,9 +9,13 @@ using LaborDAL.DB;
 using LaborDAL.Entities;
 using LaborDAL.Repo.Abstract;
 using LaborDAL.Repo.Implementation;
+using LaborPL.HealthChecks;
 using LaborPL.Middleware;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 using Serilog;
 using Stripe;
 
@@ -97,6 +101,66 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddLogging();
 builder.Services.AddHangfire(x => x.UseSqlServerStorage(connectionString));
 builder.Services.AddHangfireServer();
+
+// 2. API Rate Limiting - Prevent brute force and abuse
+builder.Services.AddRateLimiter(options =>
+{
+    // General API limit: 100 requests per minute per client
+    options.AddFixedWindowLimiter("General", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;
+        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 10;
+    });
+
+    // Strict limit for login endpoints: 5 attempts per 5 minutes
+    options.AddFixedWindowLimiter("Login", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(5);
+        opt.PermitLimit = 5;
+        opt.QueueLimit = 0;
+    });
+
+    // Payment endpoints: 10 requests per minute
+    options.AddFixedWindowLimiter("Payment", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 10;
+        opt.QueueLimit = 5;
+    });
+
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", token);
+    };
+});
+
+// 4. Response Compression - Improve performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "text/css", "application/javascript" });
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Optimal;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Optimal;
+});
+
+// 5. Health Checks - Monitor system health
+builder.Services.AddHealthChecks()
+    .AddCheck<ApplicationDbContextHealthCheck>("database", tags: new[] { "db" });
+
 builder.Services.AddModularDataAccessLayer();
 builder.Services.AddModularBusinessLogicLayer();
              
@@ -125,6 +189,16 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// 3. Security Headers - Add security headers to all responses
+app.UseSecurityHeaders();
+
+// 4. Response Compression
+app.UseResponseCompression();
+
+// 2. Rate Limiting
+app.UseRateLimiter();
+
 // And this:
 app.UseHangfireDashboard();
 app.UseHangfireServer();
@@ -150,5 +224,27 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// 5. Health Checks endpoint
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            Status = report.Status.ToString(),
+            TotalDuration = report.TotalDuration,
+            Checks = report.Entries.Select(e => new
+            {
+                Name = e.Key,
+                Status = e.Value.Status.ToString(),
+                Duration = e.Value.Duration,
+                Exception = e.Value.Exception?.Message
+            })
+        };
+        await context.Response.WriteAsJsonAsync(response);
+    }
+});
 
 app.Run();
