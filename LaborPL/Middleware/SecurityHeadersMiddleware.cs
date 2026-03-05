@@ -34,9 +34,10 @@ namespace LaborPL.Middleware
             context.Response.Headers["Content-Security-Policy"] = 
                 "default-src 'self'; " +
                 "script-src 'self' 'unsafe-inline' https://js.stripe.com; " +
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
+                "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
                 "img-src 'self' data: https:; " +
-                "font-src 'self' https://fonts.gstatic.com; " +
+                "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; " +
                 "frame-src https://js.stripe.com https://hooks.stripe.com; " +
                 "connect-src 'self' https://api.stripe.com;";
 
