@@ -193,6 +193,7 @@ builder.Services.AddScoped<IFileUploadValidationService, FileUploadValidationSer
 builder.Services.AddScoped<IZipSecurityValidator, ZipSecurityValidator>();
 builder.Services.AddScoped<IImageValidationService, ImageValidationService>();
 builder.Services.AddScoped<IUserUploadRateLimiter, UserUploadRateLimiter>();
+builder.Services.AddScoped<IFileUploadAuditRepo, FileUploadAuditRepo>();
 builder.Services.AddScoped<IFileUploadAuditService, FileUploadAuditService>();
 builder.Services.AddScoped<IContentInspector, ContentInspector>();
 
