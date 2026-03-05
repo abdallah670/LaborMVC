@@ -1,0 +1,260 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var recentUsers = ViewBag.RecentUsers as List<LaborDAL.Entities.AppUser> ?? new List<LaborDAL.Entities.AppUser>();
+    var recentTasks = ViewBag.RecentTasks as List<LaborBLL.ModelVM.TaskListViewModel> ?? new List<LaborBLL.ModelVM.TaskListViewModel>();
+}
+
+<div class="dashboard-container fade-in">
+    <!-- Welcome Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h2>
+            <p class="text-muted mb-0">Platform overview and management</p>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards Row 1 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.TotalUsers</h3>
+                            <small>Total Users</small>
+                        </div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.TotalWorkers</h3>
+                            <small>Workers</small>
+                        </div>
+                        <i class="bi bi-tools fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.TotalPosters</h3>
+                            <small>Posters</small>
+                        </div>
+                        <i class="bi bi-clipboard-plus fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.PendingVerifications</h3>
+                            <small>Pending Verifications</small>
+                        </div>
+                        <i class="bi bi-patch-check fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards Row 2 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.TotalTasks</h3>
+                            <small>Total Tasks</small>
+                        </div>
+                        <i class="bi bi-clipboard-list fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.ActiveTasks</h3>
+                            <small>Active Tasks</small>
+                        </div>
+                        <i class="bi bi-lightning fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.TotalBookings</h3>
+                            <small>Total Bookings</small>
+                        </div>
+                        <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">@ViewBag.CompletedBookings</h3>
+                            <small>Completed</small>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a asp-controller="Admin" asp-action="Users" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-people me-2"></i>Manage Users</span>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Verifications" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-patch-check me-2"></i>Review Verifications</span>
+                            <span class="badge bg-warning rounded-pill">@ViewBag.PendingVerifications</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Disputes" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-exclamation-triangle me-2"></i>Manage Disputes</span>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        @if (User.IsInRole("Worker") || User.IsInRole("Poster"))
+                        {
+                            <a asp-controller="Dashboard" asp-action="Combined" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-light">
+                                <span><i class="bi bi-grid-3x3-gap me-2"></i>My Tasks & Work</span>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-people me-2"></i>Recent Users</h5>
+                    <a asp-controller="Admin" asp-action="Users" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (recentUsers.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var user in recentUsers)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">@user.FirstName @user.LastName</h6>
+                                            <small class="text-muted">@user.Email</small>
+                                        </div>
+                                        <span class="badge bg-@(user.IDVerified ? "success" : "warning")">
+                                            @(user.IDVerified ? "Verified" : "Pending")
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">Joined @user.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-people fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">No users found</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="col-lg-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clipboard me-2"></i>Recent Tasks</h5>
+                    <a asp-controller="Task" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (recentTasks.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var task in recentTasks)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-0">@task.Title</h6>
+                                            <small class="text-muted">@task.Category | @task.Budget.ToString("C")</small>
+                                        </div>
+                                        <span class="badge bg-@(GetTaskStatusColor(task.Status))">@task.Status</span>
+                                    </div>
+                                    <small class="text-muted">Posted @task.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-clipboard fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">No tasks found</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetTaskStatusColor(LaborDAL.Enums.TaskStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.TaskStatus.Open => "success",
+            LaborDAL.Enums.TaskStatus.Assigned => "info",
+            LaborDAL.Enums.TaskStatus.InProgress => "warning",
+            LaborDAL.Enums.TaskStatus.Completed => "primary",
+            LaborDAL.Enums.TaskStatus.Cancelled => "danger",
+            _ => "secondary"
+        };
+    }
+}

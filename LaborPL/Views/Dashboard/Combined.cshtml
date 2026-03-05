@@ -1,0 +1,298 @@
+@{
+    ViewData["Title"] = "My Dashboard";
+    var workerBookings = ViewBag.WorkerBookings as List<LaborBLL.ModelVM.BookingDashboardViewModel> ?? new List<LaborBLL.ModelVM.BookingDashboardViewModel>();
+    var workerApplications = ViewBag.WorkerApplications as List<LaborBLL.ModelVM.TaskApplicationViewModel> ?? new List<LaborBLL.ModelVM.TaskApplicationViewModel>();
+    var posterTasks = ViewBag.PosterTasks as List<LaborBLL.ModelVM.TaskListViewModel> ?? new List<LaborBLL.ModelVM.TaskListViewModel>();
+    var posterApplications = ViewBag.PosterApplications as List<LaborBLL.ModelVM.TaskApplicationViewModel> ?? new List<LaborBLL.ModelVM.TaskApplicationViewModel>();
+    var posterBookings = ViewBag.PosterBookings as List<LaborBLL.ModelVM.BookingDashboardViewModel> ?? new List<LaborBLL.ModelVM.BookingDashboardViewModel>();
+}
+
+<div class="dashboard-container fade-in">
+    <!-- Welcome Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-grid-3x3-gap me-2"></i>My Dashboard</h2>
+            <p class="text-muted mb-0">Welcome back! Manage both your work and your posted tasks</p>
+        </div>
+        <div class="btn-group">
+            <a asp-controller="Task" asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Post Task
+            </a>
+            <a asp-controller="Task" asp-action="Index" class="btn btn-outline-primary">
+                <i class="bi bi-search me-1"></i>Find Work
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats Overview -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2">
+            <div class="card shadow-sm bg-primary text-white text-center">
+                <div class="card-body py-3">
+                    <h4 class="mb-0">@ViewBag.WorkerTotalBookings</h4>
+                    <small>My Bookings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm bg-warning text-center">
+                <div class="card-body py-3">
+                    <h4 class="mb-0">@ViewBag.WorkerPendingApplications</h4>
+                    <small>My Applications</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm bg-success text-white text-center">
+                <div class="card-body py-3">
+                    <h4 class="mb-0">@ViewBag.PosterTotalTasks</h4>
+                    <small>Posted Tasks</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm bg-info text-white text-center">
+                <div class="card-body py-3">
+                    <h4 class="mb-0">@ViewBag.PosterPendingApplications</h4>
+                    <small>Received Apps</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm bg-secondary text-white text-center">
+                <div class="card-body py-3">
+                    <h4 class="mb-0">@ViewBag.TotalActiveBookings</h4>
+                    <small>Active Bookings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm bg-dark text-white text-center">
+                <div class="card-body py-3">
+                    <h4 class="mb-0">@ViewBag.TotalCompleted</h4>
+                    <small>Completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker Section -->
+    <div class="card shadow mb-4 border-primary border-2">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i>As Worker</h5>
+            <a asp-action="Worker" class="btn btn-sm btn-light">Full Worker View</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- My Bookings -->
+                <div class="col-lg-6">
+                    <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-calendar3 me-2"></i>My Bookings</h6>
+                    @if (workerBookings.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var booking in workerBookings.Take(3))
+                            {
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <small class="text-muted">Booking #@booking.Id</small>
+                                            <p class="mb-0">@booking.AgreedRate.ToString("C")</p>
+                                        </div>
+                                        <span class="badge bg-@(GetBookingStatusColor(booking.Status))">@booking.Status</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <a asp-controller="Booking" asp-action="Dashboard" class="btn btn-sm btn-outline-primary mt-2">View All Bookings</a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-2">No bookings yet</p>
+                            <a asp-controller="Task" asp-action="Index" class="btn btn-sm btn-primary">Find Tasks</a>
+                        </div>
+                    }
+                </div>
+
+                <!-- My Applications -->
+                <div class="col-lg-6">
+                    <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-file-earmark-text me-2"></i>My Applications</h6>
+                    @if (workerApplications.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var app in workerApplications.Take(3))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 small">@app.TaskTitle</p>
+                                            <small class="text-muted">@app.ProposedBudget.ToString("C")</small>
+                                        </div>
+                                        <span class="badge bg-@(GetApplicationStatusColor(app.Status))">@app.Status</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <a asp-controller="Application" asp-action="ByWorker" class="btn btn-sm btn-outline-primary mt-2">View All Applications</a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-2">No applications yet</p>
+                            <a asp-controller="Task" asp-action="Index" class="btn btn-sm btn-primary">Browse Tasks</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Poster Section -->
+    <div class="card shadow mb-4 border-success border-2">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>As Poster</h5>
+            <a asp-action="Poster" class="btn btn-sm btn-light">Full Poster View</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- My Tasks -->
+                <div class="col-lg-4">
+                    <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-clipboard me-2"></i>My Tasks</h6>
+                    @if (posterTasks.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var task in posterTasks.Take(3))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 small">@task.Title</p>
+                                            <small class="text-muted">@task.Budget.ToString("C")</small>
+                                        </div>
+                                        <span class="badge bg-@(GetTaskStatusColor(task.Status))">@task.Status</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <a asp-controller="Task" asp-action="MyTasks" class="btn btn-sm btn-outline-success mt-2">View All Tasks</a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-2">No tasks posted</p>
+                            <a asp-controller="Task" asp-action="Create" class="btn btn-sm btn-success">Post Task</a>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pending Applications -->
+                <div class="col-lg-4">
+                    <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-person-lines-fill me-2"></i>Pending Applications</h6>
+                    @if (posterApplications.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var app in posterApplications.Take(3))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 small">@app.WorkerName</p>
+                                            <small class="text-muted">for @app.TaskTitle</small>
+                                        </div>
+                                        <span class="badge bg-warning">Pending</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <a asp-controller="Application" asp-action="ByPoster" class="btn btn-sm btn-outline-success mt-2">Review All</a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-2">No pending applications</p>
+                            <p class="text-muted small">Applications will appear here</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Active Bookings -->
+                <div class="col-lg-4">
+                    <h6 class="border-bottom pb-2 mb-3"><i class="bi bi-calendar-check me-2"></i>Active Bookings</h6>
+                    @if (posterBookings.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var booking in posterBookings.Take(3))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 small">@booking.UserName</p>
+                                            <small class="text-muted">@booking.AgreedRate.ToString("C")</small>
+                                        </div>
+                                        <span class="badge bg-@(GetBookingStatusColor(booking.Status))">@booking.Status</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <a asp-controller="Booking" asp-action="Dashboard" class="btn btn-sm btn-outline-success mt-2">View All Bookings</a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-2">No active bookings</p>
+                            <p class="text-muted small">Bookings appear after accepting applications</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetBookingStatusColor(LaborDAL.Enums.BookingStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.BookingStatus.Scheduled => "primary",
+            LaborDAL.Enums.BookingStatus.InProgress => "warning",
+            LaborDAL.Enums.BookingStatus.Completed => "success",
+            LaborDAL.Enums.BookingStatus.Cancelled => "danger",
+            LaborDAL.Enums.BookingStatus.Disputed => "dark",
+            _ => "secondary"
+        };
+    }
+
+    string GetApplicationStatusColor(LaborDAL.Enums.ApplicationStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.ApplicationStatus.Pending => "warning",
+            LaborDAL.Enums.ApplicationStatus.Accepted => "success",
+            LaborDAL.Enums.ApplicationStatus.Rejected => "danger",
+            LaborDAL.Enums.ApplicationStatus.Withdrawn => "secondary",
+            _ => "secondary"
+        };
+    }
+
+    string GetTaskStatusColor(LaborDAL.Enums.TaskStatus status)
+    {
+        return status switch
+        {
+            LaborDAL.Enums.TaskStatus.Open => "success",
+            LaborDAL.Enums.TaskStatus.Assigned => "info",
+            LaborDAL.Enums.TaskStatus.InProgress => "warning",
+            LaborDAL.Enums.TaskStatus.Completed => "primary",
+            LaborDAL.Enums.TaskStatus.Cancelled => "danger",
+            _ => "secondary"
+        };
+    }
+}

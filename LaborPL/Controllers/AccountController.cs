@@ -115,7 +115,7 @@ namespace LaborPL.Controllers
                     return Redirect(returnUrl);
                 }
 
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
             }
 
             ModelState.AddModelError(string.Empty, response.ErrorMessage ?? "Invalid login attempt.");

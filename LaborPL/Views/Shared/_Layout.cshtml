@@ -23,11 +23,37 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-house me-1"></i>Home
-                            </a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                                    <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house me-1"></i>Home
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/#categories">
+                                    <i class="bi bi-grid me-1"></i>Categories
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/#how-it-works">
+                                    <i class="bi bi-question-circle me-1"></i>How It Works
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/#features">
+                                    <i class="bi bi-stars me-1"></i>Features
+                                </a>
+                            </li>
+                        }
 
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -39,11 +65,16 @@
                                         <i class="bi bi-gear me-1"></i>Admin
                                     </a>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Index"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Index"><i class="bi bi-speedometer2 me-1"></i>Admin Dashboard</a></li>
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Users"><i class="bi bi-people me-1"></i>Users</a></li>
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Verifications"><i class="bi bi-patch-check me-1"></i>Verifications</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Disputes"><i class="bi bi-exclamation-triangle me-1"></i>Disputes</a></li>
+                                        @if (User.IsInRole("Worker") || User.IsInRole("Poster"))
+                                        {
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="Combined"><i class="bi bi-grid-3x3-gap me-1"></i>My Tasks & Work</a></li>
+                                        }
                                     </ul>
                                 </li>
                             }

@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Select Dashboard";
+}
+
+<div class="dashboard-container fade-in">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-5">
+                <h2><i class="bi bi-grid-3x3-gap me-2"></i>Choose Your Dashboard</h2>
+                <p class="text-muted">You have access to both Worker and Poster dashboards. Select which one you'd like to use.</p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Worker Dashboard Option -->
+                <div class="col-md-6">
+                    <div class="card shadow h-100 border-primary border-2 hover-card">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="bi bi-person-workspace display-1 text-primary"></i>
+                            </div>
+                            <h4 class="card-title">Worker Dashboard</h4>
+                            <p class="card-text text-muted">
+                                Find tasks, manage your bookings, and track your applications.
+                            </p>
+                            <ul class="list-unstyled text-start text-muted small mb-4">
+                                <li><i class="bi bi-check text-success me-2"></i>Browse available tasks</li>
+                                <li><i class="bi bi-check text-success me-2"></i>View your bookings</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Track applications</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Manage your work schedule</li>
+                            </ul>
+                            <a asp-action="Worker" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-arrow-right me-2"></i>Go to Worker Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Poster Dashboard Option -->
+                <div class="col-md-6">
+                    <div class="card shadow h-100 border-success border-2 hover-card">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="bi bi-clipboard-data display-1 text-success"></i>
+                            </div>
+                            <h4 class="card-title">Poster Dashboard</h4>
+                            <p class="card-text text-muted">
+                                Post tasks, review applications, and manage your hired workers.
+                            </p>
+                            <ul class="list-unstyled text-start text-muted small mb-4">
+                                <li><i class="bi bi-check text-success me-2"></i>Post new tasks</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Review worker applications</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Manage your tasks</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Track active bookings</li>
+                            </ul>
+                            <a asp-action="Poster" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-arrow-right me-2"></i>Go to Poster Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    You can switch between dashboards anytime using the menu
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,0.175) !important;
+    }
+</style>
