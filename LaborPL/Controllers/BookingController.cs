@@ -13,14 +13,16 @@ namespace LaborPL.Controllers
         private readonly UserManager<AppUser> userManager;
         private readonly IRatingService ratingService;
         private readonly IEscrowService escrowService;
+        private readonly IPaymentService paymentService;
 
-        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService)
+        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService,IPaymentService paymentService)
         {
             this.bookingService = bookingService;
             this.disputeService = disputeService;
             this.userManager = userManager;
             this.ratingService = ratingService;
             this.escrowService = escrowService;
+            this.paymentService = paymentService;
         }
         #region Creat Booking
         [HttpGet]
@@ -64,7 +66,6 @@ namespace LaborPL.Controllers
         public async Task<IActionResult> Dashboard(string filter = "all", string role = "all")
         {
             var userId = userManager.GetUserId(User);
-
             var response = await bookingService.GetBookingsByUserIdAsync(userId);
 
             if (!response.Success)

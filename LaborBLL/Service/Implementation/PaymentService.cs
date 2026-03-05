@@ -49,50 +49,38 @@ namespace LaborBLL.Service.Implementation
         {
             try
             {
-                if (string.IsNullOrEmpty(model.TransactionId))
-                {
-                    // Generate unique idempotency key for this payment attempt
-                    string idempotencyKey = $"{model.BookingId}_{model.UserId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}";
-                    
-                    var Intent = await _stripeService.CreatePaymentIntentAsync(
-                        (double)model.Amount, 
-                        model.Currency ?? "usd", 
-                        model.Description ?? "Booking Payment",
-                        model.BookingId,
-                        idempotencyKey);
-                    
-                    model.TransactionId = Intent.PaymentIntentId;
-                    model.ClientSecret = Intent.ClientSecret; // Store the ClientSecret
-                    var paymentEntity = Mapper.Map<Payment>(model);
-                    paymentEntity.PaymentDate = DateTime.UtcNow;
-                    paymentEntity.Status = PaymentStatus.Pending;
-                    paymentEntity.PaymentType = model.PaymentType??"Booking";
-                    paymentEntity.Notes = $"IdempotencyKey: {idempotencyKey}"; // Store for reference
-                    
-                    await UnitOfWork.Payments.AddAsync(paymentEntity);
-                    await UnitOfWork.SaveAsync();
-                    
-                    if (paymentEntity.Id > 0)
-                    {
-                        var paymentVM = Mapper.Map<PaymentVM>(paymentEntity);
-                        return new Response<PaymentVM>(paymentVM, true, null);
-                    }
-                    else
-                    {
-                        return new Response<PaymentVM>(null, false, "Failed to create payment record.");
-                    }
-                }
-                else
-                {
-                    return new Response<PaymentVM>(null, false, "Failed to create payment record.");
-                }
+                // مش هنعمل Check على TransactionId، هنروح نعمل دفع جديد فوراً
+                string idempotencyKey = $"{model.BookingId}_{model.UserId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}";
+
+                var Intent = await _stripeService.CreatePaymentIntentAsync(
+                    (double)model.Amount,
+                    model.Currency ?? "usd",
+                    model.Description ?? "Booking Payment",
+                    model.BookingId,
+                    idempotencyKey);
+
+                model.TransactionId = Intent.PaymentIntentId;
+                model.ClientSecret = Intent.ClientSecret;
+
+                var paymentEntity = Mapper.Map<Payment>(model);
+                paymentEntity.PaymentDate = DateTime.UtcNow;
+                paymentEntity.Status = PaymentStatus.Pending;
+                paymentEntity.PaymentType = model.PaymentType ?? "Booking";
+                paymentEntity.ClientSecret = Intent.ClientSecret;
+                paymentEntity.Notes = $"IdempotencyKey: {idempotencyKey}";
+
+                await UnitOfWork.Payments.AddAsync(paymentEntity);
+                await UnitOfWork.SaveAsync();
+
+                var paymentVM = Mapper.Map<PaymentVM>(paymentEntity);
+                paymentVM.ClientSecret = Intent.ClientSecret;
+                return new Response<PaymentVM>(paymentVM, true, null);
             }
             catch (Exception ex)
             {
                 return new Response<PaymentVM>(null, false, $"Error in creating payment: {ex.Message}");
             }
         }
-
         public async Task<Response<PaymentVM>> GetByIdAsync(int id)
         {
             try

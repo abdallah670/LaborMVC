@@ -10,6 +10,8 @@
         public List<BookingListViewModel> Bookings { get; set; } = new List<BookingListViewModel>();
 
         public BookingStatus Status { get; set; }
+        public string PaymentStatus { get; set; }  // Held, Pending, Released, Refunded
+
 
         public int PendingCount { get; set; }
         public int InProgressCount { get; set; }

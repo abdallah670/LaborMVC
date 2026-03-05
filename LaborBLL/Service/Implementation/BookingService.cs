@@ -1,5 +1,7 @@
 ﻿
 
+using LaborDAL.Repo.Implementation;
+
 namespace LaborBLL.Service.Implementation
 {
     public class BookingService : IBookingService
@@ -279,8 +281,21 @@ namespace LaborBLL.Service.Implementation
                 .Select(g => g.First())
                 .ToList();
 
+            // ✅ أضف Payment Status لكل Booking
+            foreach (var booking in allBookings)
+            {
+                var payment = await unitOfWork.Payments.GetPaymentByBookingIdAsync(booking.Id);
+                if (payment != null)
+                {
+                    booking.PaymentStatus = payment.Status.ToString(); // Held, Pending, etc.
+                }
+                else
+                {
+                    booking.PaymentStatus = "No Payment";
+                }
+            }
+
             return new Response<IEnumerable<BookingDashboardViewModel>>(allBookings, true, null);
-                
         }
 
         public async Task<Response<bool>> CompleteBookingByPosterAsync(int bookingId)

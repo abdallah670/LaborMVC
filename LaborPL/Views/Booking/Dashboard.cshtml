@@ -182,16 +182,17 @@
                                 </div>
 
                                 <div class="col-md-3 text-md-end">
-                                    @if (booking.PosterHasVisa ||isWorker)
+                                    @if (isPoster && (booking.PaymentStatus == "Pending" || booking.PaymentStatus == "No Payment"))
                                     {
-                                        <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-outline-primary btn-sm">
-                                            View Details
-                                        </a>
+                                             <a asp-controller="Payment" asp-action="Checkout" asp-route-bookingId="@booking.Id" class="btn btn-warning btn-sm">
+                                  Checkout to View
+                                                                </a>
+                                    
                                     }
                                     else
                                     {
-                                        <a asp-controller="Payment" asp-action="Checkout" asp-route-bookingId="@booking.Id" class="btn btn-warning btn-sm">
-                                            Checkout to View
+                                        <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-outline-primary btn-sm">
+                                            View Details
                                         </a>
                                     }
                                 </div>

@@ -31,23 +31,34 @@
                return await _dbSet.Include(m=>m.Sender).Include(m=>m.Receiver) .Where(m=>m.SenderId==userId||m.ReceiverId==userId).OrderBy(p=>p.CreatedAt).ToListAsync();
             }
 
-            public async Task<List<AppUser>> GetNewContact(string userId)
-            {
+        public async Task<List<AppUser>> GetNewContact(string userId)
+        {
+            // 1. جيب الـ IDs اللي موجودة في المحادثات
             var existingChatUserIds = await _dbSet
-         .Where(m => m.SenderId == userId || m.ReceiverId == userId)
-         .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
-         .Distinct()
-         .ToListAsync();
+                .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                .Distinct()
+                .ToListAsync();
 
-            return await _context.Bookings
-                    .Include(b => b.Poster)
-                    .Include(b => b.Worker)
-                    .Where(b => b.PosterId == userId || b.WorkerId == userId)
-                    .Select(b => b.PosterId == userId ? b.Worker : b.Poster)
-                    .Where(u=>u!=null &&u.Id!=userId &&!existingChatUserIds.Contains(u.Id) )
-                    .Distinct().ToListAsync();
-                
-            }
+            // 2. جيب كل المستخدمين المرتبطين بالحجوزات (كـ IDs) 
+            //    واستبعد اللي موجودين في المحادثات
+            var newContactIds = await _context.Bookings
+                .Where(b => b.PosterId == userId || b.WorkerId == userId)
+                .Select(b => b.PosterId == userId ? b.WorkerId : b.PosterId)
+                .Where(id => id != userId)
+                .Distinct()
+                .ToListAsync();
+
+            // 3. فلترة الـ IDs في الذاكرة (عشان Contains)
+            var filteredIds = newContactIds
+                .Where(id => !existingChatUserIds.Contains(id))
+                .ToList();
+
+            // 4. جيب بيانات المستخدمين
+            return await _context.Users
+                .Where(u => filteredIds.Contains(u.Id))
+                .ToListAsync();
+        }
         public async Task<List<AppUser>> GetAdminUsersAsync(string userId)
         {
             // جلب كل المستخدمين اللي عندهم صلاحية Admin (بأي درجة)

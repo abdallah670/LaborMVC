@@ -133,7 +133,18 @@
                                 @await Html.PartialAsync("_ChatFloatingIcon")
                             </li>
                         }
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <!-- Payment History Card -->
+                                    <a asp-controller="Payment" asp-action="MyPaymentHistory"
+                                       class="btn btn-outline-primary btn-sm rounded-pill d-flex align-items-center">
+                                        <i class="bi bi-credit-card me-1"></i> Payment History
+                                    </a>
 
+                            </li>
+                        }
                         <!-- User Info -->
                         <li class="nav-item">
                             @await Html.PartialAsync("UserInfoPartial")

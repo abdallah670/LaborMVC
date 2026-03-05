@@ -33,6 +33,8 @@ builder.Services.AddSignalR();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+builder.Services.Configure<StripeSettings>(
+    builder.Configuration.GetSection("Stripe"));
 
 // Configure DbContext with resilience
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -202,6 +204,15 @@ builder.Services.AddMemoryCache();
              
 var app = builder.Build();
 
+// ✅ لازم يكون أول حاجة
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api/StripeWebhook"))
+    {
+        context.Request.EnableBuffering();
+    }
+    await next();
+});
 // Seed database with roles
 using (var scope = app.Services.CreateScope())
 {
@@ -255,6 +266,7 @@ RecurringJob.AddOrUpdate<INotificationService>(
     Cron.Minutely);
 
 app.UseHttpsRedirection();
+
 app.UseRouting();
 app.UseCors("AllowSpecificOrigins"); // ✅ أضيف هنا
 

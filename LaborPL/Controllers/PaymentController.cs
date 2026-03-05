@@ -104,15 +104,54 @@ namespace LaborPL.Controllers
             // Check if payment already exists
             var existingPayment = await _paymentService.GetPaymentByBookingIdAsync(bookingId);
             PaymentVM payment;
-            
+
             if (existingPayment.Success && existingPayment.Result != null)
             {
-                // Use existing payment
                 payment = existingPayment.Result;
+
+                // ✅ لو في ClientSecret قديم، اتأكد إنه لسه صالح
+                if (string.IsNullOrEmpty(payment.ClientSecret))
+                {
+                    // لو مفيش ClientSecret، اخلق Payment Intent جديد
+                    var options = new PaymentIntentCreateOptions
+                    {
+                        Amount = (long)(booking.AgreedRate * 100),
+                        Currency = "usd",
+                        CaptureMethod = "automatic", // 👈 الأهم هنا
+                        Metadata = new Dictionary<string, string>
+                {
+                    { "bookingId", bookingId.ToString() }
+                }
+                    };
+
+                    var service = new PaymentIntentService();
+                    var paymentIntent = await service.CreateAsync(options);
+
+                    payment.ClientSecret = paymentIntent.ClientSecret;
+                    payment.TransactionId = paymentIntent.Id;
+
+                    // حدث قاعدة البيانات بالـ ClientSecret الجديد
+                    await _paymentService.UpdateAsync(payment);
+                }
             }
             else
             {
-                // Create new payment
+                // ✅ أنشئ Payment Intent في Stripe الأول
+                var options = new PaymentIntentCreateOptions
+                {
+                    Amount = (long)(booking.AgreedRate * 100),
+                    Currency = "usd",
+                    CaptureMethod = "automatic", // 👈 الأهم هنا
+                    Metadata = new Dictionary<string, string>
+            {
+                { "bookingId", bookingId.ToString() }
+            }
+                };
+
+                var service = new PaymentIntentService();
+                var paymentIntent = await service.CreateAsync(options);
+
+                // ✅ بعد كده أنشئ payment في قاعدة البيانات
                 var paymentVM = new PaymentVM
                 {
                     BookingId = bookingId,
@@ -121,7 +160,9 @@ namespace LaborPL.Controllers
                     PaymentType = "Booking",
                     Description = $"Payment for booking #{bookingId}",
                     Currency = "USD",
-                    PaymentMethod = "CreditCard"
+                    PaymentMethod = "CreditCard",
+                    ClientSecret = paymentIntent.ClientSecret, // 👈 مهم جداً
+                    TransactionId = paymentIntent.Id // 👈 مهم جداً
                 };
 
                 var createResponse = await _paymentService.CreateAsync(paymentVM);
@@ -138,13 +179,12 @@ namespace LaborPL.Controllers
             {
                 BookingId = bookingId,
                 Amount = booking.AgreedRate,
-                ClientSecret = payment.ClientSecret, // Use the actual ClientSecret from Stripe
+                ClientSecret = payment.ClientSecret,
                 PubishableKey = _configuration["Stripe:PublishableKey"]
             };
 
             return View(viewModel);
         }
-
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> ReleasePayment(int bookingId)
@@ -181,6 +221,48 @@ namespace LaborPL.Controllers
                 TempData["Error"] = result.ErrorMessage;
             }
             return RedirectToAction("MyPaymentHistory");
+        }
+        [Authorize]
+        public async Task<IActionResult> Status(int bookingId)
+        {
+            var response = await _paymentService.GetPaymentByBookingIdAsync(bookingId);
+            if (!response.Success || response.Result == null)
+            {
+                TempData["Error"] = "Payment not found.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var vm = new PaymentStatusViewModel
+            {
+                BookingId = response.Result.BookingId,
+                Amount = response.Result.Amount,
+                Status = response.Result.Status.ToString(),
+                CreatAt = response.Result.PaymentDate,
+                RealaseAt = response.Result.ProcessedDate
+            };
+
+            return View(vm);
+        }
+        [Authorize]
+        public async Task<IActionResult> ConfirmPayment(int bookingId)
+        {
+            var response = await _paymentService.GetPaymentByBookingIdAsync(bookingId);
+            if (!response.Success || response.Result == null)
+            {
+                TempData["Error"] = "Payment not found.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var vm = new PaymentStatusViewModel
+            {
+                BookingId = response.Result.BookingId,
+                Amount = response.Result.Amount,
+                Status = response.Result.Status.ToString(),
+                CreatAt = response.Result.PaymentDate,
+                RealaseAt = response.Result.ProcessedDate
+            };
+
+            return View("Status", vm);
         }
     }
 }
