@@ -25,11 +25,13 @@ namespace LaborDAL.Common
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IPaymentRepo, PaymentRepo>();
             services.AddScoped<IMessageRepo, MessageRepo>();
+            services.AddScoped<IRatingRepo,RatingRepo>();
 
             // Distributed Transaction Repositories (C1 - Saga Pattern & Outbox Pattern)
             services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
             services.AddScoped<IPendingTransferRepository, PendingTransferRepository>();
             services.AddScoped<ISagaRepository, SagaRepository>();
+
 
             return services;
         }

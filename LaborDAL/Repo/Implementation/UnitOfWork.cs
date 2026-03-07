@@ -23,6 +23,7 @@ namespace LaborDAL.Repo.Implementation
         public IPaymentRepo Payments { get; private set; }
         public IMessageRepo Messages { get; private set; }
         public IchatRepo chatrepo { get; private set; }
+        public IRatingRepo RatingRepo { get; private set; }
 
         // Distributed transaction repositories
         public IOutboxMessageRepository OutboxMessages { get; private set; }
@@ -43,7 +44,8 @@ namespace LaborDAL.Repo.Implementation
             IBookingRepo bookingRepo,
              IPaymentRepo paymentRepo,
              IMessageRepo messageRepo,
-            IchatRepo chatRepo
+            IchatRepo chatRepo,
+            IRatingRepo ratingRepo
             )
         {
             _context = context;
@@ -54,6 +56,7 @@ namespace LaborDAL.Repo.Implementation
             Payments = paymentRepo;
             Messages = messageRepo;
             chatrepo = chatRepo;
+            RatingRepo = ratingRepo;
 
             // Initialize repositories
             InitializeRepositories();

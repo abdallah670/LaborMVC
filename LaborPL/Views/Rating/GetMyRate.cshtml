@@ -1,0 +1,99 @@
+﻿@* /Views/Profile/MyRaters.cshtml *@
+@model LaborBLL.Response.Response<List<LaborBLL.ModelVM.AllRatingViewModel>>
+
+@{
+    ViewData["Title"] = "من قيمني";
+
+}
+@inject UserManager<AppUser> userManager
+@{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var user = userManager.FindByIdAsync(userId).Result;
+}
+
+<div class="container mt-4">
+    <!-- استخدام البيانات -->
+    <div class="row">
+        <div class="col-12">
+            <h1>Hello @user?.FirstName @user?.LastName </h1>
+           
+        </div>
+    </div>
+
+    <!-- عرض قائمة المقيّمين -->
+    @if (Model.Result != null )
+    {
+        <div class="row">
+            @foreach (var rater in Model.Result)
+            {
+
+
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="mb-3">
+                        <strong> Name</strong>
+                        <p class="text-muted mb-0">
+                            <a href="@Url.Action("ProfilePoster", "Booking", new { id = rater.RaterId })">@rater.RaterName</a>
+                        </p><strong> from Bookin</strong>
+                        <p class="text-muted mb-0">
+                                    <a href="@Url.Action("Details", "Booking", new { id = rater.bookingId })">Go To Booking</a>
+                        </p>
+                    </div>
+                            
+
+                            <div class="rating mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= rater.Score)
+                                    {
+                                        <i class="fas fa-star text-warning"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="far fa-star text-warning"></i>
+                                    }
+                                }
+                                <span class="ms-2">@rater.Score/5</span>
+                                @{
+                                    var rating = rater.Score ;
+                                    var fullStar = (int)Math.Floor(rating);
+                                    var hasHalfStar = rating - fullStar >= 0.5m;
+                                }
+
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= fullStar)
+                                    {
+                                        <i class="bi bi-star-fill text-warning fs-4 me-1"></i>
+                                    }
+                                    else if (i == fullStar + 1 && hasHalfStar)
+                                    {
+                                        <i class="bi bi-star-half text-warning fs-4 me-1"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-star text-warning fs-4 me-1"></i>
+                                    }
+                                }
+                            </div>
+
+                          
+                            <h4>Her Comment @rater.comment </h4>
+
+                            <small class="text-muted">
+                              Date: @rater.CreatedAt.ToString("dd/MM/yyyy")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No one Has evaluated You Yet 
+        </div>
+    }
+</div>

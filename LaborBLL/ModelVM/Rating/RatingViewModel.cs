@@ -8,5 +8,6 @@ namespace LaborBLL.ModelVM.Rating
         public string RatedId { get; set; }
         [Range (1,5)]
         public int Score { get; set; }
+        public string comment { get; set; }
     }
 }

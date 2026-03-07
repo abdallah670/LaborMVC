@@ -164,9 +164,21 @@ namespace LaborBLL.Mapping
 
 
 
-        
 
-
+            CreateMap<Rating, AllRatingViewModel>()
+                        .ForMember(dest => dest.id, opt => opt.MapFrom(src => src.Id))
+                        .ForMember(dest => dest.RatedId, opt => opt.MapFrom(src => src.RateeId))
+                        .ForMember(dest => dest.RaterId, opt => opt.MapFrom(src => src.RaterId))
+                        .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
+                        .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                        .ForMember(dest => dest.comment, opt => opt.MapFrom(src => src.Comment))
+                        .ForMember(dest => dest.bookingId, opt => opt.MapFrom(src => src.bookingId))
+                        .ForMember(dest => dest.RaterName,
+                            opt => opt.MapFrom(src => src.Rater != null ?
+                                src.Rater.FirstName + " " + src.Rater.LastName : ""))
+                        .ForMember(dest => dest.RateeName,
+                            opt => opt.MapFrom(src => src.Rated != null ?
+                                src.Rated.FirstName + " " + src.Rated.LastName : ""));
 
 
 

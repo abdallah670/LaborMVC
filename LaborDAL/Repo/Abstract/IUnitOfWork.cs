@@ -16,6 +16,7 @@ namespace LaborDAL.Repo.Abstract
         IPaymentRepo Payments { get; }
         IMessageRepo Messages { get; }
         IchatRepo chatrepo { get; }
+        IRatingRepo RatingRepo { get; }
 
         // Distributed transaction repositories
         IOutboxMessageRepository OutboxMessages { get; }

@@ -11,13 +11,14 @@ namespace LaborDAL.Entities
         public int Id { get; set; }
         public string RaterId { get; set; }
         public string RateeId { get; set; }
-        public int Score { get; set; }
+        public decimal Score { get; set; }
         public int bookingId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public AppUser Rater { get; set; }
         public AppUser Rated { get; set; }
         public Booking Booking { get; set; }
+        public string Comment { get; set; }
 
     }
 }

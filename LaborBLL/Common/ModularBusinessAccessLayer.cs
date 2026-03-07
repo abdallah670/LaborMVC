@@ -1,7 +1,7 @@
 using LaborBLL.Mapping;
 using LaborBLL.Service;
 using LaborBLL.Service.Abstract;
-using LaborBLL.Service.Abstract.Rating;
+using LaborBLL.Service.Abstract;
 using LaborBLL.Service.Implementation;
 using LaborBLL.Service.Implementation.Rating;
 

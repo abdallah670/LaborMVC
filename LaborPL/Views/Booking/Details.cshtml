@@ -83,22 +83,36 @@
                 @* Rating Section *@
                 @if (Model.Status == BookingStatus.Completed || Model.Status == BookingStatus.Cancelled)
                 {
-                    <div class="mb-4">
-                        <h6>Rate the @(isPoster ? "Worker" : "Poster")</h6>
+                        <div class="mb-4">
+                            <h6>Rate the @(isPoster ? "Worker" : "Poster")</h6>
                         <form asp-action="Rate" asp-controller="Booking" method="post">
                             <input type="hidden" name="bookingId" value="@Model.Id" />
                             <input type="hidden" name="RatedId" value="@ViewBag.RatedId" />
 
+                            <!-- حقل التقييم بالنجوم -->
                             <div class="star-rating mb-3">
                                 @for (int i = 5; i >= 1; i--)
                                 {
                                     <input type="radio" name="Score" value="@i" id="star_@i"
                                            @(ViewBag.ExistingScore == i ? "checked" : "") />
-                                    <label for="star_@i">&#9733;</label>
+                                    <label for="star_@i" title="@i stars">&#9733;</label>
                                 }
                             </div>
 
-                            <button type="submit" class="btn btn-warning w-100">
+                            <!-- رسالة خطأ للتقييم -->
+                            <span class="text-danger" id="scoreError"></span>
+
+                            <!-- حقل التعليق -->
+                            <div class="mb-3">
+                                <label  class="form-label">Comment</label>
+                                <textarea name="Comment" class="form-control" rows="3"
+                                      placeholder="Write your comment here...">@ViewBag.ExistingComment</textarea>
+                                <span class="text-danger" id="commentError"></span>
+                                <small class="text-muted">Optional: You can leave a comment about your experience</small>
+                            </div>
+
+                            <!-- زر الإرسال -->
+                            <button type="submit" class="btn btn-warning w-100" id="submitBtn">
                                 @(ViewBag.ExistingScore > 0 ? "Update Rating" : "Submit Rating")
                             </button>
                         </form>

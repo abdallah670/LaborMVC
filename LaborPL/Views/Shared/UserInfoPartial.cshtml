@@ -8,9 +8,30 @@
 {
     <div class="d-flex align-items-center">
         <div class="d-flex align-items-center">
-            <span class="badge text-bg-primary text-white  me-1 ms-2" style="min-width:40px; text-align:center;">
-                My Rating: @user.AverageRating?.ToString("0.0")
-            </span>
+            <style>
+                .rating-link {
+                    transition: transform 0.2s, opacity 0.2s;
+                    display: inline-block;
+                }
+
+                    .rating-link:hover {
+                        transform: scale(1.05);
+                        opacity: 0.9;
+                    }
+
+                    .rating-link:active {
+                        transform: scale(0.95);
+                    }
+            </style>
+
+            <a asp-controller="Rating" asp-action="GetMyRate"
+               asp-route-userId="@user.Id"
+               class="rating-link text-decoration-none">
+                <span class="badge text-bg-primary text-white me-1 ms-2"
+                      style="min-width:40px; text-align:center;">
+                    My Rating: @user.AverageRating?.ToString("0.0")
+                </span>
+            </a>
             @{
                 var rating = user.AverageRating ?? 0m;
                 var fullStar = (int)Math.Floor(rating);
