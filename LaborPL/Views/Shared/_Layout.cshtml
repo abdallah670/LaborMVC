@@ -216,6 +216,48 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    <!-- SignalR للأونلاين -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
+    <script>
+        // الكود ده هيشتغل في كل صفحات الموقع
+        (function() {
+            // منع تكرار الاتصال
+            if (window.globalConnection) return;
+
+            console.log('🔄 بدأ الاتصال...');
+
+            // إنشاء اتصال واحد لكل الموقع
+            window.globalConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/DirectChatHub")
+                .withAutomaticReconnect()
+                .build();
+
+            // تشغيل الاتصال
+            window.globalConnection.start()
+                .then(() => console.log('✅ تم الاتصال بنجاح'))
+                .catch(err => console.error('❌ فشل الاتصال:', err));
+
+            // استقبال حدث أونلاين
+            window.globalConnection.on("UserOnline", function(userId) {
+                console.log('👤 المستخدم أونلاين:', userId);
+
+                // لو في عناصر في الصفحة فيها data-user-id = userId
+                document.querySelectorAll(`[data-user-id="${userId}"] .online-indicator`).forEach(el => {
+                    el.style.display = 'inline-block';
+                });
+            });
+
+            // استقبال حدث أوفلاين
+            window.globalConnection.on("UserOffline", function(userId) {
+                console.log('👤 المستخدم أوفلاين:', userId);
+
+                document.querySelectorAll(`[data-user-id="${userId}"] .online-indicator`).forEach(el => {
+                    el.style.display = 'none';
+                });
+            });
+
+        })();
+    </script>
 </body>
 </html>

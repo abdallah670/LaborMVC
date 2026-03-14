@@ -4,277 +4,497 @@
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
-<div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="bi bi-chat-dots-fill me-2"></i>
-                محادثة  #@Model.OtherUserName
-            </h5>
-            <a href="@Url.Action("Contacts")" class="btn btn-sm btn-light">
-                <i class="bi bi-arrow-right"></i> الرجوع
-            </a>
-        </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container-fluid px-2 px-sm-3 px-md-4 mt-2 mt-sm-3 mt-md-4">
+        <div class="card shadow border-0" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Card Header - Responsive -->
+            <div class="card-header bg-primary text-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center p-3 p-md-4">
+                <h5 class="mb-2 mb-sm-0 d-flex align-items-center fs-6 fs-sm-5">
+                    <i class="bi bi-chat-dots-fill me-2"></i>
+                    <span class="text-truncate" style="max-width: 200px;">محادثة #@Model.OtherUserName</span>
+                </h5>Contacts
+                <a href="@Url.Action("")" class="btn btn-sm btn-light w-100 w-sm-auto">
+                    <i class="bi bi-arrow-right me-1"></i>
+                    <span class="d-inline d-sm-none">رجوع</span>
+                    <span class="d-none d-sm-inline">الرجوع للقائمة</span>
+                </a>
+            </div>
 
-        <div class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;" id="chatBox">
-            @if (Model.Messages != null && Model.Messages.Any())
-            {
-                @foreach (var msg in Model.Messages)
-                {
-                    <div class="message-wrapper @(msg.SenderId == currentUserId ? "message-sent" : "message-received")">
-                        <div class="message-bubble">
-                            <div class="message-sender">@(msg.SenderName ?? "مستخدم")</div>
-                            <div class="message-content">@msg.Content</div>
-                            <div class="message-time">@msg.SentAt.ToString("hh:mm tt")</div>
+            <!-- Chat Messages Area - Responsive Height -->
+            <div class="card-body p-2 p-sm-3" style="background-color: #f8f9fa;" id="chatContainer">
+                <div class="chat-messages" id="chatBox" style="height: calc(100vh - 280px); min-height: 300px; max-height: 600px; overflow-y: auto; padding: 10px;">
+                    @if (Model.Messages != null && Model.Messages.Any())
+                    {
+                        @foreach (var msg in Model.Messages)
+                        {
+                            <div class="message-wrapper @(msg.SenderId == currentUserId ? "message-sent" : "message-received")">
+                                <div class="message-bubble">
+                                    <div class="message-sender">@(msg.SenderName ?? "مستخدم")</div>
+                                    <div class="message-content">@msg.Content</div>
+                                    <div class="message-time">@msg.SentAt.ToString("hh:mm tt")</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state text-center text-muted mt-5">
+                            <i class="bi bi-chat fs-1"></i>
+                            <p class="mt-3 px-3">No Message Yet ,,Start New</p>
                         </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="text-center text-muted mt-5">
-                    <i class="bi bi-chat fs-1"></i>
-                    <p class="mt-3">لا توجد رسائل بعد، ابدأ المحادثة الآن!</p>
+                    }
                 </div>
-            }
-        </div>
+            </div>
 
-        <div class="card-footer bg-white">
-            <div class="input-group">
-                <input type="text" id="messageInput" class="form-control" placeholder="اكتب رسالتك..."
-                       onkeypress="if(event.key === 'Enter') sendMessage()">
-                <button class="btn btn-primary" onclick="sendMessage()" id="sendButton">
-                    <i class="bi bi-send"></i> إرسال
-                </button>
+            <!-- Card Footer - Responsive Input -->
+            <div class="card-footer bg-white p-2 p-sm-3">
+                <div class="d-flex gap-2">
+                    <input type="text" id="messageInput" class="form-control form-control-sm form-control-md"
+                           placeholder="اكتب رسالتك..."
+                           onkeypress="if(event.key === 'Enter') sendMessage()"
+                           style="font-size: 16px;"> <!-- لمنع التكبير التلقائي على iOS -->
+                    <button class="btn btn-primary d-flex align-items-center gap-1 gap-sm-2 px-3 px-sm-4"
+                            onclick="sendMessage()" id="sendButton">
+                        <i class="bi bi-send"></i>
+                        <span class="d-none d-sm-inline">إرسال</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    .message-wrapper {
-        margin-bottom: 15px;
-        display: flex;
-        animation: fadeIn 0.3s ease;
-    }
-
-    .message-sent {
-        justify-content: flex-end;
-    }
-
-    .message-received {
-        justify-content: flex-start;
-    }
-
-    .message-bubble {
-        max-width: 70%;
-        padding: 10px 15px;
-        border-radius: 15px;
-        position: relative;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .message-sent .message-bubble {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-bottom-right-radius: 5px;
-    }
-
-    .message-received .message-bubble {
-        background-color: white;
-        color: #333;
-        border-bottom-left-radius: 5px;
-    }
-
-    .message-sender {
-        font-size: 0.8rem;
-        font-weight: bold;
-        margin-bottom: 3px;
-        opacity: 0.8;
-    }
-
-    .message-content {
-        font-size: 1rem;
-        word-wrap: break-word;
-    }
-
-    .message-time {
-        font-size: 0.7rem;
-        margin-top: 3px;
-        opacity: 0.7;
-    }
-
-    .message-sent .message-time {
-        text-align: left;
-    }
-
-    .message-received .message-time {
-        text-align: right;
-    }
-
-    #chatBox::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #chatBox::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    #chatBox::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-        #chatBox::-webkit-scrollbar-thumb:hover {
-            background: #555;
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
         }
 
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
+        body {
+            overflow-x: hidden;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-<script>
-    const currentUserId = "@currentUserId";
-    const bookingId = @Model.OtherUserId;
-
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/chatHub")
-        .withAutomaticReconnect()
-        .build();
-
-    connection.on("ReceiveMessage", function(message) {
-        if (message.bookingId === bookingId) {
-            addMessageToChat(message);
-            updateUnreadCount();
-        }
-    });
-
-    function addMessageToChat(message) {
-        const chatBox = document.getElementById("chatBox");
-        const isMyMessage = message.senderId === currentUserId;
-
-        // لو فاضية نمسح رسالة "لا توجد رسائل"
-        if (chatBox.children.length === 1 && chatBox.children[0].classList.contains('text-muted')) {
-            chatBox.innerHTML = '';
+        /* Chat Container Responsive */
+        .chat-messages {
+            scroll-behavior: smooth;
         }
 
-        const div = document.createElement("div");
-        div.className = `message-wrapper ${isMyMessage ? 'message-sent' : 'message-received'}`;
+        /* Message Wrapper Responsive */
+        .message-wrapper {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s ease;
+            width: 100%;
+        }
 
-        const time = message.sentAt ? new Date(message.sentAt).toLocaleTimeString('ar-EG', {
-            hour: '2-digit',
-            minute: '2-digit'
-        }) : new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        .message-sent {
+            justify-content: flex-end;
+        }
 
-        div.innerHTML = `
-            <div class="message-bubble">
-                <div class="message-sender">${message.senderName || 'مستخدم'}</div>
-                <div class="message-content">${message.content}</div>
-                <div class="message-time">${time}</div>
-            </div>
-        `;
+        .message-received {
+            justify-content: flex-start;
+        }
 
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+        /* Message Bubble Responsive */
+        .message-bubble {
+            max-width: 85%; /* للشاشات الصغيرة */
+            padding: 8px 12px;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            word-break: break-word;
+        }
 
-    connection.start().then(function() {
-        console.log("Connected to SignalR");
-        connection.invoke("JoinBookingGroup", bookingId).catch(err => console.error(err));
-    }).catch(function(err) {
-        console.error("Connection failed: ", err);
-    });
-
-       function sendMessage() {
-        const input = document.getElementById("messageInput");
-        const content = input.value.trim();
-        if (!content) return;
-
-        const sendButton = document.getElementById("sendButton");
-        sendButton.disabled = true;
-
-        fetch('/Message/SendMessage', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                bookingId: 0,
-                otherUserId: '@Model.OtherUserId',
-                content: content
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                input.value = '';
-            } else {
-                alert(data.message);
+        /* تحسينات للشاشات الأكبر */
+        @@media (min-width: 576px) {
+            .message-bubble {
+                max-width: 70%;
+                padding: 10px 15px;
             }
-        })
-        .finally(() => {
-            sendButton.disabled = false;
-            input.focus();
-        });
-    }
+        }
 
-       function loadMessages() {
-        fetch(`/Message/GetConversation?otherUserId=@Model.OtherUserId`)
-            .then(r => r.json())
-            .then(data => {
+        @@media (min-width: 768px) {
+            .message-bubble {
+                max-width: 60%;
+            }
+        }
+
+        @@media (min-width: 992px) {
+            .message-bubble {
+                max-width: 50%;
+            }
+        }
+
+        /* Sent Message Style */
+        .message-sent .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        /* Received Message Style */
+        .message-received .message-bubble {
+            background-color: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        /* Message Elements Responsive */
+        .message-sender {
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+            opacity: 0.8;
+        }
+
+        @@media (min-width: 576px) {
+            .message-sender {
+                font-size: 0.8rem;
+                margin-bottom: 3px;
+            }
+        }
+
+        .message-content {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        @@media (min-width: 576px) {
+            .message-content {
+                font-size: 1rem;
+            }
+        }
+
+        .message-time {
+            font-size: 0.6rem;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+
+        @@media (min-width: 576px) {
+            .message-time {
+                font-size: 0.7rem;
+                margin-top: 3px;
+            }
+        }
+
+        .message-sent .message-time {
+            text-align: left;
+        }
+
+        .message-received .message-time {
+            text-align: right;
+        }
+
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        @@media (min-width: 576px) {
+            .chat-messages::-webkit-scrollbar {
+                width: 6px;
+            }
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+            .chat-messages::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+
+        /* Empty State */
+        .empty-state {
+            padding: 20px 10px;
+        }
+
+            .empty-state i {
+                font-size: 3rem;
+            }
+
+        @@media (min-width: 576px) {
+            .empty-state i {
+                font-size: 4rem;
+            }
+        }
+
+        /* Animation */
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* تحسين للشاشات الصغيرة جداً */
+        @@media (max-width: 360px) {
+            .message-bubble {
+                max-width: 90%;
+                padding: 6px 10px;
+            }
+
+            .message-sender {
+                font-size: 0.65rem;
+            }
+
+            .message-content {
+                font-size: 0.85rem;
+            }
+
+            .message-time {
+                font-size: 0.55rem;
+            }
+        }
+
+        /* منع التكبير التلقائي على iOS */
+        input, textarea, button {
+            font-size: 16px !important;
+        }
+
+        /* تحسين المسافات */
+        .card {
+            border-radius: 15px 15px 12px 12px;
+        }
+
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        /* تحسين ظهور الأزرار */
+        .btn-light {
+            white-space: nowrap;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const currentUserId = "@currentUserId";
+        const bookingId = @Model.OtherUserId;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect([0, 2000, 5000, 10000, 15000])
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        // استقبال الرسائل
+        connection.on("ReceiveMessage", function(message) {
+            if (message.bookingId === bookingId) {
+                addMessageToChat(message);
+                updateUnreadCount();
+                scrollToBottom();
+            }
+        });
+
+        // إضافة رسالة للشات
+        function addMessageToChat(message) {
+            const chatBox = document.getElementById("chatBox");
+            const isMyMessage = message.senderId === currentUserId;
+
+            // إزالة رسالة "لا توجد رسائل" إذا موجودة
+            const emptyState = chatBox.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const div = document.createElement("div");
+            div.className = `message-wrapper ${isMyMessage ? 'message-sent' : 'message-received'}`;
+
+            const time = message.sentAt ? new Date(message.sentAt).toLocaleTimeString('ar-EG', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            div.innerHTML = `
+                <div class="message-bubble">
+                    <div class="message-sender">${message.senderName || 'مستخدم'}</div>
+                    <div class="message-content">${escapeHtml(message.content)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            chatBox.appendChild(div);
+        }
+
+        // دالة للهروب من HTML لتجنب XSS
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // التمرير لأسفل
+        function scrollToBottom() {
+            const chatBox = document.getElementById("chatBox");
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // بدء الاتصال
+        async function startConnection() {
+            try {
+                await connection.start();
+                console.log("✅ Connected to SignalR");
+                await connection.invoke("JoinBookingGroup", bookingId);
+                reconnectAttempts = 0;
+            } catch (err) {
+                console.error("❌ Connection failed: ", err);
+                reconnectAttempts++;
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    setTimeout(startConnection, 2000 * reconnectAttempts);
+                }
+            }
+        }
+
+        startConnection();
+
+        // إرسال رسالة
+        async function sendMessage() {
+            const input = document.getElementById("messageInput");
+            const content = input.value.trim();
+            if (!content) return;
+
+            const sendButton = document.getElementById("sendButton");
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch('/Message/SendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bookingId: 0,
+                        otherUserId: '@Model.OtherUserId',
+                        content: content
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    input.value = '';
+                    // إضافة الرسالة محلياً لسرعة الظهور
+                    addMessageToChat({
+                        senderId: currentUserId,
+                        senderName: 'أنت',
+                        content: content,
+                        sentAt: new Date()
+                    });
+                    scrollToBottom();
+                } else {
+                    alert(data.message || 'حدث خطأ في الإرسال');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('فشل إرسال الرسالة. تأكد من اتصالك بالإنترنت.');
+            } finally {
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+
+        // تحميل الرسائل
+        async function loadMessages() {
+            try {
+                const response = await fetch(`/Message/GetConversation?otherUserId=@Model.OtherUserId`);
+                const data = await response.json();
+
                 if (data.success && data.messages) {
                     const chatBox = document.getElementById("chatBox");
                     chatBox.innerHTML = '';
+
                     if (data.messages.length === 0) {
-                        chatBox.innerHTML = `<div class="text-center text-muted mt-5"><i class="bi bi-chat fs-1"></i><p class="mt-3">لا توجد رسائل بعد</p></div>`;
+                        chatBox.innerHTML = `<div class="empty-state text-center text-muted mt-5">
+                            <i class="bi bi-chat fs-1"></i>
+                            <p class="mt-3 px-3">لا توجد رسائل بعد، ابدأ المحادثة الآن!</p>
+                        </div>`;
                     } else {
                         data.messages.forEach(msg => addMessageToChat(msg));
+                        scrollToBottom();
                     }
                 }
-            });
-    }
-    function updateUnreadCount() {
-        fetch('/Message/UnReadCount')
-            .then(response => response.json())
-            .then(data => {
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        // تحديث عداد الرسائل غير المقروءة
+        async function updateUnreadCount() {
+            try {
+                const response = await fetch('/Message/UnReadCount');
+                const data = await response.json();
                 const badge = document.getElementById('unreadMessagesBadge');
                 if (badge) {
-                    if (data.count > 0) {
-                        badge.textContent = data.count;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
+                    badge.style.display = data.count > 0 ? 'flex' : 'none';
+                    if (data.count > 0) badge.textContent = data.count;
                 }
-            })
-            .catch(error => console.error('Error updating unread count:', error));
-    }
-
-    // تحميل الرسائل عند فتح الصفحة
-    loadMessages();
-
-    // تحديث كل 10 ثواني
-    setInterval(loadMessages, 10000);
-
-    // عند مغادرة الصفحة
-    window.addEventListener("beforeunload", function() {
-        connection.invoke("LeaveBookingGroup", bookingId);
-        connection.stop();
-    });
-
-    // إرسال بالضغط على Enter
-    document.getElementById("messageInput").addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            sendMessage();
+            } catch (error) {
+                console.error('Error updating unread count:', error);
+            }
         }
-    });
-</script>
+
+        // تحميل الرسائل عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMessages();
+
+            // التمرير لأسفل بعد تحميل الصفحة
+            setTimeout(scrollToBottom, 100);
+        });
+
+        // تحديث كل 30 ثانية (بدلاً من 10 لتقليل التحميل)
+        setInterval(loadMessages, 30000);
+
+        // عند مغادرة الصفحة
+        window.addEventListener("beforeunload", function() {
+            if (connection.state === signalR.HubConnectionState.Connected) {
+                connection.invoke("LeaveBookingGroup", bookingId);
+                connection.stop();
+            }
+        });
+
+        // إرسال بالضغط على Enter
+        document.getElementById("messageInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // تحسين لتجربة المستخدم على الموبايل
+        document.getElementById("messageInput").addEventListener("focus", function() {
+            setTimeout(scrollToBottom, 300);
+        });
+
+        // كشف تغيير حجم الشاشة
+        window.addEventListener('resize', function() {
+            // إعادة حساب الارتفاعات إذا لزم الأمر
+            scrollToBottom();
+        });
+    </script>
+</body>
+</html>

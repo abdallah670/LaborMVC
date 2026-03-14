@@ -201,10 +201,10 @@ builder.Services.AddScoped<IContentInspector, ContentInspector>();
 
 // Add Memory Cache for rate limiting
 builder.Services.AddMemoryCache();
-             
+
 var app = builder.Build();
 
-// ✅ لازم يكون أول حاجة
+// أول حاجة - Stripe webhook
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments("/api/StripeWebhook"))
@@ -213,7 +213,8 @@ app.Use(async (context, next) =>
     }
     await next();
 });
-// Seed database with roles
+
+// Seed database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -227,52 +228,33 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
-// 4. Global Error Handling
-app.UseGlobalExceptionHandler();
 
-// 6. Audit Logging - Log all requests
+// Middlewares - بالترتيب ده بالظبط
+app.UseGlobalExceptionHandler();
 app.UseAuditLogging();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
-// 3. Security Headers - Add security headers to all responses
+// ✅ الأمان - مهم يكون هنا
 app.UseSecurityHeaders();
 
-// 4. Response Compression
 app.UseResponseCompression();
-
-// 2. Rate Limiting
 app.UseRateLimiter();
-
-// And this:
-app.UseHangfireDashboard();
-app.UseHangfireServer();
-
-// Schedule recurring jobs after Hangfire is initialized
-RecurringJob.AddOrUpdate<PaymentReleaseJob>(
-    "auto-release-payments",
-    job => job.AutoReleasePayments(),
-    Cron.Hourly);
-
-// Schedule notification processing job
-RecurringJob.AddOrUpdate<INotificationService>(
-    "process-notifications",
-    service => service.ProcessPendingNotificationsAsync(50),
-    Cron.Minutely);
-
 app.UseHttpsRedirection();
 
 app.UseRouting();
-app.UseCors("AllowSpecificOrigins"); // ✅ أضيف هنا
-
+app.UseCors("AllowSpecificOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHangfireDashboard();
+app.UseHangfireServer();
+
+// Map endpoints
 app.MapStaticAssets();
 app.MapHub<ChatHub>("/chatHub");
 app.MapHub<DirectChatHub>("/DirectChatHub");
@@ -282,26 +264,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-// 5. Health Checks endpoint
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var response = new
-        {
-            Status = report.Status.ToString(),
-            TotalDuration = report.TotalDuration,
-            Checks = report.Entries.Select(e => new
-            {
-                Name = e.Key,
-                Status = e.Value.Status.ToString(),
-                Duration = e.Value.Duration,
-                Exception = e.Value.Exception?.Message
-            })
-        };
-        await context.Response.WriteAsJsonAsync(response);
-    }
-});
+app.MapHealthChecks("/health");
 
 app.Run();

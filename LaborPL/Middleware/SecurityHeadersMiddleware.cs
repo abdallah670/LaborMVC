@@ -1,60 +1,38 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
+using System.Threading.Tasks;
 
 namespace LaborPL.Middleware
 {
-    /// <summary>
-    /// Middleware to add security headers to all HTTP responses
-    /// Protects against XSS, clickjacking, MIME-type sniffing, and other common attacks
-    /// </summary>
     public class SecurityHeadersMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly IWebHostEnvironment _env;
 
-        public SecurityHeadersMiddleware(RequestDelegate next)
+        public SecurityHeadersMiddleware(RequestDelegate next, IWebHostEnvironment env)
         {
             _next = next;
+            _env = env;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Prevent MIME-type sniffing
+            // headers الأمان الأساسية
             context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-
-            // Prevent clickjacking attacks
-            context.Response.Headers["X-Frame-Options"] = "DENY";
-
-            // Enable XSS protection in browsers
-            context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-
-            // Control referrer information
+            context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN"; context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
             context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
 
-            // Content Security Policy - restricts sources of content
-            context.Response.Headers["Content-Security-Policy"] = 
-                "default-src 'self'; " +
-                "script-src 'self' 'unsafe-inline' https://js.stripe.com; " +
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
-                "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
-                "img-src 'self' data: https:; " +
-                "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; " +
-                "frame-src https://js.stripe.com https://hooks.stripe.com; " +
-                "connect-src 'self' https://api.stripe.com;";
-
-            // Permissions Policy - controls browser features
-            context.Response.Headers["Permissions-Policy"] = 
-                "camera=(), microphone=(), geolocation=(self), payment=(self)";
-
-            // Remove server header to prevent information disclosure
+            // ✅ السياسة الجديدة - بتسمح بكل حاجة عشان الشات يشتغل
+            context.Response.Headers["Content-Security-Policy"] =
+       "default-src * data: blob: filesystem: about: ws: wss: http: https: 'unsafe-inline' 'unsafe-eval'; " +
+       "frame-src * https://js.stripe.com https://hooks.stripe.com;";
+            // شيل الـ Server header
             context.Response.Headers.Remove("Server");
 
             await _next(context);
         }
     }
 
-    /// <summary>
-    /// Extension method to easily register the SecurityHeadersMiddleware
-    /// </summary>
     public static class SecurityHeadersMiddlewareExtensions
     {
         public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app)
