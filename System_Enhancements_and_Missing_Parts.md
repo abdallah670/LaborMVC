@@ -13,7 +13,7 @@ This document identifies enhancements and missing components for the Labor Marke
 
 ### Enhancement Required
 ```csharp
-// Global Exception Middleware
+// Global Exception Middleware  ب
 public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;

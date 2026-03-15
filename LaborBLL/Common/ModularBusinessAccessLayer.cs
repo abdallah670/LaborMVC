@@ -29,7 +29,7 @@ namespace LaborBLL.Common
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IVerificationService, VerificationService>();
 
-            services.AddScoped<IchatService, ChatService>       ();
+            services.AddScoped<IchatService, ChatService>();
             // Booking service
             services.AddScoped<IBookingService, BookingService>();
 

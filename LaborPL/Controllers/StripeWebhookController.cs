@@ -61,6 +61,7 @@ namespace LaborPL.Controllers
                     case "payment_intent.succeeded":
                         var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                         _logger.LogInformation($"PaymentIntent succeeded: {paymentIntent?.Id}");
+                        await HandleSuccessfulPayment(paymentIntent);
                         break;
 
                     case "charge.succeeded":
