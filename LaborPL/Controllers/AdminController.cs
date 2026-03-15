@@ -21,6 +21,7 @@ namespace LaborPL.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly ILogger<AdminController> _logger;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AdminController(
             IUserService userService,
@@ -30,7 +31,8 @@ namespace LaborPL.Controllers
             IDisputeService disputeService,
             UserManager<AppUser> userManager,
             ILogger<AdminController> logger,
-            IMapper mapper)
+            IMapper mapper,
+            IUnitOfWork unitOfWork)
         {
             _userService = userService;
             _verificationService = verificationService;
@@ -40,6 +42,7 @@ namespace LaborPL.Controllers
             _userManager = userManager;
             _logger = logger;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: /Admin/Index
@@ -50,7 +53,7 @@ namespace LaborPL.Controllers
             ViewBag.TotalUsers = users.Count();
             ViewBag.TotalTasks = 0; // TODO: Get from task service
             ViewBag.TotalBookings = 0; // TODO: Get from booking service
-            ViewBag.PendingVerifications = users.Count(u => !u.IDVerified && !string.IsNullOrEmpty(u.IDDocumentUrl));
+            ViewBag.PendingVerifications = await _unitOfWork.IDVerifications.GetPendingVerificationsAsync().ContinueWith(t => t.Result.Count());
 
             return View();
         }
@@ -59,9 +62,9 @@ namespace LaborPL.Controllers
         public async Task<IActionResult> Users(string filter = "all")
         {
             ViewBag.CurrentFilter = filter;
-            
+
             var users = await _userRepository.GetAllAsync();
-            
+
             // Apply filters
             users = filter?.ToLower() switch
             {
@@ -84,13 +87,139 @@ namespace LaborPL.Controllers
             return View(userViewModels);
         }
 
-        // GET: /Admin/Verifications
+        #region ID Verification Management
+
+        // GET: /Admin/IdVerifications
+        public async Task<IActionResult> IdVerifications(string filter = "pending")
+        {
+            ViewBag.CurrentFilter = filter;
+
+            IEnumerable<IDVerification> verifications;
+
+            // Apply filters
+            verifications = filter?.ToLower() switch
+            {
+                "pending" => await _unitOfWork.IDVerifications.GetPendingVerificationsAsync(),
+                "approved" => await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Approved),
+                "rejected" => await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Rejected),
+                _ => await _unitOfWork.IDVerifications.GetPendingVerificationsAsync()
+            };
+
+            // Statistics
+            var pending = await _unitOfWork.IDVerifications.GetPendingVerificationsAsync();
+            var approved = await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Approved);
+            var rejected = await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Rejected);
+
+            ViewBag.PendingCount = pending.Count();
+            ViewBag.ApprovedCount = approved.Count();
+            ViewBag.RejectedCount = rejected.Count();
+
+            return View(verifications);
+        }
+
+        // GET: /Admin/ReviewIdVerification/5
+        public async Task<IActionResult> ReviewIdVerification(int id)
+        {
+            var verification = await _unitOfWork.IDVerifications.GetByIdAsync(id);
+            if (verification == null)
+            {
+                return NotFound();
+            }
+
+            // Load user information
+            var user = await _userManager.FindByIdAsync(verification.UserId);
+            if (user != null)
+            {
+                ViewBag.UserName = $"{user.FirstName} {user.LastName}";
+                ViewBag.UserEmail = user.Email;
+            }
+
+            return View(verification);
+        }
+
+        // POST: /Admin/ApproveIdVerification
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveIdVerification(int id, string? notes)
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(adminId))
+                {
+                    TempData["ErrorMessage"] = "Admin authentication required.";
+                    return RedirectToAction(nameof(IdVerifications));
+                }
+
+                var result = await _verificationService.ApproveIdVerificationAsync(id, adminId, notes);
+
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "ID verification approved successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.ErrorMessage ?? "Failed to approve verification.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving ID verification {VerificationId}", id);
+                TempData["ErrorMessage"] = "An error occurred while approving the verification.";
+            }
+
+            return RedirectToAction(nameof(IdVerifications));
+        }
+
+        // POST: /Admin/RejectIdVerification
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectIdVerification(int id, string reason, string? notes)
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(adminId))
+                {
+                    TempData["ErrorMessage"] = "Admin authentication required.";
+                    return RedirectToAction(nameof(IdVerifications));
+                }
+
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    TempData["ErrorMessage"] = "Rejection reason is required.";
+                    return RedirectToAction(nameof(ReviewIdVerification), new { id });
+                }
+
+                var result = await _verificationService.RejectIdVerificationAsync(id, adminId, reason, notes);
+
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "ID verification rejected.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.ErrorMessage ?? "Failed to reject verification.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting ID verification {VerificationId}", id);
+                TempData["ErrorMessage"] = "An error occurred while rejecting the verification.";
+            }
+
+            return RedirectToAction(nameof(IdVerifications));
+        }
+
+        #endregion
+
+        // GET: /Admin/Verifications (Legacy - kept for compatibility)
         public async Task<IActionResult> Verifications(string filter = "pending")
         {
             ViewBag.CurrentFilter = filter;
-            
+
             var users = await _userRepository.GetAllAsync();
-            
+
             // Apply filters based on verification status
             users = filter?.ToLower() switch
             {
@@ -112,13 +241,24 @@ namespace LaborPL.Controllers
             return View(userViewModels);
         }
 
-        // POST: /Admin/ApproveVerification
+        // POST: /Admin/ApproveVerification (Legacy - kept for compatibility)
         [HttpPost]
         public async Task<IActionResult> ApproveVerification(string id)
         {
             try
             {
-                await _verificationService.ReviewIDDocumentAsync(id, true);
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction(nameof(Verifications));
+                }
+
+                user.IDVerified = true;
+                user.VerificationTier = VerificationTier.IDVerified;
+                await _userManager.UpdateAsync(user);
+
+                _logger.LogInformation("User {UserId} ID verification approved by admin", id);
                 TempData["SuccessMessage"] = "User verification approved successfully.";
             }
             catch (Exception ex)
@@ -130,14 +270,26 @@ namespace LaborPL.Controllers
             return RedirectToAction(nameof(Verifications));
         }
 
-        // POST: /Admin/RejectVerification
+        // POST: /Admin/RejectVerification (Legacy - kept for compatibility)
         [HttpPost]
         public async Task<IActionResult> RejectVerification(string id)
         {
             try
             {
-                await _verificationService.ReviewIDDocumentAsync(id, false);
-                TempData["SuccessMessage"] = "User verification rejected.";
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction(nameof(Verifications));
+                }
+
+                // Clear ID document URL to require resubmission
+                user.IDDocumentUrl = null;
+                user.IDDocumentSubmittedAt = null;
+                await _userManager.UpdateAsync(user);
+
+                _logger.LogInformation("User {UserId} ID verification rejected by admin", id);
+                TempData["SuccessMessage"] = "User verification rejected. Document upload required again.";
             }
             catch (Exception ex)
             {
@@ -240,7 +392,7 @@ namespace LaborPL.Controllers
         // GET: /Admin/UserDetails/{id}
         public async Task<IActionResult> UserDetails(string id)
         {
-            
+
             if (string.IsNullOrEmpty(id))
             {
                 return BadRequest("User ID is required.");
@@ -252,7 +404,13 @@ namespace LaborPL.Controllers
                 return NotFound();
             }
 
-            var viewModel = _mapper.Map<ProfileViewModel>(user);
+            // Use the new method to get full profile with ratings and stats
+            var viewModel = await _userService.GetProfileWithDetailsAsync(id);
+            if (viewModel == null)
+            {
+                return NotFound();
+            }
+
             return View(viewModel);
         }
 

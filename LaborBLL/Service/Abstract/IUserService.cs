@@ -22,6 +22,13 @@ namespace LaborBLL.Service.Abstract
         Task<ProfileViewModel?> GetProfileAsync(string userId);
 
         /// <summary>
+        /// Gets the profile of a user with all details including ratings and statistics
+        /// </summary>
+        /// <param name="userId">The ID of the user to get profile for</param>
+        /// <param name="viewerId">Optional viewer ID to customize response based on viewer</param>
+        Task<ProfileViewModel?> GetProfileWithDetailsAsync(string userId, string? viewerId = null);
+
+        /// <summary>
         /// Updates a user's profile
         /// </summary>
         Task<Response<bool>> UpdateProfileAsync(ProfileViewModel model);
@@ -35,6 +42,6 @@ namespace LaborBLL.Service.Abstract
         /// Checks if an email is already registered
         /// </summary>
         Task<bool> EmailExistsAsync(string email);
-        Task <bool> LogoutAsync();
+        Task<bool> LogoutAsync();
     }
 }

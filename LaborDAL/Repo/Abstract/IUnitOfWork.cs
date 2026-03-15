@@ -22,11 +22,14 @@ namespace LaborDAL.Repo.Abstract
         IOutboxMessageRepository OutboxMessages { get; }
         IPendingTransferRepository PendingTransfers { get; }
         ISagaRepository Sagas { get; }
-        
+
         // Notification system
         INotificationRepo Notifications { get; }
-        
+
         // File upload audit
         IFileUploadAuditRepo FileUploadAudits { get; }
+
+        // ID Verification (KYC)
+        IIDVerificationRepo IDVerifications { get; }
     }
 }

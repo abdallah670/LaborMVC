@@ -40,6 +40,11 @@ namespace LaborDAL.DB
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<FileUploadAuditLog> FileUploadAuditLogs { get; set; }
 
+        /// <summary>
+        /// ID Verifications DbSet for KYC
+        /// </summary>
+        public DbSet<IDVerification> IDVerifications { get; set; }
+
 
         /// <summary>
         /// Override SaveChanges to implement soft delete and audit functionality
@@ -189,6 +194,13 @@ namespace LaborDAL.DB
                 .WithMany()
                 .HasForeignKey(d => d.ResolvedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure IDVerification relationships
+            modelBuilder.Entity<IDVerification>()
+                .HasOne(i => i.User)
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Additional Identity configurations can be added here
         }

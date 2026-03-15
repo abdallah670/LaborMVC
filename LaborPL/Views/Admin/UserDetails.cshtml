@@ -74,6 +74,7 @@
                                 }
                                 <span class="ms-2 text-dark">@Model.AverageRating.Value.ToString("0.0")</span>
                             </div>
+                            <small class="text-muted">(@Model.TotalRatingsReceived reviews)</small>
                         }
                         else
                         {
@@ -205,7 +206,7 @@
             </div>
 
             <!-- Account Information -->
-            <div class="card shadow-sm">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header bg-transparent">
                     <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Account Information</h5>
                 </div>
@@ -226,6 +227,115 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Worker Statistics -->
+            @if (Model.IsWorker)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Worker Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-primary mb-1">@Model.CompletedJobsAsWorker</h3>
+                                    <small class="text-muted">Completed Jobs</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-success mb-1">$@Model.TotalEarnings.ToString("N2")</h3>
+                                    <small class="text-muted">Total Earnings</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-warning mb-1">@Model.TotalRatingsReceived</h3>
+                                    <small class="text-muted">Total Reviews</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Poster Statistics -->
+            @if (Model.IsPoster)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-plus me-2"></i>Poster Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-primary mb-1">@Model.TasksPosted</h3>
+                                    <small class="text-muted">Tasks Posted</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-info mb-1">@Model.TotalHires</h3>
+                                    <small class="text-muted">Total Hires</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-danger mb-1">$@Model.TotalSpent.ToString("N2")</h3>
+                                    <small class="text-muted">Total Spent</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Ratings List -->
+            @if (Model.Ratings != null && Model.Ratings.Any())
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0"><i class="bi bi-star me-2"></i>Recent Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var rating in Model.Ratings.OrderByDescending(r => r.CreatedAt).Take(10))
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="text-warning mb-1">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star@(i <= rating.Score ? "-fill" : "")"></i>
+                                            }
+                                            <span class="ms-2 text-dark">@rating.Score.ToString("0.0")</span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(rating.comment))
+                                        {
+                                            <p class="mb-1">@rating.comment</p>
+                                        }
+                                        <small class="text-muted">
+                                            <a href="@Url.Action("ProfilePoster", "Booking", new { id = rating.RaterId })">From User</a>
+                                            • @rating.CreatedAt.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                    <a href="@Url.Action("Details", "Booking", new { id = rating.bookingId })" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-link-45deg"></i> Booking
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.Ratings.Count > 10)
+                        {
+                            <p class="text-muted text-center mb-0">
+                                And @((Model.Ratings.Count - 10)) more reviews...
+                            </p>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

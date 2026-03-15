@@ -1,4 +1,4 @@
-﻿using LaborBLL.ModelVM;
+using LaborBLL.ModelVM;
 using LaborDAL.DB;
 using LaborDAL.Entities;
 
@@ -38,6 +38,8 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.Skills, opt => opt.MapFrom(src => src.Skills))
                 .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
                 .ForMember(dest => dest.IDVerified, opt => opt.MapFrom(src => src.IDVerified))
+                .ForMember(dest => dest.IsEmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed))
+                .ForMember(dest => dest.VerificationTier, opt => opt.MapFrom(src => src.VerificationTier))
                 .ForMember(dest => dest.AverageRating, opt => opt.MapFrom(src => src.AverageRating))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role));

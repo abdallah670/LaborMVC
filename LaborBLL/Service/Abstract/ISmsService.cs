@@ -1,38 +1,32 @@
 namespace LaborBLL.Service.Abstract
 {
     /// <summary>
-    /// SMS notification service interface
+    /// Service for sending SMS messages
     /// </summary>
     public interface ISmsService
     {
         /// <summary>
-        /// Send a basic SMS message
+        /// Send an SMS message to a phone number
         /// </summary>
-        Task<bool> SendSmsAsync(string toPhoneNumber, string message);
-
-        /// <summary>
-        /// Send verification code via SMS
-        /// </summary>
-        Task<bool> SendVerificationCodeAsync(string toPhoneNumber, string verificationCode);
-
-        /// <summary>
-        /// Send booking confirmation SMS
-        /// </summary>
-        Task<bool> SendBookingConfirmationAsync(string toPhoneNumber, string taskTitle, string workerName);
-
-        /// <summary>
-        /// Send task reminder SMS
-        /// </summary>
-        Task<bool> SendTaskReminderAsync(string toPhoneNumber, string taskTitle, DateTime taskDate);
-
-        /// <summary>
-        /// Send payment notification SMS
-        /// </summary>
-        Task<bool> SendPaymentNotificationAsync(string toPhoneNumber, decimal amount, string status);
+        /// <param name="phoneNumber">Phone number in E.164 format (e.g., +201234567890)</param>
+        /// <param name="message">Message body</param>
+        /// <returns>True if message was sent successfully</returns>
+        Task<bool> SendSmsAsync(string phoneNumber, string message);
 
         /// <summary>
         /// Validate phone number format
         /// </summary>
-        bool ValidatePhoneNumber(string phoneNumber);
+        /// <param name="phoneNumber">Phone number to validate</param>
+        /// <param name="countryCode">Country code (e.g., +20 for Egypt)</param>
+        /// <returns>True if phone number is valid</returns>
+        bool IsValidPhoneNumber(string phoneNumber, string countryCode = "+20");
+
+        /// <summary>
+        /// Format phone number to E.164 standard
+        /// </summary>
+        /// <param name="phoneNumber">Raw phone number</param>
+        /// <param name="countryCode">Country code</param>
+        /// <returns>Formatted phone number</returns>
+        string FormatPhoneNumber(string phoneNumber, string countryCode = "+20");
     }
 }

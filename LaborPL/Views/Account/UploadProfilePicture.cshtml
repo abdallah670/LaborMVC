@@ -1,0 +1,125 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "Upload Profile Picture";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-camera-fill me-2"></i>Upload Profile Picture</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Current Profile Picture -->
+                    <div class="text-center mb-4">
+                        <h6>Current Picture</h6>
+                        <div class="position-relative d-inline-block">
+                            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                            {
+                                <img src="@Model.ProfilePictureUrl" 
+                                     alt="Current Profile" 
+                                     class="rounded-circle"
+                                     style="width: 150px; height: 150px; object-fit: cover;"
+                                     id="current-picture" />
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                     style="width: 150px; height: 150px;"
+                                     id="current-picture-placeholder">
+                                    <i class="bi bi-person-fill text-white" style="font-size: 80px;"></i>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Simple File Upload Form -->
+                    <form asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="mb-4">
+                            <label for="profilePicture" class="form-label">
+                                <i class="bi bi-image me-1"></i>Select Image
+                            </label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="profilePicture" 
+                                   name="profilePicture"
+                                   accept="image/jpeg,image/png,image/gif"
+                                   required />
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                JPEG, PNG, or GIF • Max 5MB • Recommended: 400x400px or larger
+                            </div>
+                        </div>
+
+                        <!-- Preview Container -->
+                        <div id="previewContainer" class="text-center mb-4 d-none">
+                            <h6>Preview</h6>
+                            <img id="imagePreview" class="rounded-circle" 
+                                 style="width: 150px; height: 150px; object-fit: cover;" />
+                        </div>
+
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("MyProfile", "Account")" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Profile
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="btnUpload">
+                                <i class="bi bi-cloud-upload me-1"></i>Upload Picture
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('profilePicture');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const uploadForm = document.getElementById('uploadForm');
+            const btnUpload = document.getElementById('btnUpload');
+
+            // Show preview when file is selected
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                
+                if (file) {
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File size exceeds 5MB. Please choose a smaller image.');
+                        fileInput.value = '';
+                        previewContainer.classList.add('d-none');
+                        return;
+                    }
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        previewContainer.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Form submission with loading state
+            uploadForm.addEventListener('submit', function() {
+                if (fileInput.files.length > 0) {
+                    btnUpload.disabled = true;
+                    btnUpload.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+                }
+            });
+        });
+    </script>
+}

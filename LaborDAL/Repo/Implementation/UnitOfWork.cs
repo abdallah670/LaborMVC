@@ -9,7 +9,7 @@ namespace LaborDAL.Repo.Implementation
         private IDbContextTransaction? _transaction;
         private readonly IMapper _mapper;
         private readonly ILoggerFactory _loggerFactory;
-        
+
 
         // Repositories
         public IAppUserRepository AppUsers { get; private set; }
@@ -29,12 +29,15 @@ namespace LaborDAL.Repo.Implementation
         public IOutboxMessageRepository OutboxMessages { get; private set; }
         public IPendingTransferRepository PendingTransfers { get; private set; }
         public ISagaRepository Sagas { get; private set; }
-        
+
         // Notification system
         public INotificationRepo Notifications { get; private set; }
-        
+
         // File upload audit
         public IFileUploadAuditRepo FileUploadAudits { get; private set; }
+
+        // ID Verification (KYC)
+        public IIDVerificationRepo IDVerifications { get; private set; }
 
         public UnitOfWork(
             ApplicationDbContext context,
@@ -78,12 +81,15 @@ namespace LaborDAL.Repo.Implementation
             OutboxMessages = new OutboxMessageRepository(_context);
             PendingTransfers = new PendingTransferRepository(_context);
             Sagas = new SagaRepository(_context);
-            
+
             // Initialize notification repository
             Notifications = new NotificationRepo(_context);
-            
+
             // Initialize file upload audit repository
             FileUploadAudits = new FileUploadAuditRepo(_context);
+
+            // Initialize ID verification repository
+            IDVerifications = new IDVerificationRepo(_context);
         }
 
         public async Task<int> SaveAsync()

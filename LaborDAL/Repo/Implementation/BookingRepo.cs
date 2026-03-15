@@ -1,5 +1,7 @@
 ﻿
 
+using LaborDAL.Enums;
+
 namespace LaborDAL.Repo.Implementation
 {
     public class BookingRepo : Repository<Booking>, IBookingRepo
@@ -38,19 +40,37 @@ namespace LaborDAL.Repo.Implementation
         }
 
 
-        public Task<List<Booking>> GetBookingsByWorkerIdAsync(string workerId)
+        public async Task<List<Booking>> GetBookingsByWorkerIdAsync(string workerId)
         {
-            throw new NotImplementedException();
+            return await _dbSet
+                .Include(b => b.Task)
+                .Include(b => b.Poster)
+                .Where(b => b.WorkerId == workerId)
+                .IgnoreQueryFilters()
+                .ToListAsync();
         }
 
-        public Task<List<Booking>> GetOverlappingBookingsAsync(int workerId, DateTime start, DateTime end)
+        public async Task<List<Booking>> GetOverlappingBookingsAsync(string workerId, DateTime start, DateTime end)
         {
-            throw new NotImplementedException();
+            return await _dbSet
+                .Include(b => b.Task)
+                .Include(b => b.Poster)
+                .Where(b => b.WorkerId == workerId && 
+                           b.Status != BookingStatus.Cancelled &&
+                           b.StartTime < end && 
+                           b.EndTime > start)
+                .IgnoreQueryFilters()
+                .ToListAsync();
         }
 
-        public Task<List<Booking>> GetBookingsByPosterIdAsync(string posterId)
+        public async Task<List<Booking>> GetBookingsByPosterIdAsync(string posterId)
         {
-            throw new NotImplementedException();
+            return await _dbSet
+                .Include(b => b.Task)
+                .Include(b => b.Worker)
+                .Where(b => b.PosterId == posterId)
+                .IgnoreQueryFilters()
+                .ToListAsync();
         }
     }
 }

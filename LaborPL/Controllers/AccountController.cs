@@ -14,13 +14,20 @@ namespace LaborPL.Controllers
         private readonly IUserService _userService;
         private readonly IStripeService _stripeService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IVerificationService _verificationService;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService, IStripeService stripeService, IUnitOfWork unitOfWork, ILogger<AccountController> logger)
+        public AccountController(
+            IUserService userService,
+            IStripeService stripeService,
+            IUnitOfWork unitOfWork,
+            IVerificationService verificationService,
+            ILogger<AccountController> logger)
         {
             _userService = userService;
             _stripeService = stripeService;
             _unitOfWork = unitOfWork;
+            _verificationService = verificationService;
             _logger = logger;
         }
 
@@ -55,7 +62,7 @@ namespace LaborPL.Controllers
             if (response.Success)
             {
                 _logger.LogInformation("User registered successfully: {Email}", model.Email);
-                
+
                 // Auto-login after registration
                 var loginModel = new LoginViewModel
                 {
@@ -69,7 +76,7 @@ namespace LaborPL.Controllers
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     await SignInUserAsync(new ProfileViewModel { Email = model.Email, FirstName = model.FirstName, LastName = model.LastName }, false);
-                    
+
                     return Redirect(returnUrl);
                 }
 
@@ -139,11 +146,11 @@ namespace LaborPL.Controllers
 
         #endregion
 
-        #region Profile
+        #region MyProfile (Current User - Editable)
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Profile()
+        public async Task<IActionResult> MyProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -151,7 +158,8 @@ namespace LaborPL.Controllers
                 return RedirectToAction("Login");
             }
 
-            var profile = await _userService.GetProfileAsync(userId);
+            // Get profile with all details including ratings and stats
+            var profile = await _userService.GetProfileWithDetailsAsync(userId);
             if (profile == null)
             {
                 return NotFound();
@@ -163,46 +171,346 @@ namespace LaborPL.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Profile(ProfileViewModel model)
+        public async Task<IActionResult> MyProfile(ProfileViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var response= await _userService.UpdateProfileAsync(model);
+            var response = await _userService.UpdateProfileAsync(model);
 
             if (response.Success)
             {
                 TempData["SuccessMessage"] = "Profile updated successfully.";
-                return RedirectToAction(nameof(Profile));
+                return RedirectToAction(nameof(MyProfile));
             }
 
             ModelState.AddModelError(string.Empty, response.ErrorMessage ?? "Failed to update profile.");
             return View(model);
         }
 
+        #endregion
+
+        #region Upload Profile Picture
+
+        /// <summary>
+        /// Upload profile picture view
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> UploadProfilePicture()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var profile = await _userService.GetProfileWithDetailsAsync(userId);
+            if (profile == null)
+            {
+                return NotFound();
+            }
+
+            return View(profile);
+        }
+
+        /// <summary>
+        /// Handle profile picture upload
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadProfilePicture(IFormFile profilePicture)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            if (profilePicture == null || profilePicture.Length == 0)
+            {
+                TempData["Error"] = "Please select an image file.";
+                return RedirectToAction(nameof(UploadProfilePicture));
+            }
+
+            // Validate file type
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
+            if (!allowedTypes.Contains(profilePicture.ContentType))
+            {
+                TempData["Error"] = "Invalid file type. Please upload JPEG, PNG, or GIF.";
+                return RedirectToAction(nameof(UploadProfilePicture));
+            }
+
+            // Validate file size (5MB)
+            if (profilePicture.Length > 5 * 1024 * 1024)
+            {
+                TempData["Error"] = "File size exceeds 5MB. Please choose a smaller image.";
+                return RedirectToAction(nameof(UploadProfilePicture));
+            }
+
+            try
+            {
+                // Create uploads directory if it doesn't exist
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Generate unique filename
+                var fileName = $"{userId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(profilePicture.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await profilePicture.CopyToAsync(stream);
+                }
+
+                // Update user profile picture URL
+                var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
+                if (user != null)
+                {
+                    // Delete old picture if exists
+                    if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+                    {
+                        var oldFileName = Path.GetFileName(user.ProfilePictureUrl);
+                        var oldFilePath = Path.Combine(uploadsFolder, oldFileName);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+
+                    // Update with new URL
+                    user.ProfilePictureUrl = $"/uploads/profiles/{fileName}";
+                    await _unitOfWork.AppUsers.UpdateAsync(user);
+                    await _unitOfWork.SaveAsync();
+
+                    _logger.LogInformation("Profile picture uploaded for user {UserId}", userId);
+                    TempData["SuccessMessage"] = "Profile picture uploaded successfully!";
+                }
+
+                return RedirectToAction(nameof(MyProfile));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading profile picture for user {UserId}", userId);
+                TempData["Error"] = "Failed to upload image. Please try again.";
+                return RedirectToAction(nameof(UploadProfilePicture));
+            }
+        }
+
+        #endregion
+
+        #region Email Verification
+
+        /// <summary>
+        /// Confirm email address with token
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Invalid verification link.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var result = await _verificationService.ConfirmEmailAsync(userId, token);
+
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Thank you! Your email has been confirmed successfully.";
+                return RedirectToAction("Login");
+            }
+            else
+            {
+                TempData["Error"] = result.ErrorMessage ?? "Failed to confirm email. The link may have expired.";
+                return RedirectToAction("Login");
+            }
+        }
+
+        /// <summary>
+        /// Resend email verification link
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendEmailConfirmation()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var result = await _verificationService.ResendEmailVerificationAsync(userId);
+
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Verification email sent! Please check your inbox.";
+            }
+            else
+            {
+                TempData["Error"] = result.ErrorMessage ?? "Failed to send verification email.";
+            }
+
+            return RedirectToAction("MyProfile");
+        }
+
+        #endregion
+
+        #region Phone Verification
+
+        /// <summary>
+        /// Phone verification page
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public IActionResult VerifyPhone()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Send phone verification SMS code
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendPhoneVerification([FromBody] SendPhoneVerificationRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { success = false, message = "User not authenticated." });
+            }
+
+            var result = await _verificationService.SendPhoneVerificationAsync(
+                userId,
+                request.PhoneNumber,
+                request.CountryCode);
+
+            return Json(new { success = result.Success, message = result.ErrorMessage });
+        }
+
+        /// <summary>
+        /// Verify phone number with SMS code
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyPhone([FromBody] VerifyPhoneRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { success = false, message = "User not authenticated." });
+            }
+
+            var result = await _verificationService.VerifyPhoneAsync(userId, request.Code);
+
+            return Json(new { success = result.Success, message = result.ErrorMessage });
+        }
+
+        #endregion
+
+        #region ID Verification (KYC)
+
+        /// <summary>
+        /// ID Verification page
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public IActionResult IdVerification()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Submit ID verification documents
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitIdVerification([FromBody] IdVerificationRequestDto request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { success = false, message = "User not authenticated." });
+            }
+
+            var result = await _verificationService.SubmitIdVerificationAsync(userId, request);
+
+            return Json(new { success = result.Success, message = result.ErrorMessage, id = result.Result });
+        }
+
+        /// <summary>
+        /// Get ID verification status
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> IdVerificationStatus()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { success = false, message = "User not authenticated." });
+            }
+
+            var status = await _verificationService.GetIdVerificationStatusAsync(userId);
+            return Json(new { success = true, status });
+        }
+
+        /// <summary>
+        /// Check if user has pending ID verification
+        /// </summary>
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> HasPendingIdVerification()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { success = false, message = "User not authenticated." });
+            }
+
+            var hasPending = await _verificationService.HasPendingIdVerificationAsync(userId);
+            return Json(new { success = true, hasPending });
+        }
+
+        #endregion
+
+        #region Profile (Other Users - Read Only)
+
         /// <summary>
         /// View another user's profile (read-only) - used for viewing applicant/worker profiles
         /// </summary>
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> ViewProfile(string id)
+        public async Task<IActionResult> Profile(string id)
         {
+            // If no ID provided, redirect to current user's profile
             if (string.IsNullOrEmpty(id))
             {
-                return BadRequest("User ID is required.");
+                return RedirectToAction(nameof(MyProfile));
             }
 
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+
             // If user is viewing their own profile, redirect to the editable profile page
             if (id == currentUserId)
             {
-                return RedirectToAction(nameof(Profile));
+                return RedirectToAction(nameof(MyProfile));
             }
 
-            var profile = await _userService.GetProfileAsync(id);
+            var profile = await _userService.GetProfileWithDetailsAsync(id);
             if (profile == null)
             {
                 return NotFound("User not found.");
@@ -360,7 +668,7 @@ namespace LaborPL.Controllers
                 // Add role claims based on ClientRole flags
                 new Claim("Role", profile.Role.ToString())
             };
-            
+
             // Add individual role claims for authorization
             if (profile.IsAdmin)
             {
@@ -374,7 +682,7 @@ namespace LaborPL.Controllers
             {
                 claims.Add(new Claim(ClaimTypes.Role, "Poster"));
             }
-            
+
             var claimsIdentity = new ClaimsIdentity(claims, "Login");
             var authProperties = new AuthenticationProperties
             {

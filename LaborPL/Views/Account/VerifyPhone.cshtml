@@ -1,0 +1,362 @@
+@{
+    ViewData["Title"] = "Verify Phone Number";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-phone-fill me-2"></i>Verify Phone Number
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- Step 1: Enter Phone Number -->
+                    <div id="step1">
+                        <h5 class="mb-3">Enter your phone number</h5>
+                        <div class="mb-3">
+                            <label for="countryCode" class="form-label">Country Code</label>
+                            <select class="form-select" id="countryCode">
+                                <option value="+20" selected>Egypt (+20)</option>
+                                <option value="+966">Saudi Arabia (+966)</option>
+                                <option value="+971">UAE (+971)</option>
+                                <option value="+965">Kuwait (+965)</option>
+                                <option value="+974">Qatar (+974)</option>
+                                <option value="+973">Bahrain (+973)</option>
+                                <option value="+968">Oman (+968)</option>
+                                <option value="+962">Jordan (+962)</option>
+                                <option value="+961">Lebanon (+961)</option>
+                                <option value="+1">USA (+1)</option>
+                                <option value="+44">UK (+44)</option>
+                                <option value="+49">Germany (+49)</option>
+                                <option value="+33">France (+33)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phoneNumber" 
+                                   placeholder="10xxxxxxxx" maxlength="15">
+                            <div class="form-text">Enter your phone number without country code</div>
+                        </div>
+                        <div id="step1Error" class="alert alert-danger d-none"></div>
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" id="btnSendCode">
+                                <i class="bi bi-send me-2"></i>Send Verification Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Enter Verification Code -->
+                    <div id="step2" class="d-none">
+                        <h5 class="mb-3">Enter verification code</h5>
+                        <p class="text-muted">We've sent a 6-digit code to <span id="phoneDisplay"></span></p>
+                        
+                        <div class="mb-3">
+                            <label for="verificationCode" class="form-label">Verification Code</label>
+                            <input type="text" class="form-control form-control-lg text-center" 
+                                   id="verificationCode" placeholder="123456" maxlength="6">
+                        </div>
+                        
+                        <div id="step2Error" class="alert alert-danger d-none"></div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" id="btnVerifyCode">
+                                <i class="bi bi-check-circle me-2"></i>Verify Code
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="btnResendCode" disabled>
+                                <i class="bi bi-arrow-repeat me-2"></i>Resend Code
+                                <span id="resendCountdown" class="ms-1"></span>
+                            </button>
+                            <button type="button" class="btn btn-link" id="btnChangeNumber">
+                                Change phone number
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Success -->
+                    <div id="step3" class="d-none">
+                        <div class="text-center">
+                            <i class="bi bi-check-circle-fill text-success display-1"></i>
+                            <h5 class="mt-3 text-success">Phone Verified!</h5>
+                            <p class="text-muted">Your phone number has been successfully verified.</p>
+                            <a href="@Url.Action("MyProfile")" class="btn btn-primary">
+                                <i class="bi bi-person me-2"></i>Back to Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Why Verify Your Phone?</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-shield-check text-success me-2"></i>
+                            <strong>Account Security:</strong> Protects your account from unauthorized access
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-bell text-primary me-2"></i>
+                            <strong>Instant Notifications:</strong> Get SMS alerts for important updates
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-star-fill text-warning me-2"></i>
+                            <strong>Trust Badge:</strong> Shows you're a verified member
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-cash text-success me-2"></i>
+                            <strong>Secure Payments:</strong> Required for payment processing
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentPhone = '';
+            let currentCountryCode = '';
+            let resendTimer = null;
+            const RESEND_DELAY = 60; // seconds
+
+            // Get the anti-forgery token
+            function getAntiForgeryToken() {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                return token ? token.value : '';
+            }
+
+            // Start countdown timer for resend button
+            function startResendCountdown() {
+                const btnResend = document.getElementById('btnResendCode');
+                const countdownSpan = document.getElementById('resendCountdown');
+                let seconds = RESEND_DELAY;
+
+                btnResend.disabled = true;
+                countdownSpan.textContent = `(${seconds}s)`;
+
+                if (resendTimer) {
+                    clearInterval(resendTimer);
+                }
+
+                resendTimer = setInterval(function() {
+                    seconds--;
+                    if (seconds > 0) {
+                        countdownSpan.textContent = `(${seconds}s)`;
+                    } else {
+                        clearInterval(resendTimer);
+                        btnResend.disabled = false;
+                        countdownSpan.textContent = '';
+                    }
+                }, 1000);
+            }
+
+            // Step 1: Send verification code
+            async function sendVerificationCode() {
+                const countryCode = document.getElementById('countryCode').value;
+                const phoneNumber = document.getElementById('phoneNumber').value.trim();
+                const errorDiv = document.getElementById('step1Error');
+                const btn = document.getElementById('btnSendCode');
+                
+                // Validate phone number
+                if (!phoneNumber || phoneNumber.length < 8) {
+                    errorDiv.textContent = 'Please enter a valid phone number';
+                    errorDiv.classList.remove('d-none');
+                    return false;
+                }
+
+                currentPhone = phoneNumber;
+                currentCountryCode = countryCode;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+                try {
+                    const response = await fetch('@Url.Action("SendPhoneVerification")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        body: JSON.stringify({
+                            phoneNumber: phoneNumber,
+                            countryCode: countryCode
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        document.getElementById('step1').classList.add('d-none');
+                        document.getElementById('step2').classList.remove('d-none');
+                        document.getElementById('phoneDisplay').textContent = currentCountryCode + currentPhone;
+                        errorDiv.classList.add('d-none');
+                        
+                        // Start the resend countdown
+                        startResendCountdown();
+                        return true;
+                    } else {
+                        errorDiv.textContent = result.message || 'Failed to send code. Please try again.';
+                        errorDiv.classList.remove('d-none');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorDiv.textContent = 'An error occurred. Please try again.';
+                    errorDiv.classList.remove('d-none');
+                    return false;
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send me-2"></i>Send Verification Code';
+                }
+            }
+
+            // Resend verification code
+            async function resendVerificationCode() {
+                const errorDiv = document.getElementById('step2Error');
+                const btn = document.getElementById('btnResendCode');
+
+                if (!currentPhone || !currentCountryCode) {
+                    errorDiv.textContent = 'Phone number information is missing. Please go back and try again.';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
+
+                btn.disabled = true;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+                try {
+                    const response = await fetch('@Url.Action("SendPhoneVerification")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        body: JSON.stringify({
+                            phoneNumber: currentPhone,
+                            countryCode: currentCountryCode
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        errorDiv.classList.add('d-none');
+                        // Show success message temporarily
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'alert alert-success';
+                        successDiv.textContent = 'New verification code sent!';
+                        errorDiv.parentNode.insertBefore(successDiv, errorDiv);
+                        setTimeout(() => successDiv.remove(), 3000);
+                        
+                        // Restart countdown
+                        startResendCountdown();
+                    } else {
+                        errorDiv.textContent = result.message || 'Failed to resend code. Please try again.';
+                        errorDiv.classList.remove('d-none');
+                        btn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorDiv.textContent = 'An error occurred. Please try again.';
+                    errorDiv.classList.remove('d-none');
+                    btn.disabled = false;
+                } finally {
+                    btn.innerHTML = originalText;
+                }
+            }
+
+            // Step 2: Verify code
+            async function verifyCode() {
+                const code = document.getElementById('verificationCode').value.trim();
+                const errorDiv = document.getElementById('step2Error');
+
+                if (!code || code.length !== 6) {
+                    errorDiv.textContent = 'Please enter the 6-digit verification code';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
+
+                const btn = document.getElementById('btnVerifyCode');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying...';
+
+                try {
+                    const response = await fetch('@Url.Action("VerifyPhone")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        body: JSON.stringify({ code: code })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        document.getElementById('step2').classList.add('d-none');
+                        document.getElementById('step3').classList.remove('d-none');
+                        
+                        // Clear timer
+                        if (resendTimer) {
+                            clearInterval(resendTimer);
+                        }
+                    } else {
+                        errorDiv.textContent = result.message || 'Invalid code. Please try again.';
+                        errorDiv.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorDiv.textContent = 'An error occurred. Please try again.';
+                    errorDiv.classList.remove('d-none');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Verify Code';
+                }
+            }
+
+            // Event listeners
+            document.getElementById('btnSendCode').addEventListener('click', sendVerificationCode);
+            document.getElementById('btnResendCode').addEventListener('click', resendVerificationCode);
+            document.getElementById('btnVerifyCode').addEventListener('click', verifyCode);
+            
+            document.getElementById('btnChangeNumber').addEventListener('click', function() {
+                document.getElementById('step2').classList.add('d-none');
+                document.getElementById('step1').classList.remove('d-none');
+                document.getElementById('verificationCode').value = '';
+                
+                // Clear timer
+                if (resendTimer) {
+                    clearInterval(resendTimer);
+                }
+                
+                // Reset resend button
+                const btnResend = document.getElementById('btnResendCode');
+                btnResend.disabled = true;
+                document.getElementById('resendCountdown').textContent = '';
+            });
+
+            // Allow Enter key to submit
+            document.getElementById('phoneNumber').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendVerificationCode();
+                }
+            });
+
+            document.getElementById('verificationCode').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyCode();
+                }
+            });
+        });
+    </script>
+}

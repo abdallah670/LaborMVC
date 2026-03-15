@@ -1,4 +1,4 @@
-﻿using Hangfire;
+using Hangfire;
 using LaborBLL.Common;
 using LaborBLL.Hubs;
 using LaborBLL.Mapping;
@@ -68,7 +68,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     options.User.RequireUniqueEmail = true;
 
     // Sign in settings
-    options.SignIn.RequireConfirmedEmail = false;
+    options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedPhoneNumber = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -201,6 +201,16 @@ builder.Services.AddScoped<IContentInspector, ContentInspector>();
 
 // Add Memory Cache for rate limiting
 builder.Services.AddMemoryCache();
+
+// Register Image Processing and Storage Services
+builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
+builder.Services.AddScoped<IStorageService, LocalStorageService>();
+
+// Register Verification Service
+builder.Services.AddScoped<IVerificationService, VerificationService>();
+
+// Register SMS Service - Using Twilio for production
+builder.Services.AddScoped<ISmsService, TwilioSmsService>();
              
 var app = builder.Build();
 

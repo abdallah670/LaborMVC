@@ -1,0 +1,305 @@
+@using LaborDAL.Enums
+
+@{
+    ViewData["Title"] = "ID Verification";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-badge me-2"></i>ID Verification
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Verification Status -->
+                    <div id="verificationStatus" class="mb-4">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Checking verification status...</p>
+                        </div>
+                    </div>
+
+                    <!-- Verification Form -->
+                    <form id="idVerificationForm" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Document Type *</label>
+                            <select class="form-select" id="documentType" name="DocumentType" required>
+                                <option value="">Select document type...</option>
+                                <option value="Passport">Passport</option>
+                                <option value="NationalID">National ID Card</option>
+                                <option value="DriversLicense">Driver's License</option>
+                                <option value="ResidencePermit">Residence Permit</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Document Number *</label>
+                            <input type="text" class="form-control" id="documentNumber" name="DocumentNumber"
+                                   required placeholder="Enter document number" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Country *</label>
+                            <select class="form-select" id="documentCountry" name="DocumentCountry" required>
+                                <option value="">Select country...</option>
+                                <option value="Egypt">Egypt</option>
+                                <option value="Saudi Arabia">Saudi Arabia</option>
+                                <option value="UAE">UAE</option>
+                                <option value="Kuwait">Kuwait</option>
+                                <option value="Qatar">Qatar</option>
+                                <option value="Bahrain">Bahrain</option>
+                                <option value="Oman">Oman</option>
+                                <option value="Jordan">Jordan</option>
+                                <option value="Lebanon">Lebanon</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Front Document Upload -->
+                        <div class="mb-4">
+                            <label class="form-label">Front Document *</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="frontDocument" name="frontDocument"
+                                       accept="image/jpeg,image/png,image/jpg" required />
+                            </div>
+                            <small class="text-muted">Upload a clear photo of the front of your ID (JPG, PNG only)</small>
+                            <div id="frontPreview" class="mt-2 d-none">
+                                <img src="" alt="Front Preview" class="img-thumbnail" style="max-height: 200px;" />
+                            </div>
+                        </div>
+
+                        <!-- Back Document Upload -->
+                        <div class="mb-4">
+                            <label class="form-label">Back Document</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="backDocument" name="backDocument"
+                                       accept="image/jpeg,image/png,image/jpg" />
+                            </div>
+                            <small class="text-muted">Upload a clear photo of the back of your ID (optional)</small>
+                            <div id="backPreview" class="mt-2 d-none">
+                                <img src="" alt="Back Preview" class="img-thumbnail" style="max-height: 200px;" />
+                            </div>
+                        </div>
+
+                        <!-- Selfie Upload -->
+                        <div class="mb-4">
+                            <label class="form-label">Selfie with ID</label>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Please take a selfie holding your ID document next to your face. This helps us verify your identity faster.
+                            </div>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="selfie" name="selfie"
+                                       accept="image/jpeg,image/png,image/jpg" />
+                            </div>
+                            <small class="text-muted">Upload a selfie holding your ID (optional, speeds up verification)</small>
+                            <div id="selfiePreview" class="mt-2 d-none">
+                                <img src="" alt="Selfie Preview" class="img-thumbnail" style="max-height: 200px;" />
+                            </div>
+                        </div>
+
+                        <div id="submitError" class="alert alert-danger d-none"></div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="bi bi-upload me-2"></i>Submit for Verification
+                            </button>
+                            <a href="@Url.Action("MyProfile")" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Profile
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Information Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Why Verify Your ID?</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-shield-check text-success me-2"></i>
+                            <strong>Increased Trust:</strong> Verified users get a badge on their profile
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-briefcase text-primary me-2"></i>
+                            <strong>More Opportunities:</strong> Task posters prefer verified workers
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-cash text-warning me-2"></i>
+                            <strong>Higher Limits:</strong> Access to higher-value tasks and payments
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-lock text-danger me-2"></i>
+                            <strong>Secure Platform:</strong> Helps us maintain a safe community
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            checkVerificationStatus();
+            setupImagePreviews();
+            setupFormSubmission();
+        });
+
+        function checkVerificationStatus() {
+            fetch('@Url.Action("IdVerificationStatus")')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateStatusUI(data.status);
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('verificationStatus').innerHTML = 
+                        '<div class="alert alert-warning">Unable to check verification status.</div>';
+                });
+        }
+
+        function updateStatusUI(status) {
+            let statusHtml = '';
+
+            if (status.hasSubmitted) {
+                const alertClass = status.status === 'Approved' ? 'alert-success' : 
+                                  status.status === 'Rejected' ? 'alert-danger' : 'alert-info';
+                const icon = status.status === 'Approved' ? 'bi-check-circle-fill' : 
+                            status.status === 'Rejected' ? 'bi-x-circle-fill' : 'bi-clock-fill';
+
+                statusHtml = `
+                    <div class="alert ${alertClass}">
+                        <h5><i class="bi ${icon}"></i> Verification Status: ${status.status}</h5>
+                        <p class="mb-1">Submitted: ${new Date(status.submittedAt).toLocaleDateString()}</p>
+                        ${status.rejectionReason ? `<p class="mb-0 text-danger"><strong>Reason:</strong> ${status.rejectionReason}</p>` : ''}
+                    </div>
+                `;
+
+                // Hide form if approved or pending
+                if (status.status === 'Approved' || status.status === 'Pending' || status.status === 'InReview') {
+                    document.getElementById('idVerificationForm').style.display = 'none';
+                }
+            } else {
+                statusHtml = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> Please complete the form below to verify your identity.</div>';
+            }
+
+            document.getElementById('verificationStatus').innerHTML = statusHtml;
+        }
+
+        function setupImagePreviews() {
+            document.getElementById('frontDocument').addEventListener('change', function() {
+                previewImage(this, 'frontPreview');
+            });
+            document.getElementById('backDocument').addEventListener('change', function() {
+                previewImage(this, 'backPreview');
+            });
+            document.getElementById('selfie').addEventListener('change', function() {
+                previewImage(this, 'selfiePreview');
+            });
+        }
+
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById(previewId);
+                    preview.classList.remove('d-none');
+                    preview.querySelector('img').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function setupFormSubmission() {
+            document.getElementById('idVerificationForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+
+                try {
+                    // Upload files first
+                    const formData = new FormData();
+                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+                    
+                    const frontFile = document.getElementById('frontDocument').files[0];
+                    const backFile = document.getElementById('backDocument').files[0];
+                    const selfieFile = document.getElementById('selfie').files[0];
+
+                    if (!frontFile) {
+                        throw new Error('Front document is required');
+                    }
+
+                    formData.append('frontDocument', frontFile);
+                    if (backFile) formData.append('backDocument', backFile);
+                    if (selfieFile) formData.append('selfie', selfieFile);
+
+                    // Upload files
+                    const uploadResponse = await fetch('/api/upload/id-documents', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const uploadResult = await uploadResponse.json();
+
+                    if (!uploadResult.success) {
+                        throw new Error(uploadResult.message || 'Failed to upload documents');
+                    }
+
+                    // Now submit verification request
+                    const requestData = {
+                        DocumentType: document.getElementById('documentType').value,
+                        DocumentNumber: document.getElementById('documentNumber').value,
+                        DocumentCountry: document.getElementById('documentCountry').value,
+                        FrontDocumentUrl: uploadResult.data.frontUrl,
+                        BackDocumentUrl: uploadResult.data.backUrl,
+                        SelfieUrl: uploadResult.data.selfieUrl
+                    };
+
+                    const response = await fetch('@Url.Action("SubmitIdVerification")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        document.getElementById('idVerificationForm').style.display = 'none';
+                        document.getElementById('verificationStatus').innerHTML = `
+                            <div class="alert alert-success">
+                                <h5><i class="bi bi-check-circle-fill"></i> Submitted Successfully!</h5>
+                                <p>Your ID verification has been submitted and is pending review. We'll notify you once it's processed.</p>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error(result.message || 'Failed to submit verification');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('submitError').classList.remove('d-none');
+                    document.getElementById('submitError').textContent = error.message || 'An error occurred. Please try again.';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-upload me-2"></i>Submit for Verification';
+                }
+            });
+        }
+    </script>
+}

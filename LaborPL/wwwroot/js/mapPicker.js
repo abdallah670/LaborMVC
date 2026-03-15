@@ -92,6 +92,11 @@ class MapPicker {
         
         this.isInitialized = true;
         
+        // Invalidate size after a short delay to ensure proper rendering
+        setTimeout(() => {
+            this.invalidateSize();
+        }, 100);
+        
         // If we have valid coordinates, trigger initial callback
         if (LocationService.isValidCoordinates(this.options.defaultLat, this.options.defaultLng)) {
             this.notifyLocationChange(this.options.defaultLat, this.options.defaultLng);

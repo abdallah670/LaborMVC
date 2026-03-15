@@ -52,6 +52,16 @@ namespace LaborDAL.Entities
         public DateTime? PhoneVerificationExpiry { get; set; }
 
         /// <summary>
+        /// Number of phone verification attempts
+        /// </summary>
+        public int PhoneVerificationAttempts { get; set; } = 0;
+
+        /// <summary>
+        /// Last phone verification attempt timestamp
+        /// </summary>
+        public DateTime? LastPhoneVerificationAttempt { get; set; }
+
+        /// <summary>
         /// Email verification token
         /// </summary>
         public string? EmailVerificationToken { get; set; }

@@ -1,0 +1,218 @@
+@model LaborDAL.Entities.IDVerification
+@using LaborDAL.Enums
+
+@{
+    ViewData["Title"] = "Review ID Verification";
+    var userName = ViewBag.UserName as string ?? "Unknown User";
+    var userEmail = ViewBag.UserEmail as string ?? "N/A";
+    var isPending = Model.Status == VerificationStatus.Pending || Model.Status == VerificationStatus.InReview;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-id-card me-2"></i>Review ID Verification
+            </h2>
+            <p class="text-muted mb-0">Verification #@Model.Id</p>
+        </div>
+        <a href="@Url.Action("IdVerifications")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="alert @(Model.Status == VerificationStatus.Approved ? "alert-success" : Model.Status == VerificationStatus.Rejected ? "alert-danger" : "alert-warning") mb-4">
+        <div class="d-flex align-items-center">
+            <i class="fas @(Model.Status == VerificationStatus.Approved ? "fa-check-circle" : Model.Status == VerificationStatus.Rejected ? "fa-times-circle" : "fa-clock") fa-2x me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Status: @Model.Status</h5>
+                @if (Model.Status == VerificationStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+                {
+                    <p class="mb-0"><strong>Reason:</strong> @Model.RejectionReason</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column: User Info & Document Details -->
+        <div class="col-lg-4">
+            <!-- User Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>User Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="fw-bold">Name:</td>
+                            <td>@userName</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Email:</td>
+                            <td>@userEmail</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">User ID:</td>
+                            <td><code>@Model.UserId</code></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Document Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Document Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="fw-bold">Type:</td>
+                            <td><span class="badge bg-info">@Model.DocumentType</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Number:</td>
+                            <td>@Model.DocumentNumber</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Country:</td>
+                            <td>@Model.DocumentCountry</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Submitted:</td>
+                            <td>@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                        </tr>
+                        @if (Model.ReviewedAt.HasValue)
+                        {
+                            <tr>
+                                <td class="fw-bold">Reviewed:</td>
+                                <td>@Model.ReviewedAt.Value.ToString("MMM dd, yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            <!-- Admin Notes (if any) -->
+            @if (!string.IsNullOrEmpty(Model.AdminNotes))
+            {
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Admin Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.AdminNotes</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Right Column: Document Images -->
+        <div class="col-lg-8">
+            <!-- Front Document -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Front Document</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.FrontDocumentUrl))
+                    {
+                        <img src="@Model.FrontDocumentUrl" alt="Front Document" class="img-fluid rounded border" style="max-height: 400px;" />
+                        <div class="mt-2">
+                            <a href="@Model.FrontDocumentUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View Full Size
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Front document not available
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Back Document -->
+            @if (!string.IsNullOrEmpty(Model.BackDocumentUrl))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-id-card-alt me-2"></i>Back Document</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="@Model.BackDocumentUrl" alt="Back Document" class="img-fluid rounded border" style="max-height: 400px;" />
+                        <div class="mt-2">
+                            <a href="@Model.BackDocumentUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View Full Size
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Selfie -->
+            @if (!string.IsNullOrEmpty(Model.SelfieUrl))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Selfie Verification</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="@Model.SelfieUrl" alt="Selfie" class="img-fluid rounded border" style="max-height: 400px;" />
+                        <div class="mt-2">
+                            <a href="@Model.SelfieUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View Full Size
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Action Buttons (Only for Pending/InReview) -->
+            @if (isPending)
+            {
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-gavel me-2"></i>Review Decision</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Approve Form -->
+                        <form asp-action="ApproveIdVerification" method="post" class="mb-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label class="form-label">Approval Notes (Optional)</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Add any notes about this approval..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100" onclick="return confirm('Are you sure you want to approve this ID verification?');">
+                                <i class="fas fa-check me-2"></i>Approve Verification
+                            </button>
+                        </form>
+
+                        <hr />
+
+                        <!-- Reject Form -->
+                        <form asp-action="RejectIdVerification" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label class="form-label text-danger">Rejection Reason *</label>
+                                <input type="text" name="reason" class="form-control" required placeholder="Reason for rejection (required)" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin Notes (Optional)</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Additional notes for internal use..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to reject this ID verification?');">
+                                <i class="fas fa-times me-2"></i>Reject Verification
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

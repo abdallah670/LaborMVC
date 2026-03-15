@@ -1,96 +1,102 @@
+using LaborBLL.ModelVM;
 using LaborBLL.Response;
+using LaborDAL.Enums;
 
 namespace LaborBLL.Service.Abstract
 {
     /// <summary>
-    /// Service for handling user verification workflows
+    /// Service for handling user verification (email, phone, ID)
     /// </summary>
     public interface IVerificationService
     {
         #region Email Verification
 
         /// <summary>
-        /// Generates and sends email verification token
+        /// Send email verification link to user
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <returns>True if verification email sent successfully</returns>
-        Task<Response<bool>> SendEmailVerificationAsync(string userId);
+        Task<Response<bool>> SendEmailVerificationAsync(string userId, string email);
 
         /// <summary>
-        /// Verifies email with the provided token
+        /// Confirm email verification token
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <param name="token">The verification token</param>
-        /// <returns>True if verification successful</returns>
-        Task<Response<bool>> VerifyEmailAsync(string userId, string token);
+        Task<Response<bool>> ConfirmEmailAsync(string userId, string token);
+
+        /// <summary>
+        /// Resend email verification with rate limiting
+        /// </summary>
+        Task<Response<bool>> ResendEmailVerificationAsync(string userId);
+
+        /// <summary>
+        /// Check if user can resend email verification
+        /// </summary>
+        Task<bool> CanResendEmailAsync(string userId);
 
         #endregion
 
         #region Phone Verification
 
         /// <summary>
-        /// Generates and sends phone verification code (SMS)
+        /// Send phone verification SMS code
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <param name="phoneNumber">The phone number to verify</param>
-        /// <returns>True if verification code sent successfully</returns>
-        Task<Response<bool>> SendPhoneVerificationAsync(string userId, string phoneNumber);
+        Task<Response<bool>> SendPhoneVerificationAsync(string userId, string phoneNumber, string countryCode = "+20");
 
         /// <summary>
-        /// Verifies phone with the provided code
+        /// Verify phone number with SMS code
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <param name="code">The verification code</param>
-        /// <returns>True if verification successful</returns>
         Task<Response<bool>> VerifyPhoneAsync(string userId, string code);
+
+        /// <summary>
+        /// Check if user can request phone verification
+        /// </summary>
+        Task<bool> CanRequestPhoneVerificationAsync(string userId);
 
         #endregion
 
         #region ID Verification
 
         /// <summary>
-        /// Submits ID document for verification
+        /// Submit ID documents for verification
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <param name="documentUrl">URL to the uploaded document</param>
-        /// <returns>True if document submitted successfully</returns>
-        Task<Response<bool>> SubmitIDDocumentAsync(string userId, string documentUrl);
+        Task<Response<int>> SubmitIdVerificationAsync(string userId, IdVerificationRequestDto request);
 
         /// <summary>
-        /// Approves or rejects ID document (admin only)
+        /// Check if user has pending ID verification
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <param name="approved">Whether the document is approved</param>
-        /// <param name="adminNotes">Optional notes from admin</param>
-        /// <returns>True if action completed successfully</returns>
-        Task<Response<bool>> ReviewIDDocumentAsync(string userId, bool approved, string? adminNotes = null);
+        Task<bool> HasPendingIdVerificationAsync(string userId);
+
+        /// <summary>
+        /// Get user's ID verification status
+        /// </summary>
+        Task<IdVerificationStatusDto> GetIdVerificationStatusAsync(string userId);
+
+        /// <summary>
+        /// Approve ID verification (for admin use)
+        /// </summary>
+        Task<Response<bool>> ApproveIdVerificationAsync(int verificationId, string adminId, string? notes = null);
+
+        /// <summary>
+        /// Reject ID verification (for admin use)
+        /// </summary>
+        Task<Response<bool>> RejectIdVerificationAsync(int verificationId, string adminId, string reason, string? notes = null);
 
         #endregion
 
-        #region Verification Status
+        #region Verification Tier
 
         /// <summary>
-        /// Gets the current verification tier for a user
+        /// Update user's verification tier based on completed verifications
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <returns>The verification tier</returns>
+        Task UpdateVerificationTierAsync(string userId);
+
+        /// <summary>
+        /// Get user's current verification tier
+        /// </summary>
         Task<VerificationTier> GetVerificationTierAsync(string userId);
 
         /// <summary>
-        /// Checks if user can perform tasks above the specified amount
-        /// Unverified users are limited to $100 tasks
+        /// Get complete verification status for a user
         /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <param name="taskAmount">The task amount to check</param>
-        /// <returns>True if user can perform the task</returns>
-        Task<bool> CanPerformTaskAsync(string userId, decimal taskAmount);
-
-        /// <summary>
-        /// Updates the verification tier based on current verification status
-        /// </summary>
-        /// <param name="userId">The user ID</param>
-        /// <returns>True if tier updated successfully</returns>
-        Task<bool> UpdateVerificationTierAsync(string userId);
+        Task<UserVerificationStatusDto> GetUserVerificationStatusAsync(string userId);
 
         #endregion
     }

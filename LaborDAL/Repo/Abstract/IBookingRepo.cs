@@ -8,7 +8,7 @@ namespace LaborDAL.Repo.Abstract
         Task<List<Booking>> GetBookingsByPosterIdAsync(string posterId);
    
 
-        Task<List<Booking>> GetOverlappingBookingsAsync(int workerId, DateTime start, DateTime end);
+        Task<List<Booking>> GetOverlappingBookingsAsync(string workerId, DateTime start, DateTime end);
         Task<List<Booking>> GetBookingsWithWorkerAsync(Expression<Func<Booking, bool>> predicate);
         Task<List<Booking>> GetBookingsWithPosterAsync(string PosterId);
 

@@ -170,6 +170,90 @@ namespace LaborBLL.Service
         }
 
         /// <summary>
+        /// Gets the profile of a user with all details including ratings and statistics
+        /// </summary>
+        public async Task<ProfileViewModel?> GetProfileWithDetailsAsync(string userId, string? viewerId = null)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null || user.IsDeleted)
+                {
+                    return null;
+                }
+
+                var profile = _mapper.Map<ProfileViewModel>(user);
+
+                // Get ratings for this user
+                var ratings = await _unitOfWork.RatingRepo.GetAllRatingByUserId(userId);
+                if (ratings != null && ratings.Any())
+                {
+                    profile.TotalRatingsReceived = ratings.Count;
+                    profile.AverageRating = (decimal)ratings.Average(r => r.Score);
+                    
+                    // Map ratings to AllRatingViewModel
+                    profile.Ratings = ratings.Select(r => new LaborBLL.ModelVM.AllRatingViewModel
+                    {
+                        id = r.Id.ToString(),
+                        RaterId = r.RaterId,
+                        RatedId = r.RateeId,
+                        bookingId = r.bookingId,
+                        Score = r.Score,
+                        comment = r.Comment ?? string.Empty,
+                        CreatedAt = r.CreatedAt,
+                        // RaterName and RateeName would need to be fetched separately if needed
+                        RaterName = string.Empty,
+                        RateeName = string.Empty,
+                        OverallAverageRating = (int)profile.AverageRating,
+                        TotalRatingsReceived = ratings.Count
+                    }).ToList();
+                }
+
+                // Get Worker statistics (completed jobs and earnings)
+                if (profile.IsWorker)
+                {
+                    var workerBookings = await _unitOfWork.Bookings.GetBookingsByWorkerIdAsync(userId);
+                    if (workerBookings != null)
+                    {
+                        // Count completed jobs (Completed status)
+                        profile.CompletedJobsAsWorker = workerBookings
+                            .Count(b => b.Status == LaborDAL.Enums.BookingStatus.Completed);
+                        
+                        // Calculate total earnings from completed jobs
+                        profile.TotalEarnings = workerBookings
+                            .Where(b => b.Status == LaborDAL.Enums.BookingStatus.Completed)
+                            .Sum(b => b.AgreedRate);
+                    }
+                }
+
+                // Get Poster statistics (tasks posted, hires, total spent)
+                if (profile.IsPoster)
+                {
+                    // Get bookings made by this poster (hires)
+                    var posterBookings = await _unitOfWork.Bookings.GetBookingsByPosterIdAsync(userId);
+                    if (posterBookings != null)
+                    {
+                        profile.TotalHires = posterBookings.Count;
+                        profile.TotalSpent = posterBookings
+                            .Where(b => b.Status == LaborDAL.Enums.BookingStatus.Completed)
+                            .Sum(b => b.AgreedRate);
+                    }
+
+                    // Get tasks posted by this poster
+                    var tasks = await _unitOfWork.Tasks.FindAsync(t => t.PosterId == userId);
+                    profile.TasksPosted = tasks?.Count() ?? 0;
+                }
+
+                return profile;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting profile with details: {UserId}", userId);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Updates a user's profile
         /// </summary>
         public async Task<Response<bool>> UpdateProfileAsync(ProfileViewModel model)
