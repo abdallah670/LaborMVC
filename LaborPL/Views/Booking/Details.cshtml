@@ -26,9 +26,7 @@
     bool isWorker = currentUserId == Model.WorkerId;
 }
 
-<!-- Container متجاوب مثل الصورة الأصلية -->
 <div class="container-fluid px-3 px-lg-4 py-4" style="background-color: #f8f9fa; min-height: 100vh;">
-    <!-- عنوان الصفحة -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0 fw-bold">
             <i class="bi bi-calendar-check me-2 text-primary"></i>
@@ -39,9 +37,8 @@
         </a>
     </div>
 
-    <!-- Grid System متجاوب 3 أعمدة -->
     <div class="row g-4">
-        <!-- العمود الأيسر: Booking Information (مثل الصورة) -->
+        <!-- العمود الأيسر -->
         <div class="col-lg-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-transparent border-bottom py-3">
@@ -51,7 +48,6 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <!-- Poster/Worker Info -->
                     @if (!isPoster)
                     {
                         <div class="mb-3 pb-2 border-bottom">
@@ -78,7 +74,6 @@
                         </div>
                     }
 
-                    <!-- Time Info -->
                     <div class="mb-3 pb-2 border-bottom">
                         <small class="text-muted d-block mb-1">Start Time</small>
                         <strong class="d-flex align-items-center">
@@ -95,14 +90,105 @@
                         </strong>
                     </div>
 
-                    <!-- Rate & Status -->
                     <div class="mb-3 pb-2 border-bottom">
                         <small class="text-muted d-block mb-1">Agreed Rate</small>
-                        <strong class="text-primary fs-5">
-                            <i class="bi bi-currency-dollar me-1"></i>
-                            $@Model.AgreedRate.ToString("N2")
-                        </strong>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-primary fs-5">
+                                <i class="bi bi-currency-dollar me-1"></i>
+                                $@Model.AgreedRate.ToString("N2")
+                            </strong>
+
+                            @* ✅ إظهار زرار Change فقط لو Scheduled *@
+                            @if (isPoster && Model.Status == BookingStatus.Scheduled)
+                            {
+                                <button type="button"
+                                        class="btn btn-outline-primary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#updatePriceModal">
+                                    <i class="bi bi-pencil-square me-1"></i>
+                                    Change
+                                </button>
+                            }
+                        </div>
                     </div>
+
+                    <div class="mb-3 pb-2 border-bottom">
+                        <small class="text-muted d-block mb-1">
+                            <i class="bi bi-clock-history me-1"></i>Last Updated Price
+                        </small>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-calendar3 text-primary me-2"></i>
+                            <strong class="text-dark">
+                                @* ✅ إصلاح DateTime.MinValue *@
+                                @if (Model.lastUpdateRate != null && Model.lastUpdateRate != DateTime.MinValue)
+                                {
+                                    @Model.lastUpdateRate.ToString("MMM dd, yyyy")
+                                    <span class="text-muted mx-1">at</span>
+                                    @Model.lastUpdateRate.ToString("HH:mm")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not updated yet</span>
+                                }
+                            </strong>
+                        </div>
+                    </div>
+
+                    @* ✅ Modal فقط لو Scheduled *@
+                    @if (isPoster && Model.Status == BookingStatus.Scheduled)
+                    {
+                        <div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="updatePriceModalLabel">
+                                            <i class="bi bi-pencil-square me-2"></i>
+                                            Change Price
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+
+                                    <form asp-action="UpdatePrice" method="post">
+                                        <input type="hidden" asp-for="Id" />
+                                        <input type="hidden" asp-for="StartTime" />
+                                        <input type="hidden" asp-for="EndTime" />
+                                        <input type="hidden" asp-for="Status" />
+                                        <input type="hidden" asp-for="WorkerId" />
+                                        <input type="hidden" asp-for="PosterId" />
+
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label asp-for="AgreedRate" class="form-label fw-bold">New Price ($)</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input asp-for="AgreedRate"
+                                                           class="form-control form-control-lg"
+                                                           type="number"
+                                                           step="0.01"
+                                                           min="0"
+                                                           value="@Model.AgreedRate" />
+                                                </div>
+                                                <span asp-validation-for="AgreedRate" class="text-danger"></span>
+                                            </div>
+                                            <div class="alert alert-info bg-light border-0">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                Current price: <strong>$@Model.AgreedRate.ToString("N2")</strong>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-lg me-1"></i>Cancel
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-lg me-1"></i>Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
 
                     <div class="mb-3">
                         <small class="text-muted d-block mb-1">Status</small>
@@ -114,9 +200,8 @@
             </div>
         </div>
 
-        <!-- العمود الأوسط: Quick Actions (Tasks & Bookings زي الصورة) -->
+        <!-- العمود الأوسط -->
         <div class="col-lg-4">
-            <!-- Tasks Section -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-transparent border-bottom py-3">
                     <h6 class="mb-0 fw-bold">
@@ -125,7 +210,6 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <!-- Action Buttons حسب حالة الحجز -->
                     @if (Model.Status == BookingStatus.Scheduled && (isWorker || isPoster))
                     {
                         <div class="d-grid gap-2">
@@ -182,7 +266,6 @@
                 </div>
             </div>
 
-            <!-- Rating Section -->
             @if (Model.Status == BookingStatus.Completed || Model.Status == BookingStatus.Cancelled)
             {
                 <div class="card shadow-sm border-0">
@@ -197,7 +280,6 @@
                             <input type="hidden" name="bookingId" value="@Model.Id" />
                             <input type="hidden" name="RatedId" value="@ViewBag.RatedId" />
 
-                            <!-- Star Rating -->
                             <div class="star-rating mb-3">
                                 @for (int i = 5; i >= 1; i--)
                                 {
@@ -207,14 +289,12 @@
                                 }
                             </div>
 
-                            <!-- Comment -->
                             <div class="mb-3">
                                 <textarea name="Comment" class="form-control" rows="2"
                                       placeholder="Write your comment here...">@ViewBag.ExistingComment</textarea>
                                 <small class="text-muted">Optional: Share your experience</small>
                             </div>
 
-                            <!-- Submit Button -->
                             <button type="submit" class="btn btn-warning w-100">
                                 <i class="bi bi-send me-2"></i>
                                 @(ViewBag.ExistingScore > 0 ? "Update Rating" : "Submit Rating")
@@ -225,9 +305,8 @@
             }
         </div>
 
-        <!-- العمود الأيمن: Privacy & Chat (زي الصورة) -->
+        <!-- العمود الأيمن -->
         <div class="col-lg-5">
-            <!-- Privacy Section -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-transparent border-bottom py-3">
                     <h6 class="mb-0 fw-bold">
@@ -259,8 +338,6 @@
                 </div>
             </div>
 
-            <!-- Chat Section -->
-            <!-- Chat Section - نسخة محسنة -->
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-transparent border-bottom py-3">
                     <div class="d-flex justify-content-between align-items-center">
@@ -277,6 +354,7 @@
                                         }
                                         else
                                         {
+
                                             @Model.WorkerName
                                         }
                                     </span>
@@ -289,8 +367,7 @@
                             {
                                 <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.PosterId })"
                                    class="btn btn-sm btn-outline-primary rounded-circle p-1"
-                                   style="width: 32px; height: 32px;"
-                                   title="View Profile">
+                                   style="width: 32px; height: 32px;" title="View Profile">
                                     <i class="bi bi-person"></i>
                                 </a>
                             }
@@ -298,8 +375,7 @@
                             {
                                 <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.WorkerId })"
                                    class="btn btn-sm btn-outline-primary rounded-circle p-1"
-                                   style="width: 32px; height: 32px;"
-                                   title="View Profile">
+                                   style="width: 32px; height: 32px;" title="View Profile">
                                     <i class="bi bi-person"></i>
                                 </a>
                             }
@@ -308,7 +384,6 @@
                 </div>
 
                 <div class="card-body p-0" style="height: 350px; overflow-y: auto; background-color: #f8fafc;" id="messagesList">
-                    <!-- Messages will appear here -->
                     <div class="no-messages text-center py-5">
                         <div class="mb-3">
                             <i class="bi bi-chat-dots fs-1 text-muted"></i>
@@ -323,6 +398,7 @@
                                 }
                                 else
                                 {
+
                                     @Model.WorkerName
                                 }
                             </span>
@@ -374,7 +450,6 @@
 </div>
 
 <style>
-    /* تنسيق النجوم */
     .star-rating {
         display: flex;
         flex-direction: row-reverse;
@@ -399,7 +474,6 @@
                 color: #ffc107;
             }
 
-    /* تنسيق الشات */
     .message-container {
         margin-bottom: 1rem;
         display: flex;
@@ -448,7 +522,6 @@
         margin-top: 0.2rem;
     }
 
-    /* Scrollbar */
     #messagesList::-webkit-scrollbar {
         width: 6px;
     }
@@ -466,7 +539,6 @@
             background: #555;
         }
 
-    /* Responsive */
     @@media (max-width: 768px) {
         .star-rating label {
             font-size: 1.8rem;
@@ -494,7 +566,7 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             var bookingId = @Model.Id;
             var currentUserId = "@userId";
             var otherUserId = "@(isPoster? Model.WorkerId: Model.PosterId)";
@@ -509,10 +581,7 @@
 
                 var isOutgoing = message.senderId === currentUserId;
                 var timeString = new Date(message.sentAt).toLocaleTimeString('ar-EG', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                    timeZone: 'Africa/Cairo'
+                    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Africa/Cairo'
                 });
                 var senderName = isOutgoing ? 'You' : (message.senderName || 'User');
 
@@ -528,11 +597,8 @@
             }
 
             function escapeHtml(str) {
-                return str.replace(/&/g,"&amp;")
-                         .replace(/</g,"&lt;")
-                         .replace(/>/g,"&gt;")
-                         .replace(/"/g,"&quot;")
-                         .replace(/'/g,"&#039;");
+                return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             }
 
             var connection = new signalR.HubConnectionBuilder()
@@ -540,8 +606,7 @@
                 .withAutomaticReconnect()
                 .build();
 
-            connection.on("ReceiveMessage", function(message) {
-                // تجاهل لو الرسالة أنا بعتها (بتتعرض محلياً)
+            connection.on("ReceiveMessage", function (message) {
                 if (message.senderId === currentUserId) return;
                 displayMessage(message);
             });
@@ -565,7 +630,6 @@
                 var content = messageInput.value.trim();
                 if (!content) return;
 
-                // عرض الرسالة محلياً فوراً
                 displayMessage({
                     senderId: currentUserId,
                     content: content,
@@ -578,32 +642,23 @@
 
                 fetch('/Message/SendMessage', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({bookingId: bookingId, content: content})
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId: bookingId, content: content })
                 })
                 .then(r => r.json())
-                .then(data => {
-                    if (!data.success) {
-                        console.error('❌ Failed to send message');
-                    }
-                });
+                .then(data => { if (!data.success) console.error('❌ Failed to send message'); });
             }
 
             sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendMessage();
-                }
+            messageInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
             });
 
-            // ===== الأونلاين =====
             async function checkUserStatus() {
                 try {
                     const response = await fetch(`/Chat/GetUserStatus?userId=${otherUserId}`);
                     const data = await response.json();
                     const badge = document.getElementById('onlineStatus');
-
                     if (data.isOnline) {
                         badge.textContent = 'Online';
                         badge.className = 'badge bg-success';
@@ -611,12 +666,11 @@
                         badge.textContent = 'Offline';
                         badge.className = 'badge bg-secondary';
                     }
-                } catch (e) {
-                    console.error('❌ Status error:', e);
-                }
+                } catch (e) { console.error('❌ Status error:', e); }
             }
 
             checkUserStatus();
-        setInterval(checkUserStatus, 5000);        });
+            setInterval(checkUserStatus, 5000);
+        });
     </script>
 }

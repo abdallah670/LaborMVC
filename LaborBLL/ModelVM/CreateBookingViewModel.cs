@@ -30,6 +30,8 @@ namespace LaborBLL.ModelVM
 
         [Required(ErrorMessage = "Worker ID is required")]
         public string WorkerId { get; set; } = string.Empty;
+        public DateTime lastUpdateRate { get; set; }
+
 
         public static ValidationResult? ValidateEndTime(DateTime endTime, ValidationContext context)
         {

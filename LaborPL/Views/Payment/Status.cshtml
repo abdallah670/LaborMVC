@@ -33,9 +33,10 @@
     {
         return status.ToLower() switch
         {
-            "succeeded" => "badge bg-success",
+            "succeeded" or "held" or "paid" => "badge bg-success",  // ✅ أضف held
             "pending" => "badge bg-warning",
             "failed" => "badge bg-danger",
+            "refunded" => "badge bg-info",
             _ => "badge bg-secondary"
         };
     }

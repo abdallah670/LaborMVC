@@ -63,6 +63,8 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
                 .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
+                .ForMember(dest => dest.lastUpdateRate, opt => opt.MapFrom(src => src.LastUpdateRate))
+
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.TaskId, opt => opt.MapFrom(src => src.TaskItemId))
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
@@ -107,12 +109,16 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
                 .ForMember(dest => dest.TaskItemId, opt => opt.MapFrom(src => src.TaskId))
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.WorkerId))
+                                .ForMember(dest => dest.LastUpdateRate, opt => opt.MapFrom(src => src.lastUpdateRate))
+
                 .ForMember(d => d.PosterId, opt => opt.MapFrom(src => src.PosterId))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<BookingListViewModel, Booking>()
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
+                                .ForMember(dest => dest.LastUpdateRate, opt => opt.MapFrom(src => src.lastUpdateRate))
+
                 .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));

@@ -359,7 +359,17 @@
                         <div class="contact-info">
                             <div class="contact-name">
                                 @contact.FullName
-                                <span class="online-indicator"></span>
+                                @if (contact.IsAdmin)
+                                {
+                                    <span style="background:#667eea; color:white; font-size:10px;
+                                 padding:2px 8px; border-radius:20px; font-weight:600;">
+                                        <i class="fas fa-shield-alt me-1"></i>Admin
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="online-indicator"></span>
+                                }
                             </div>
                             <div class="contact-preview">
                                 <span class="time-ago">
@@ -414,15 +424,38 @@
                         <div class="contact-info">
                             <div class="contact-name">
                                 @contact.FullName
+                                @if (contact.IsAdmin)
+                                {
+                                    // ✅ علامة الأدمن
+                                    <span style="background:#667eea; color:white; font-size:10px;
+                                             padding:2px 8px; border-radius:20px; font-weight:600;">
+                                        <i class="fas fa-shield-alt me-1"></i>Admin
+                                    </span>
+                                }
                             </div>
                             <div class="contact-preview">
                                 <span>
-                                    <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                    New contact
+                                    @if (contact.IsAdmin)
+                                    {
+                                        <i class="fas fa-headset" style="color:#667eea;"></i>
+                                        <span style="color:#667eea;">Support</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-star" style="color: #fbbf24;"></i>
+                                        <span>New contact</span>
+                                    }
                                 </span>
                             </div>
                         </div>
-                        <span class="new-badge">NEW</span>
+                        @if (contact.IsAdmin)
+                        {
+                            <span class="new-badge" style="background:#667eea;">ADMIN</span>
+                        }
+                        else
+                        {
+                            <span class="new-badge">NEW</span>
+                        }
                     </a>
                 }
             </div>
