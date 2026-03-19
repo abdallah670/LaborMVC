@@ -12,15 +12,18 @@ namespace LaborBLL.Service
 {
     public class ChatService : IchatService
     {
-        private readonly IUnitOfWork unitOfWork;
+     
+            private readonly IUnitOfWork unitOfWork;
+            private readonly UserManager<AppUser> _userManager; // ✅ أضف
 
-        public ChatService(IUnitOfWork unitOfWork)
-        {
-            this.unitOfWork = unitOfWork;
-        }
+            public ChatService(IUnitOfWork unitOfWork, UserManager<AppUser> userManager) // ✅ أضف
+            {
+                this.unitOfWork = unitOfWork;
+                _userManager = userManager; // ✅ أضف
+            }
 
-        // دالة مساعدة للتحويل من ChatUsers إلى MessageViewMode
-        private MessageViewMode MapToMessageViewModel(ChatUsers message)
+            // دالة مساعدة للتحويل من ChatUsers إلى MessageViewMode
+            private MessageViewMode MapToMessageViewModel(ChatUsers message)
         {
             return new MessageViewMode
             {
@@ -40,16 +43,16 @@ namespace LaborBLL.Service
         {
             try
             {
-                // جلب كل الرسائل الخاصة بالمستخدم
                 var messages = await unitOfWork.chatrepo.GetmessageByIdAsync(userId);
-
-                // لو مفيش رسائل، رجع قائمة فاضية
                 if (messages == null || !messages.Any())
                 {
                     return new Response<List<ContactViewModel>>(new List<ContactViewModel>(), true, "لا توجد رسائل");
                 }
 
-                // تجميع الرسائل حسب المستخدم الآخر
+                // ✅ جيب الـ Admin IDs
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                var adminIds = admins.Select(a => a.Id).ToHashSet();
+
                 var contacts = messages
                     .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
                     .Select(g =>
@@ -57,10 +60,8 @@ namespace LaborBLL.Service
                         var lastMessage = g.OrderByDescending(m => m.CreatedAt).FirstOrDefault();
                         if (lastMessage == null) return null;
 
-                        // تحديد المستخدم الآخر
                         var otherUser = lastMessage.SenderId == userId ? lastMessage.Receiver : lastMessage.Sender;
 
-                        // اسم المستخدم (لو مش موجود استخدم اسم افتراضي)
                         string fullName = "مستخدم";
                         if (otherUser != null)
                         {
@@ -72,10 +73,11 @@ namespace LaborBLL.Service
                         return new ContactViewModel
                         {
                             OtherUserId = g.Key,
-                            FullName = $"{otherUser.FirstName ?? ""} {otherUser.LastName ?? ""}",
+                            FullName = fullName,
                             LastMessage = lastMessage.Content ?? "",
                             LastMessageAt = lastMessage.CreatedAt,
-                            UnreadCount = g.Count(m => m.SenderId != userId && m.isread != true)
+                            UnreadCount = g.Count(m => m.SenderId != userId && m.isread != true),
+                            IsAdmin = adminIds.Contains(g.Key) // ✅
                         };
                     })
                     .Where(c => c != null)
@@ -95,10 +97,12 @@ namespace LaborBLL.Service
         {
             try
             {
-                // جلب المستخدمين الجدد من خلال Bookings
                 var newContactsUsers = await unitOfWork.chatrepo.GetNewContact(userId);
-
                 var newContacts = new List<ContactViewModel>();
+
+                // ✅ جيب الـ Admin IDs
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                var adminIds = admins.Select(a => a.Id).ToHashSet();
 
                 if (newContactsUsers != null && newContactsUsers.Any())
                 {
@@ -110,7 +114,8 @@ namespace LaborBLL.Service
                             FullName = $"{u.FirstName ?? ""} {u.LastName ?? ""}".Trim(),
                             LastMessage = "",
                             LastMessageAt = DateTime.Now,
-                            UnreadCount = 0
+                            UnreadCount = 0,
+                            IsAdmin = adminIds.Contains(u.Id) // ✅
                         })
                         .ToList();
                 }
@@ -122,7 +127,6 @@ namespace LaborBLL.Service
                 return new Response<List<ContactViewModel>>(new List<ContactViewModel>(), false, ex.Message);
             }
         }
-
         // جلب محادثة كاملة بين مستخدمين
         public async Task<Response<ChatViewModel>> GetConversationAsync(string userId, string otherUserId)
         {

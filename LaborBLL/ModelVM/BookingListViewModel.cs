@@ -14,6 +14,8 @@ namespace LaborBLL.ModelVM
         public decimal AgreedRate { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+        public DateTime lastUpdateRate { get; set; }
+
         public BookingStatus Status { get; set; }
     }
 }

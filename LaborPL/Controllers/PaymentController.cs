@@ -223,6 +223,8 @@ namespace LaborPL.Controllers
             return RedirectToAction("MyPaymentHistory");
         }
         [Authorize]
+        [ResponseCache(NoStore = true, Duration = 0)]
+
         public async Task<IActionResult> Status(int bookingId)
         {
             var response = await _paymentService.GetPaymentByBookingIdAsync(bookingId);
@@ -232,11 +234,24 @@ namespace LaborPL.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            // ✅ حوّل الـ enum لـ string أول
+            var statusEnum = response.Result.Status; // هو PaymentStatus enum
+
+            var statusText = statusEnum.ToString() switch
+            {
+                "Held" => "Paid",
+                "Pending" => "Pending",
+                "Released" => "Released",
+                "Refunded" => "Refunded",
+                "Failed" => "Failed",
+                _ => statusEnum.ToString()
+            };
+
             var vm = new PaymentStatusViewModel
             {
                 BookingId = response.Result.BookingId,
                 Amount = response.Result.Amount,
-                Status = response.Result.Status.ToString(),
+                Status = statusText,
                 CreatAt = response.Result.PaymentDate,
                 RealaseAt = response.Result.ProcessedDate
             };
@@ -253,16 +268,28 @@ namespace LaborPL.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            var statusEnum = response.Result.Status;
+            var statusText = statusEnum.ToString() switch
+            {
+                "Held" => "Paid",
+                "Pending" => "Pending",
+                "Released" => "Released",
+                "Refunded" => "Refunded",
+                "Failed" => "Failed",
+                _ => statusEnum.ToString()
+            };
+
+            // ✅ لازم تبعت ViewModel مش string
             var vm = new PaymentStatusViewModel
             {
                 BookingId = response.Result.BookingId,
                 Amount = response.Result.Amount,
-                Status = response.Result.Status.ToString(),
+                Status = statusText,
                 CreatAt = response.Result.PaymentDate,
                 RealaseAt = response.Result.ProcessedDate
             };
 
-            return View("Status", vm);
+            return View("Status", vm); // ✅ vm مش statusText
         }
     }
 }

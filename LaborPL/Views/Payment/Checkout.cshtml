@@ -53,10 +53,14 @@
 
                 if (error) {
                     document.getElementById('card-errors').textContent = error.message;
-                } else {
-                    // ✅ Redirect صح
-        window.location.href = '/Payment/Status?bookingId=@Model.BookingId';
-                        }
+                       } else {
+            // ✅ استنى 3 ثواني عشان الـ Webhook يوصل ويحدث الـ DB
+            document.getElementById('pay-button').textContent = 'Processing...';
+            document.getElementById('pay-button').disabled = true;
+            setTimeout(function() {
+                window.location.href = '/Payment/Status?bookingId=@Model.BookingId';
+            }, 3000);
+        }
             });
       
         </script>

@@ -17,17 +17,19 @@ namespace LaborDAL.Entities
             Status = BookingStatus.Scheduled;
             CreatedAt = DateTime.UtcNow;
         }
-        public void Update(DateTime start, DateTime end,decimal rate, BookingStatus status)
+        public void Update(DateTime start, DateTime end,decimal rate, BookingStatus status,DateTime lastupdate)
         {
             this.Status = status;
             StartTime = start;
             EndTime = end;
             AgreedRate = rate;
+            LastUpdateRate = lastupdate;
         }
 
        
         public int Id { get; private set; }
         public decimal AgreedRate { get; private set; }
+        public DateTime LastUpdateRate { get; private set; }
         public DateTime? StartTime { get; private set; }
         public DateTime? EndTime { get; private set; }
         public BookingStatus Status { get;  set; }

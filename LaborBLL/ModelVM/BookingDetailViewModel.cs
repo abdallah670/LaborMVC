@@ -11,6 +11,7 @@ namespace LaborBLL.ModelVM
         public string PosterName { get; set; }
         public string WorkerName { get; set; }
         public decimal AgreedRate { get; set; }
+        public DateTime lastUpdateRate { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         public BookingStatus Status { get; set; }

@@ -33,15 +33,12 @@
 
         public async Task<List<AppUser>> GetNewContact(string userId)
         {
-            // 1. جيب الـ IDs اللي موجودة في المحادثات
             var existingChatUserIds = await _dbSet
                 .Where(m => m.SenderId == userId || m.ReceiverId == userId)
                 .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
                 .Distinct()
                 .ToListAsync();
 
-            // 2. جيب كل المستخدمين المرتبطين بالحجوزات (كـ IDs) 
-            //    واستبعد اللي موجودين في المحادثات
             var newContactIds = await _context.Bookings
                 .Where(b => b.PosterId == userId || b.WorkerId == userId)
                 .Select(b => b.PosterId == userId ? b.WorkerId : b.PosterId)
@@ -49,15 +46,26 @@
                 .Distinct()
                 .ToListAsync();
 
-            // 3. فلترة الـ IDs في الذاكرة (عشان Contains)
             var filteredIds = newContactIds
                 .Where(id => !existingChatUserIds.Contains(id))
                 .ToList();
 
-            // 4. جيب بيانات المستخدمين
-            return await _context.Users
+            var bookingContacts = await _context.Users
                 .Where(u => filteredIds.Contains(u.Id))
                 .ToListAsync();
+
+            var adminRoleId = await _context.Roles
+                .Where(r => r.Name == "Admin")
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            var admins = await _context.Users
+                .Where(u => u.Id != userId
+                    && !existingChatUserIds.Contains(u.Id)
+                    && _context.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
+                .ToListAsync();
+
+            return bookingContacts.Union(admins).ToList();
         }
         public async Task<List<AppUser>> GetAdminUsersAsync(string userId)
         {

@@ -68,27 +68,36 @@ namespace LaborBLL.Service.Implementation
             {
                 return new Response<bool>(false, false, "booking not found");
             }
+
+            // ✅ تحقق إن StartTime و EndTime مش null
+            if (!model.StartTime.HasValue || !model.EndTime.HasValue)
+            {
+                return new Response<bool>(false, false, "Start time and end time are required");
+            }
+
             var overlapping = await unitOfWork.Bookings.FindAsync(b =>
                b.Id != model.Id &&
                b.WorkerId == booking.WorkerId &&
                b.StartTime < model.EndTime &&
                b.EndTime > model.StartTime
-           );
+            );
+
             if (overlapping.Any())
             {
                 return new Response<bool>(false, false, "Worker is not available during the requested time");
             }
 
+            booking.Update(
+                model.StartTime.Value,
+                model.EndTime.Value,
+                model.AgreedRate,
+                model.Status,
+                DateTime.UtcNow
+            );
 
-            booking.Update(model.StartTime.Value, model.EndTime.Value, model.AgreedRate,model.Status);
             await unitOfWork.Bookings.UpdateAsync(booking);
             await unitOfWork.SaveAsync();
-
-
-
             return new Response<bool>(true, true, null);
-
-
         }
 
         public async Task<Response<bool>> DeleteBookingAsync(int BookingId)

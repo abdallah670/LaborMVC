@@ -149,7 +149,13 @@ namespace LaborPL.Controllers
             return RedirectToAction("Details", new { id = id });
         }
         #endregion
+        [HttpPost]
+        public async Task<IActionResult> UpdatePrice(UpdateBookingViewModel model)
+        {
+            await bookingService.UpdateBookingAsync(model);
+            return RedirectToAction("Details",new {id=model.Id});
 
+        }
         #region Start Work
 
         [HttpPost]
