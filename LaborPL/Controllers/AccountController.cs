@@ -61,26 +61,32 @@ namespace LaborPL.Controllers
 
             if (response.Success)
             {
-                _logger.LogInformation("User registered successfully: {Email}", model.Email);
+                var userId = response.Result!;
+                _logger.LogInformation("User registered successfully: {Email}, UserId: {UserId}", model.Email, userId);
 
-                // Auto-login after registration
-                var loginModel = new LoginViewModel
+                // Send email verification code
+                var sendCodeResult = await _verificationService.SendEmailVerificationCodeAsync(userId, model.Email);
+
+                if (sendCodeResult.Success)
                 {
-                    Email = model.Email,
-                    Password = model.Password,
-                    RememberMe = false
-                };
+                    _logger.LogInformation("Email verification code sent to: {Email}", model.Email);
 
-                await _userService.LoginAsync(loginModel);
+                    // Store return URL in TempData for after verification
+                    if (!string.IsNullOrEmpty(returnUrl))
+                    {
+                        TempData["ReturnUrl"] = returnUrl;
+                    }
 
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                {
-                    await SignInUserAsync(new ProfileViewModel { Email = model.Email, FirstName = model.FirstName, LastName = model.LastName }, false);
-
-                    return Redirect(returnUrl);
+                    // Redirect to email verification page
+                    return RedirectToAction("VerifyEmailCode", new { userId = userId, email = model.Email });
                 }
-
-                return RedirectToAction("Index", "Home");
+                else
+                {
+                    _logger.LogError("Failed to send verification code to {Email}: {Error}", model.Email, sendCodeResult.ErrorMessage);
+                    // Still show success but warn about email
+                    TempData["WarningMessage"] = "Account created but we couldn't send the verification email. Please try resending from your profile.";
+                    return RedirectToAction("Login");
+                }
             }
 
             _logger.LogError("Registration failed for {Email}: {Error}", model.Email, response.ErrorMessage);
@@ -108,6 +114,33 @@ namespace LaborPL.Controllers
             if (!ModelState.IsValid)
             {
                 return View(model);
+            }
+
+            // First check if user exists and get their details
+            var user = await _unitOfWork.AppUsers.GetByEmailAsync(model.Email);
+            if (user != null && !user.EmailConfirmed)
+            {
+                _logger.LogWarning("Login attempt for unverified email: {Email}", model.Email);
+
+                // Store return URL for after verification
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    TempData["ReturnUrl"] = returnUrl;
+                }
+
+                // Check if we need to resend the code (if expired or never sent)
+                if (user.EmailVerificationCodeExpiry == null || user.EmailVerificationCodeExpiry < DateTime.UtcNow)
+                {
+                    // Resend verification code
+                    var resendResult = await _verificationService.ResendEmailVerificationCodeAsync(user.Id);
+                    if (resendResult.Success)
+                    {
+                        TempData["InfoMessage"] = "A new verification code has been sent to your email.";
+                    }
+                }
+
+                // Redirect to verification page
+                return RedirectToAction("VerifyEmailCode", new { userId = user.Id, email = user.Email });
             }
 
             var response = await _userService.LoginAsync(model);
@@ -309,7 +342,145 @@ namespace LaborPL.Controllers
         #region Email Verification
 
         /// <summary>
-        /// Confirm email address with token
+        /// Display email verification code entry page (after registration)
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmailCode(string userId, string email)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(email))
+            {
+                TempData["Error"] = "Invalid verification request.";
+                return RedirectToAction("Login");
+            }
+
+            var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
+            if (user == null)
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction("Login");
+            }
+
+            // Check if already verified
+            if (user.EmailConfirmed)
+            {
+                TempData["SuccessMessage"] = "Your email is already verified. Please log in.";
+                return RedirectToAction("Login");
+            }
+
+            // Calculate cooldown remaining
+            var cooldownSeconds = 0;
+            if (user.LastEmailVerificationAttempt.HasValue)
+            {
+                var timeSinceLastAttempt = DateTime.UtcNow - user.LastEmailVerificationAttempt.Value;
+                if (timeSinceLastAttempt < TimeSpan.FromMinutes(1))
+                {
+                    cooldownSeconds = (int)(TimeSpan.FromMinutes(1) - timeSinceLastAttempt).TotalSeconds;
+                }
+            }
+
+            var viewModel = new VerifyEmailCodeViewModel
+            {
+                UserId = userId,
+                Email = email,
+                ResendCooldownSeconds = cooldownSeconds
+            };
+
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// Verify email with 6-digit code
+        /// </summary>
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyEmailCode(VerifyEmailCodeViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var result = await _verificationService.VerifyEmailCodeAsync(model.UserId, model.Code);
+
+            if (result.Success)
+            {
+                _logger.LogInformation("Email verified successfully for user {UserId}", model.UserId);
+
+                // Get user profile for sign in
+                var profile = await _userService.GetProfileAsync(model.UserId);
+                if (profile != null)
+                {
+                    await SignInUserAsync(profile, model.RememberMe);
+
+                    TempData["SuccessMessage"] = "Email verified successfully! Welcome to Labor Marketplace.";
+
+                    // Check for stored return URL
+                    if (TempData["ReturnUrl"] is string returnUrl && !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
+
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
+                TempData["SuccessMessage"] = "Email verified successfully! Please log in.";
+                return RedirectToAction("Login");
+            }
+
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Invalid verification code.");
+            
+            // Recalculate cooldown for the view
+            var user = await _unitOfWork.AppUsers.GetByIdAsync(model.UserId);
+            if (user?.LastEmailVerificationAttempt != null)
+            {
+                var timeSinceLastAttempt = DateTime.UtcNow - user.LastEmailVerificationAttempt.Value;
+                model.ResendCooldownSeconds = timeSinceLastAttempt < TimeSpan.FromMinutes(1) 
+                    ? (int)(TimeSpan.FromMinutes(1) - timeSinceLastAttempt).TotalSeconds 
+                    : 0;
+            }
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Resend email verification code
+        /// </summary>
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendEmailVerificationCode(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "User ID is required." });
+            }
+
+            var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User not found." });
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return Json(new { success = false, message = "Email is already verified." });
+            }
+
+            var result = await _verificationService.ResendEmailVerificationCodeAsync(userId);
+
+            if (result.Success)
+            {
+                _logger.LogInformation("Email verification code resent to user {UserId}", userId);
+                return Json(new { success = true, message = "Verification code sent! Please check your email." });
+            }
+
+            return Json(new { success = false, message = result.ErrorMessage ?? "Failed to resend code." });
+        }
+
+        /// <summary>
+        /// Confirm email address with token (link-based verification)
         /// </summary>
         [HttpGet]
         [AllowAnonymous]
@@ -336,7 +507,7 @@ namespace LaborPL.Controllers
         }
 
         /// <summary>
-        /// Resend email verification link
+        /// Resend email verification link (for authenticated users)
         /// </summary>
         [HttpPost]
         [Authorize]

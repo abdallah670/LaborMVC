@@ -9,7 +9,8 @@ namespace LaborBLL.Service.Abstract
         /// <summary>
         /// Registers a new user
         /// </summary>
-        Task<Response<bool>> RegisterAsync(RegisterViewModel model);
+        /// <returns>Response containing the user ID if successful</returns>
+        Task<Response<string>> RegisterAsync(RegisterViewModel model);
 
         /// <summary>
         /// Authenticates a user

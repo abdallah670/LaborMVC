@@ -1,0 +1,239 @@
+@model LaborBLL.ModelVM.VerifyEmailCodeViewModel
+@{
+    ViewData["Title"] = "Verify Email";
+    Layout = "_Layout";
+}
+
+<div class="auth-container">
+    <div class="auth-card fade-in">
+        <div class="card shadow">
+            <div class="card-header bg-primary-gradient text-white text-center">
+                <h3 class="mb-0"><i class="bi bi-envelope-check me-2"></i>Verify Your Email</h3>
+                <p class="mb-0 mt-2 opacity-75">Enter the 6-digit code sent to your email</p>
+            </div>
+            <div class="card-body">
+                @if (TempData["InfoMessage"] != null)
+                {
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>@TempData["InfoMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <div class="text-center mb-4">
+                    <div class="email-icon mb-3">
+                        <i class="bi bi-envelope-fill" style="font-size: 3rem; color: #1976d2;"></i>
+                    </div>
+                    <p class="text-muted">
+                        We've sent a verification code to:<br />
+                        <strong class="text-dark">@Model.Email</strong>
+                    </p>
+                </div>
+
+                <form asp-action="VerifyEmailCode" method="post">
+                    <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+                    <input type="hidden" asp-for="UserId" />
+                    <input type="hidden" asp-for="Email" />
+                    <input type="hidden" asp-for="ResendCooldownSeconds" id="cooldownSeconds" />
+
+                    <div class="mb-4">
+                        <label asp-for="Code" class="form-label text-center d-block">Enter Verification Code</label>
+                        <div class="verification-code-input">
+                            <input asp-for="Code" 
+                                   class="form-control form-control-lg text-center" 
+                                   placeholder="000000" 
+                                   maxlength="6"
+                                   inputmode="numeric"
+                                   pattern="\d{6}"
+                                   autocomplete="one-time-code"
+                                   style="font-size: 2rem; letter-spacing: 0.5rem;" />
+                        </div>
+                        <span asp-validation-for="Code" class="field-validation-error d-block text-center"></span>
+                    </div>
+
+                    <div class="mb-3 form-check text-center">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Verify Email
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted mb-2">Didn't receive the code?</p>
+                    <button type="button" id="resendBtn" class="btn btn-outline-primary" onclick="resendCode()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        <span id="resendText">Resend Code</span>
+                    </button>
+                    <p id="countdownText" class="text-muted mt-2" style="display: none;">
+                        Resend available in <span id="countdown">60</span> seconds
+                    </p>
+                </div>
+
+                <div class="auth-links mt-4">
+                    <p class="mb-0 text-center">
+                        Wrong email? 
+                        <a asp-action="Register">Register again</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let countdownInterval;
+        const cooldownInput = document.getElementById('cooldownSeconds');
+        const resendBtn = document.getElementById('resendBtn');
+        const resendText = document.getElementById('resendText');
+        const countdownText = document.getElementById('countdownText');
+        const countdownSpan = document.getElementById('countdown');
+
+        // Get initial cooldown from model
+        let cooldownSeconds = parseInt(cooldownInput?.value || '0');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-focus the code input
+            const codeInput = document.querySelector('input[name="Code"]');
+            if (codeInput) {
+                codeInput.focus();
+            }
+
+            // Start countdown if needed
+            if (cooldownSeconds > 0) {
+                startCountdown(cooldownSeconds);
+            }
+        });
+
+        function startCountdown(seconds) {
+            cooldownSeconds = seconds;
+            resendBtn.disabled = true;
+            resendText.textContent = 'Please wait...';
+            countdownText.style.display = 'block';
+            countdownSpan.textContent = seconds;
+
+            countdownInterval = setInterval(function() {
+                cooldownSeconds--;
+                countdownSpan.textContent = cooldownSeconds;
+
+                if (cooldownSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    resendBtn.disabled = false;
+                    resendText.textContent = 'Resend Code';
+                    countdownText.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function resendCode() {
+            const userId = document.querySelector('input[name="UserId"]').value;
+
+            // Disable button immediately
+            resendBtn.disabled = true;
+            resendText.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+            // Get antiforgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch('/Account/ResendEmailVerificationCode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `userId=${encodeURIComponent(userId)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+                    alertDiv.innerHTML = `
+                        <i class="bi bi-check-circle-fill me-2"></i>${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+
+                    // Start 60 second countdown
+                    startCountdown(60);
+                } else {
+                    // Show error message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-warning alert-dismissible fade show mt-3';
+                    alertDiv.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+
+                    // Re-enable button
+                    resendBtn.disabled = false;
+                    resendText.textContent = 'Resend Code';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resendBtn.disabled = false;
+                resendText.textContent = 'Resend Code';
+
+                // Show error message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-x-circle-fill me-2"></i>Failed to resend code. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+            });
+        }
+
+        // Auto-advance input - allow only digits
+        document.querySelector('input[name="Code"]').addEventListener('input', function(e) {
+            // Remove non-digit characters
+            this.value = this.value.replace(/\D/g, '');
+        });
+    </script>
+}
+
+<style>
+    .verification-code-input input {
+        max-width: 250px;
+        margin: 0 auto;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .verification-code-input input:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+    }
+
+    .email-icon {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .bg-primary-gradient {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    }
+</style>

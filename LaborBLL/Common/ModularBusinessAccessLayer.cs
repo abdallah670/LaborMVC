@@ -17,7 +17,7 @@ namespace LaborBLL.Common
             services.AddScoped<ICacheService, CacheService>();
 
             // Register notification services
-            services.AddScoped<IEmailService, SendGridEmailService>();
+            services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<ISmsService, TwilioSmsService>();
 
             // Register verification limit service (M6)
