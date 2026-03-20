@@ -1,0 +1,365 @@
+/* ============================================
+   LABOR MARKETPLACE — ANIMATIONS
+   Micro-interactions, transitions, keyframes
+   ============================================ */
+
+/* ── Keyframes ───────────────────────────────── */
+
+@keyframes lm-fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes lm-fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes lm-fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes lm-fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes lm-fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes lm-scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes lm-slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+}
+
+@keyframes lm-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes lm-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes lm-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes lm-bounce {
+    0%, 100% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: translateY(-6px);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+}
+
+@keyframes lm-slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes lm-slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+@keyframes lm-progress {
+    from { width: 0; }
+    to   { width: 100%; }
+}
+
+@keyframes lm-checkmark {
+    0% {
+        stroke-dashoffset: 100;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ── Animation Classes ───────────────────────── */
+
+.lm-animate-fade {
+    animation: lm-fadeIn var(--lm-duration-base) var(--lm-ease) both;
+}
+
+.lm-animate-fade-up {
+    animation: lm-fadeInUp var(--lm-duration-slow) var(--lm-ease) both;
+}
+
+.lm-animate-fade-down {
+    animation: lm-fadeInDown var(--lm-duration-slow) var(--lm-ease) both;
+}
+
+.lm-animate-fade-left {
+    animation: lm-fadeInLeft var(--lm-duration-slow) var(--lm-ease) both;
+}
+
+.lm-animate-fade-right {
+    animation: lm-fadeInRight var(--lm-duration-slow) var(--lm-ease) both;
+}
+
+.lm-animate-scale {
+    animation: lm-scaleIn var(--lm-duration-base) var(--lm-ease-bounce) both;
+}
+
+.lm-animate-slide-down {
+    animation: lm-slideDown var(--lm-duration-slow) var(--lm-ease) both;
+}
+
+.lm-animate-spin {
+    animation: lm-spin 1s linear infinite;
+}
+
+.lm-animate-pulse {
+    animation: lm-pulse 2s var(--lm-ease) infinite;
+}
+
+.lm-animate-bounce {
+    animation: lm-bounce 1s infinite;
+}
+
+/* ── Staggered Delays ────────────────────────── */
+
+.lm-delay-1 { animation-delay: 50ms; }
+.lm-delay-2 { animation-delay: 100ms; }
+.lm-delay-3 { animation-delay: 150ms; }
+.lm-delay-4 { animation-delay: 200ms; }
+.lm-delay-5 { animation-delay: 250ms; }
+.lm-delay-6 { animation-delay: 300ms; }
+.lm-delay-7 { animation-delay: 350ms; }
+.lm-delay-8 { animation-delay: 400ms; }
+
+/* ── Hover Effects ───────────────────────────── */
+
+.lm-hover-lift {
+    transition: transform var(--lm-duration-base) var(--lm-ease),
+                box-shadow var(--lm-duration-base) var(--lm-ease);
+}
+
+.lm-hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--lm-shadow-lg);
+}
+
+.lm-hover-lift:active {
+    transform: translateY(-1px);
+    box-shadow: var(--lm-shadow-md);
+}
+
+.lm-hover-glow {
+    transition: box-shadow var(--lm-duration-base) var(--lm-ease);
+}
+
+.lm-hover-glow:hover {
+    box-shadow: var(--lm-shadow-primary);
+}
+
+.lm-hover-scale {
+    transition: transform var(--lm-duration-fast) var(--lm-ease);
+}
+
+.lm-hover-scale:hover {
+    transform: scale(1.02);
+}
+
+.lm-hover-scale:active {
+    transform: scale(0.98);
+}
+
+.lm-hover-bg {
+    transition: background-color var(--lm-duration-fast) var(--lm-ease);
+}
+
+.lm-hover-bg:hover {
+    background-color: var(--lm-surface-hover);
+}
+
+/* ── Loading Skeleton ────────────────────────── */
+
+.lm-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--lm-gray-200) 25%,
+        var(--lm-gray-100) 50%,
+        var(--lm-gray-200) 75%
+    );
+    background-size: 200% 100%;
+    animation: lm-shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--lm-radius-md);
+}
+
+.lm-skeleton--text {
+    height: 1em;
+    margin-bottom: 0.5em;
+    width: 100%;
+}
+
+.lm-skeleton--text:last-child {
+    width: 70%;
+}
+
+.lm-skeleton--avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--lm-radius-full);
+}
+
+.lm-skeleton--card {
+    height: 200px;
+    width: 100%;
+}
+
+.lm-skeleton--btn {
+    height: 40px;
+    width: 120px;
+}
+
+/* ── Page Transition ─────────────────────────── */
+
+.lm-page-enter {
+    animation: lm-fadeInUp var(--lm-duration-slow) var(--lm-ease) both;
+}
+
+/* ── Scroll Reveal (JS Integration) ──────────── */
+
+[data-lm-reveal] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity var(--lm-duration-slower) var(--lm-ease),
+                transform var(--lm-duration-slower) var(--lm-ease);
+}
+
+[data-lm-reveal].lm-revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+[data-lm-reveal="left"] {
+    transform: translateX(-20px);
+}
+
+[data-lm-reveal="left"].lm-revealed {
+    transform: translateX(0);
+}
+
+[data-lm-reveal="right"] {
+    transform: translateX(20px);
+}
+
+[data-lm-reveal="right"].lm-revealed {
+    transform: translateX(0);
+}
+
+[data-lm-reveal="scale"] {
+    transform: scale(0.95);
+}
+
+[data-lm-reveal="scale"].lm-revealed {
+    transform: scale(1);
+}
+
+/* ── Toast Animations ────────────────────────── */
+
+.lm-toast-enter {
+    animation: lm-slideInRight var(--lm-duration-slow) var(--lm-ease-bounce) both;
+}
+
+.lm-toast-exit {
+    animation: lm-slideOutRight var(--lm-duration-base) var(--lm-ease-in) both;
+}
+
+/* ── Progress Bar Animation ──────────────────── */
+
+.lm-progress-animated .lm-progress-bar {
+    animation: lm-progress 1s var(--lm-ease-out) both;
+}
+
+/* ── Reduce Motion ───────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .lm-hover-lift:hover {
+        transform: none;
+    }
+
+    .lm-hover-scale:hover,
+    .lm-hover-scale:active {
+        transform: none;
+    }
+}

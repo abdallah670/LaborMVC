@@ -67,11 +67,50 @@
                             <label class="form-label">Front Document *</label>
                             <div class="input-group">
                                 <input type="file" class="form-control" id="frontDocument" name="frontDocument"
-                                       accept="image/jpeg,image/png,image/jpg" required />
+                                       accept="image/jpeg,image/png,image/jpg,application/pdf" required />
                             </div>
-                            <small class="text-muted">Upload a clear photo of the front of your ID (JPG, PNG only)</small>
+                            <small class="text-muted">Upload a clear photo of the front of your ID (JPG, PNG, PDF - max 10MB)</small>
+
+                            <!-- Progress Bar -->
+                            <div id="frontProgress" class="mt-2 d-none">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Uploading...</small>
+                                    <small class="text-muted" id="frontProgressText">0%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div id="frontProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Error Display -->
+                            <div id="frontError" class="alert alert-danger mt-2 d-none">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                                    <div>
+                                        <strong id="frontErrorTitle">Error</strong>
+                                        <p class="mb-1" id="frontErrorMessage"></p>
+                                        <small id="frontErrorSuggestion" class="text-muted"></small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="btnRetryFront">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Retry Upload
+                                </button>
+                            </div>
+
+                            <!-- Success Display -->
+                            <div id="frontSuccess" class="alert alert-success mt-2 d-none">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <span>Uploaded successfully!</span>
+                            </div>
+
+                            <!-- Preview -->
                             <div id="frontPreview" class="mt-2 d-none">
-                                <img src="" alt="Front Preview" class="img-thumbnail" style="max-height: 200px;" />
+                                <div class="card">
+                                    <div class="card-body p-2">
+                                        <img src="" alt="Front Preview" class="img-fluid rounded" style="max-height: 200px;" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -80,35 +119,127 @@
                             <label class="form-label">Back Document</label>
                             <div class="input-group">
                                 <input type="file" class="form-control" id="backDocument" name="backDocument"
-                                       accept="image/jpeg,image/png,image/jpg" />
+                                       accept="image/jpeg,image/png,image/jpg,application/pdf" />
                             </div>
                             <small class="text-muted">Upload a clear photo of the back of your ID (optional)</small>
+
+                            <!-- Progress Bar -->
+                            <div id="backProgress" class="mt-2 d-none">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Uploading...</small>
+                                    <small class="text-muted" id="backProgressText">0%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div id="backProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Error Display -->
+                            <div id="backError" class="alert alert-danger mt-2 d-none">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                                    <div>
+                                        <strong id="backErrorTitle">Error</strong>
+                                        <p class="mb-1" id="backErrorMessage"></p>
+                                        <small id="backErrorSuggestion" class="text-muted"></small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="btnRetryBack">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Retry Upload
+                                </button>
+                            </div>
+
+                            <!-- Success Display -->
+                            <div id="backSuccess" class="alert alert-success mt-2 d-none">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <span>Uploaded successfully!</span>
+                            </div>
+
+                            <!-- Preview -->
                             <div id="backPreview" class="mt-2 d-none">
-                                <img src="" alt="Back Preview" class="img-thumbnail" style="max-height: 200px;" />
+                                <div class="card">
+                                    <div class="card-body p-2">
+                                        <img src="" alt="Back Preview" class="img-fluid rounded" style="max-height: 200px;" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Selfie Upload -->
+                        <!-- Selfie Capture -->
                         <div class="mb-4">
                             <label class="form-label">Selfie with ID</label>
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>
                                 Please take a selfie holding your ID document next to your face. This helps us verify your identity faster.
                             </div>
-                            <div class="input-group">
-                                <input type="file" class="form-control" id="selfie" name="selfie"
-                                       accept="image/jpeg,image/png,image/jpg" />
+
+                            <!-- Take Selfie Button -->
+                            <button type="button" class="btn btn-outline-primary w-100 mb-2" id="btnOpenCamera">
+                                <i class="bi bi-camera-fill me-2"></i>Take Selfie
+                            </button>
+
+                            <!-- Hidden input to store captured image -->
+                            <input type="hidden" id="capturedSelfieData" />
+                            <input type="file" class="d-none" id="selfie" name="selfie" accept="image/jpeg,image/png,image/jpg" />
+
+                            <small class="text-muted">Capture a selfie holding your ID (optional, speeds up verification)</small>
+
+                            <!-- Progress Bar -->
+                            <div id="selfieProgress" class="mt-2 d-none">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Uploading...</small>
+                                    <small class="text-muted" id="selfieProgressText">0%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div id="selfieProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 0%"></div>
+                                </div>
                             </div>
-                            <small class="text-muted">Upload a selfie holding your ID (optional, speeds up verification)</small>
-                            <div id="selfiePreview" class="mt-2 d-none">
-                                <img src="" alt="Selfie Preview" class="img-thumbnail" style="max-height: 200px;" />
+
+                            <!-- Error Display -->
+                            <div id="selfieError" class="alert alert-danger mt-2 d-none">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                                    <div>
+                                        <strong id="selfieErrorTitle">Error</strong>
+                                        <p class="mb-1" id="selfieErrorMessage"></p>
+                                        <small id="selfieErrorSuggestion" class="text-muted"></small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="btnRetrySelfie">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Retry Upload
+                                </button>
                             </div>
+
+                            <!-- Success Display -->
+                            <div id="selfieSuccess" class="alert alert-success mt-2 d-none">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <span>Uploaded successfully!</span>
+                            </div>
+
+                            <!-- Selfie Preview -->
+                            <div id="selfiePreview" class="mt-3 d-none text-center">
+                                <div class="position-relative d-inline-block">
+                                    <img src="" alt="Selfie Preview" class="img-thumbnail" style="max-height: 200px;" />
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" id="btnRemoveSelfie" title="Remove">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                                <p class="text-success mb-0 mt-1"><i class="bi bi-check-circle-fill me-1"></i>Selfie captured successfully</p>
+                            </div>
+                        </div>
+
+                        <!-- Compression Notice -->
+                        <div id="compressionNotice" class="alert alert-info d-none">
+                            <i class="bi bi-magic me-2"></i>
+                            <span>Large images will be automatically compressed before upload to ensure fast processing.</span>
                         </div>
 
                         <div id="submitError" class="alert alert-danger d-none"></div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
                                 <i class="bi bi-upload me-2"></i>Submit for Verification
                             </button>
                             <a href="@Url.Action("MyProfile")" class="btn btn-outline-secondary">
@@ -149,12 +280,95 @@
     </div>
 </div>
 
+<!-- Camera Capture Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-camera me-2"></i>Take Selfie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <!-- Camera View -->
+                <div class="camera-container position-relative mb-3" style="background: #000; border-radius: 8px; overflow: hidden;">
+                    <video id="cameraVideo" autoplay playsinline style="width: 100%; height: auto; display: block;"></video>
+                    <canvas id="cameraCanvas" class="d-none"></canvas>
+
+                    <!-- Camera Loading State -->
+                    <div id="cameraLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: #000;">
+                        <div class="text-center text-white">
+                            <div class="spinner-border mb-2" role="status"></div>
+                            <p class="mb-0">Starting camera...</p>
+                        </div>
+                    </div>
+
+                    <!-- Camera Error State -->
+                    <div id="cameraError" class="position-absolute top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background: #000;">
+                        <div class="text-center text-white px-3">
+                            <i class="bi bi-camera-video-off fs-1 mb-2"></i>
+                            <p class="mb-2">Unable to access camera</p>
+                            <small>Please make sure you've granted camera permissions</small>
+                        </div>
+                    </div>
+
+                    <!-- Capture Overlay -->
+                    <div id="captureOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none" style="background: rgba(0,0,0,0.9);">
+                        <img id="capturedImage" class="w-100 h-100" style="object-fit: contain;" />
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div id="cameraInstructions" class="alert alert-warning py-2">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    Hold your ID next to your face in good lighting
+                </div>
+
+                <!-- Capture Controls -->
+                <div id="captureControls">
+                    <button type="button" class="btn btn-primary btn-lg rounded-circle" id="btnCapture" style="width: 70px; height: 70px;">
+                        <i class="bi bi-camera fs-3"></i>
+                    </button>
+                    <p class="text-muted mt-2 mb-0">Tap to capture</p>
+                </div>
+
+                <!-- Confirm Controls -->
+                <div id="confirmControls" class="d-none">
+                    <p class="mb-2">Use this photo?</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="btnRetake">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Retake
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnConfirmCapture">
+                            <i class="bi bi-check-lg me-1"></i>Use Photo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="~/js/verification.js"></script>
     <script>
+        // Camera stream reference
+        let cameraStream = null;
+        let capturedImageData = null;
+
+        // Current files being processed
+        const currentFiles = {
+            front: null,
+            back: null,
+            selfie: null
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             checkVerificationStatus();
             setupImagePreviews();
             setupFormSubmission();
+            setupCameraFunctionality();
+            setupRetryButtons();
+            setupFileInputs();
         });
 
         function checkVerificationStatus() {
@@ -166,7 +380,7 @@
                     }
                 })
                 .catch(() => {
-                    document.getElementById('verificationStatus').innerHTML = 
+                    document.getElementById('verificationStatus').innerHTML =
                         '<div class="alert alert-warning">Unable to check verification status.</div>';
                 });
         }
@@ -175,9 +389,9 @@
             let statusHtml = '';
 
             if (status.hasSubmitted) {
-                const alertClass = status.status === 'Approved' ? 'alert-success' : 
+                const alertClass = status.status === 'Approved' ? 'alert-success' :
                                   status.status === 'Rejected' ? 'alert-danger' : 'alert-info';
-                const icon = status.status === 'Approved' ? 'bi-check-circle-fill' : 
+                const icon = status.status === 'Approved' ? 'bi-check-circle-fill' :
                             status.status === 'Rejected' ? 'bi-x-circle-fill' : 'bi-clock-fill';
 
                 statusHtml = `
@@ -199,16 +413,150 @@
             document.getElementById('verificationStatus').innerHTML = statusHtml;
         }
 
-        function setupImagePreviews() {
+        function setupFileInputs() {
+            // Front document
             document.getElementById('frontDocument').addEventListener('change', function() {
-                previewImage(this, 'frontPreview');
+                handleFileSelect(this, 'front');
             });
+
+            // Back document
             document.getElementById('backDocument').addEventListener('change', function() {
-                previewImage(this, 'backPreview');
+                handleFileSelect(this, 'back');
             });
-            document.getElementById('selfie').addEventListener('change', function() {
-                previewImage(this, 'selfiePreview');
-            });
+        }
+
+        async function handleFileSelect(input, type) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            currentFiles[type] = file;
+
+            // Show compression notice for large files
+            if (file.size > 2 * 1024 * 1024) {
+                document.getElementById('compressionNotice').classList.remove('d-none');
+            }
+
+            // Validate file
+            const validation = IdVerificationUpload.validateFile(file);
+            if (!validation.valid) {
+                showError(type, {
+                    errorCode: 'VALIDATION_ERROR',
+                    title: 'Invalid File',
+                    message: validation.error,
+                    suggestion: 'Please select a valid file.',
+                    canRetry: false
+                });
+                input.value = '';
+                return;
+            }
+
+            // Show preview
+            previewImage(input, type + 'Preview');
+
+            // Reset error state
+            hideError(type);
+            hideSuccess(type);
+
+            // Upload the file
+            await uploadDocument(file, type);
+        }
+
+        async function uploadDocument(file, type) {
+            // Show progress
+            showProgress(type);
+
+            // Progress callback
+            const onProgress = (loaded, total) => {
+                const percent = Math.round((loaded / total) * 100);
+                updateProgress(type, percent);
+            };
+
+            try {
+                const result = await IdVerificationUpload.uploadIdDocument(file, type, onProgress);
+
+                hideProgress(type);
+
+                if (result.success) {
+                    showSuccess(type);
+                    updateSubmitButton();
+                } else {
+                    const errorInfo = IdVerificationUpload.handleUploadError(result.error);
+                    showError(type, { ...errorInfo, ...result.error });
+                }
+            } catch (error) {
+                hideProgress(type);
+                const errorInfo = IdVerificationUpload.handleUploadError({ errorCode: 'NETWORK_ERROR' });
+                showError(type, errorInfo);
+            }
+        }
+
+        function setupRetryButtons() {
+            document.getElementById('btnRetryFront').addEventListener('click', () => retryUpload('front'));
+            document.getElementById('btnRetryBack').addEventListener('click', () => retryUpload('back'));
+            document.getElementById('btnRetrySelfie').addEventListener('click', () => retryUpload('selfie'));
+        }
+
+        async function retryUpload(type) {
+            const file = currentFiles[type];
+            if (!file) {
+                // If no file stored, show file picker
+                const input = document.getElementById(type + 'Document') || document.getElementById(type);
+                if (input) input.click();
+                return;
+            }
+
+            hideError(type);
+            await uploadDocument(file, type);
+        }
+
+        function showProgress(type) {
+            document.getElementById(type + 'Progress').classList.remove('d-none');
+            updateProgress(type, 0);
+        }
+
+        function hideProgress(type) {
+            document.getElementById(type + 'Progress').classList.add('d-none');
+        }
+
+        function updateProgress(type, percent) {
+            const bar = document.getElementById(type + 'ProgressBar');
+            const text = document.getElementById(type + 'ProgressText');
+            if (bar) bar.style.width = percent + '%';
+            if (text) text.textContent = percent + '%';
+        }
+
+        function showError(type, error) {
+            const errorDiv = document.getElementById(type + 'Error');
+            const titleEl = document.getElementById(type + 'ErrorTitle');
+            const messageEl = document.getElementById(type + 'ErrorMessage');
+            const suggestionEl = document.getElementById(type + 'ErrorSuggestion');
+            const retryBtn = errorDiv.querySelector('button');
+
+            if (titleEl) titleEl.textContent = error.title || 'Error';
+            if (messageEl) messageEl.textContent = error.message || 'An error occurred';
+            if (suggestionEl) suggestionEl.textContent = error.suggestion || '';
+
+            if (retryBtn) {
+                retryBtn.style.display = error.canRetry !== false ? 'inline-block' : 'none';
+            }
+
+            errorDiv.classList.remove('d-none');
+        }
+
+        function hideError(type) {
+            document.getElementById(type + 'Error').classList.add('d-none');
+        }
+
+        function showSuccess(type) {
+            document.getElementById(type + 'Success').classList.remove('d-none');
+        }
+
+        function hideSuccess(type) {
+            document.getElementById(type + 'Success').classList.add('d-none');
+        }
+
+        function setupImagePreviews() {
+            // File input previews are handled in handleFileSelect
         }
 
         function previewImage(input, previewId) {
@@ -223,61 +571,259 @@
             }
         }
 
+        function updateSubmitButton() {
+            const isReady = IdVerificationUpload.areDocumentsReady();
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = !isReady;
+            }
+        }
+
+        // ============================================
+        // CAMERA FUNCTIONALITY
+        // ============================================
+        function setupCameraFunctionality() {
+            const btnOpenCamera = document.getElementById('btnOpenCamera');
+            const btnCapture = document.getElementById('btnCapture');
+            const btnRetake = document.getElementById('btnRetake');
+            const btnConfirmCapture = document.getElementById('btnConfirmCapture');
+            const btnRemoveSelfie = document.getElementById('btnRemoveSelfie');
+            const cameraModal = document.getElementById('cameraModal');
+
+            // Open camera modal
+            btnOpenCamera.addEventListener('click', function() {
+                const modal = new bootstrap.Modal(cameraModal);
+                modal.show();
+                startCamera();
+            });
+
+            // Capture photo
+            btnCapture.addEventListener('click', capturePhoto);
+
+            // Retake photo
+            btnRetake.addEventListener('click', retakePhoto);
+
+            // Confirm capture
+            btnConfirmCapture.addEventListener('click', confirmCapture);
+
+            // Remove selfie
+            btnRemoveSelfie.addEventListener('click', removeSelfie);
+
+            // Stop camera when modal is closed
+            cameraModal.addEventListener('hidden.bs.modal', stopCamera);
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('cameraVideo');
+            const loadingDiv = document.getElementById('cameraLoading');
+            const errorDiv = document.getElementById('cameraError');
+
+            // Reset UI
+            loadingDiv.classList.remove('d-none');
+            errorDiv.classList.add('d-none');
+            errorDiv.classList.remove('d-flex');
+            document.getElementById('captureOverlay').classList.add('d-none');
+            document.getElementById('captureControls').classList.remove('d-none');
+            document.getElementById('confirmControls').classList.add('d-none');
+            document.getElementById('cameraInstructions').classList.remove('d-none');
+
+            try {
+                // Request front camera with ideal settings
+                const constraints = {
+                    video: {
+                        facingMode: 'user', // Front camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = cameraStream;
+
+                // Wait for video to be ready
+                video.onloadedmetadata = function() {
+                    loadingDiv.classList.add('d-none');
+                    video.play();
+                };
+            } catch (error) {
+                console.error('Camera error:', error);
+                loadingDiv.classList.add('d-none');
+                errorDiv.classList.remove('d-none');
+                errorDiv.classList.add('d-flex');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            const video = document.getElementById('cameraVideo');
+            video.srcObject = null;
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const captureOverlay = document.getElementById('captureOverlay');
+            const capturedImage = document.getElementById('capturedImage');
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            // Draw video frame to canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get image data
+            capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
+
+            // Show captured image
+            capturedImage.src = capturedImageData;
+            captureOverlay.classList.remove('d-none');
+
+            // Switch controls
+            document.getElementById('captureControls').classList.add('d-none');
+            document.getElementById('confirmControls').classList.remove('d-none');
+            document.getElementById('cameraInstructions').classList.add('d-none');
+        }
+
+        function retakePhoto() {
+            const captureOverlay = document.getElementById('captureOverlay');
+            captureOverlay.classList.add('d-none');
+
+            // Switch controls back
+            document.getElementById('captureControls').classList.remove('d-none');
+            document.getElementById('confirmControls').classList.add('d-none');
+            document.getElementById('cameraInstructions').classList.remove('d-none');
+
+            capturedImageData = null;
+        }
+
+        async function confirmCapture() {
+            if (!capturedImageData) return;
+
+            // Store in hidden input
+            document.getElementById('capturedSelfieData').value = capturedImageData;
+
+            // Create a File object from the data URL
+            const byteString = atob(capturedImageData.split(',')[1]);
+            const mimeString = capturedImageData.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+            const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+
+            // Store file for retry
+            currentFiles.selfie = file;
+
+            // Create a DataTransfer to set the file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('selfie').files = dataTransfer.files;
+
+            // Show preview
+            const preview = document.getElementById('selfiePreview');
+            preview.classList.remove('d-none');
+            preview.querySelector('img').src = capturedImageData;
+
+            // Update button text
+            document.getElementById('btnOpenCamera').innerHTML = '<i class="bi bi-camera-fill me-2"></i>Retake Selfie';
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
+            modal.hide();
+
+            // Upload selfie
+            await uploadDocument(file, 'selfie');
+        }
+
+        function removeSelfie() {
+            // Clear file input
+            document.getElementById('selfie').value = '';
+            document.getElementById('capturedSelfieData').value = '';
+            capturedImageData = null;
+            currentFiles.selfie = null;
+
+            // Hide preview and success
+            document.getElementById('selfiePreview').classList.add('d-none');
+            hideSuccess('selfie');
+
+            // Reset upload state
+            IdVerificationUpload.resetUploadState('selfie');
+
+            // Reset button
+            document.getElementById('btnOpenCamera').innerHTML = '<i class="bi bi-camera-fill me-2"></i>Take Selfie';
+
+            updateSubmitButton();
+        }
+
+        // ============================================
+        // FORM SUBMISSION
+        // ============================================
         function setupFormSubmission() {
             document.getElementById('idVerificationForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 const submitBtn = document.getElementById('submitBtn');
+                const submitError = document.getElementById('submitError');
+
+                // Validate form fields
+                const documentType = document.getElementById('documentType').value;
+                const documentNumber = document.getElementById('documentNumber').value;
+                const documentCountry = document.getElementById('documentCountry').value;
+
+                if (!documentType || !documentNumber || !documentCountry) {
+                    submitError.textContent = 'Please fill in all required fields.';
+                    submitError.classList.remove('d-none');
+                    return;
+                }
+
+                // Check if front document is uploaded
+                if (!IdVerificationUpload.areDocumentsReady()) {
+                    submitError.textContent = 'Please upload the front document first.';
+                    submitError.classList.remove('d-none');
+                    return;
+                }
+
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Submitting...';
+                submitError.classList.add('d-none');
 
                 try {
-                    // Upload files first
-                    const formData = new FormData();
-                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
-                    
-                    const frontFile = document.getElementById('frontDocument').files[0];
-                    const backFile = document.getElementById('backDocument').files[0];
-                    const selfieFile = document.getElementById('selfie').files[0];
+                    // Get uploaded document URLs
+                    const urls = IdVerificationUpload.getDocumentUrls();
 
-                    if (!frontFile) {
-                        throw new Error('Front document is required');
-                    }
-
-                    formData.append('frontDocument', frontFile);
-                    if (backFile) formData.append('backDocument', backFile);
-                    if (selfieFile) formData.append('selfie', selfieFile);
-
-                    // Upload files
-                    const uploadResponse = await fetch('/api/upload/id-documents', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const uploadResult = await uploadResponse.json();
-
-                    if (!uploadResult.success) {
-                        throw new Error(uploadResult.message || 'Failed to upload documents');
-                    }
-
-                    // Now submit verification request
+                    // Submit verification request
                     const requestData = {
-                        DocumentType: document.getElementById('documentType').value,
-                        DocumentNumber: document.getElementById('documentNumber').value,
-                        DocumentCountry: document.getElementById('documentCountry').value,
-                        FrontDocumentUrl: uploadResult.data.frontUrl,
-                        BackDocumentUrl: uploadResult.data.backUrl,
-                        SelfieUrl: uploadResult.data.selfieUrl
+                        DocumentType: documentType,
+                        DocumentNumber: documentNumber,
+                        DocumentCountry: documentCountry,
+                        FrontDocumentUrl: urls.frontUrl,
+                        BackDocumentUrl: urls.backUrl,
+                        SelfieUrl: urls.selfieUrl
                     };
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
                     const response = await fetch('@Url.Action("SubmitIdVerification")', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            'RequestVerificationToken': token || ''
                         },
                         body: JSON.stringify(requestData)
                     });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'Failed to submit verification');
+                    }
 
                     const result = await response.json();
 
@@ -293,9 +839,9 @@
                         throw new Error(result.message || 'Failed to submit verification');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
-                    document.getElementById('submitError').classList.remove('d-none');
-                    document.getElementById('submitError').textContent = error.message || 'An error occurred. Please try again.';
+                    console.error('Submission error:', error);
+                    submitError.textContent = error.message || 'An error occurred while submitting. Please try again.';
+                    submitError.classList.remove('d-none');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="bi bi-upload me-2"></i>Submit for Verification';
                 }

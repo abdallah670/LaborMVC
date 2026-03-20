@@ -698,7 +698,7 @@ namespace LaborPL.Controllers
         /// Starts Stripe Connect onboarding for workers to receive payments
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Worker")]
+        [Authorize]
         public async Task<IActionResult> ConnectStripe()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -711,6 +711,13 @@ namespace LaborPL.Controllers
             if (user == null)
             {
                 return NotFound();
+            }
+
+            // Check if user has Worker role flag (not ASP.NET Identity role)
+            if (!user.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker))
+            {
+                TempData["ErrorMessage"] = "You must be a worker to connect a Stripe account.";
+                return RedirectToAction(nameof(MyProfile));
             }
 
             // If user already has a connected account, check if it's enabled
@@ -763,7 +770,7 @@ namespace LaborPL.Controllers
         /// Return URL after Stripe Connect onboarding
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Worker")]
+        [Authorize]
         public async Task<IActionResult> StripeConnectReturn()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -776,7 +783,14 @@ namespace LaborPL.Controllers
             if (user == null || string.IsNullOrEmpty(user.StripeAccountId))
             {
                 TempData["ErrorMessage"] = "Stripe account connection failed.";
-                return RedirectToAction(nameof(Profile));
+                return RedirectToAction(nameof(MyProfile));
+            }
+
+            // Check if user has Worker role flag
+            if (!user.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker))
+            {
+                TempData["ErrorMessage"] = "You must be a worker to connect a Stripe account.";
+                return RedirectToAction(nameof(MyProfile));
             }
 
             // Check if account is enabled
@@ -790,14 +804,14 @@ namespace LaborPL.Controllers
                 TempData["WarningMessage"] = "Your Stripe account is pending verification. You will be able to receive payments once verification is complete.";
             }
 
-            return RedirectToAction(nameof(Profile));
+            return RedirectToAction(nameof(MyProfile));
         }
 
         /// <summary>
         /// Check Stripe Connect status
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Worker")]
+        [Authorize]
         public async Task<IActionResult> StripeStatus()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -808,6 +822,12 @@ namespace LaborPL.Controllers
 
             var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
             if (user == null || string.IsNullOrEmpty(user.StripeAccountId))
+            {
+                return Json(new { connected = false, enabled = false });
+            }
+
+            // Check if user has Worker role flag
+            if (!user.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker))
             {
                 return Json(new { connected = false, enabled = false });
             }

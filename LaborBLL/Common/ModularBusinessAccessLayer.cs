@@ -60,6 +60,12 @@ namespace LaborBLL.Common
             services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
             services.AddScoped<ITransferProcessorJob, TransferProcessorJob>();
 
+            //Images
+            services.AddScoped<IImageProcessingService, ImageProcessingService>();
+
+            // Storage service
+            services.AddScoped<IStorageService, LocalStorageService>();
+
             return services;
         }
     }
