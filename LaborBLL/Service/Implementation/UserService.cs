@@ -30,7 +30,7 @@ namespace LaborBLL.Service
         /// <summary>
         /// Registers a new user
         /// </summary>
-        public async Task<Response<bool>> RegisterAsync(RegisterViewModel model)
+        public async Task<Response<string>> RegisterAsync(RegisterViewModel model)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace LaborBLL.Service
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null)
                 {
-                    return new Response<bool>(false, false, "Email is already registered.");
+                    return new Response<string>(null, false, "Email is already registered.");
                 }
                 var isfirstuser = (await _userManager.Users.CountAsync()) == 0;
                 // Map ViewModel to Entity
@@ -88,17 +88,17 @@ namespace LaborBLL.Service
                         _logger.LogInformation("First user registered, assigned Admin role: {Email}", model.Email);
                     }
                     _logger.LogInformation("User registered successfully: {Email}", model.Email);
-                    return new Response<bool>(true, true, null);
+                    return new Response<string>(user.Id, true, null);
                 }
 
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 _logger.LogWarning("User registration failed: {Errors}", errors);
-                return new Response<bool>(false, false, errors);
+                return new Response<string>(null, false, errors);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during user registration: {Email}", model.Email);
-                return new Response<bool>(false, false, "An error occurred during registration.");
+                return new Response<string>(null, false, "An error occurred during registration.");
             }
         }
 
@@ -118,6 +118,13 @@ namespace LaborBLL.Service
                 if (user.IsDeleted)
                 {
                     return new Response<ProfileViewModel>(null, false, "This account has been deactivated.");
+                }
+
+                // Check if email is verified
+                if (!user.EmailConfirmed)
+                {
+                    _logger.LogWarning("Login attempt for unverified email: {Email}", model.Email);
+                    return new Response<ProfileViewModel>(null, false, "Please verify your email before logging in. Check your inbox for the verification code.");
                 }
 
                 var result = await _signInManager.PasswordSignInAsync(

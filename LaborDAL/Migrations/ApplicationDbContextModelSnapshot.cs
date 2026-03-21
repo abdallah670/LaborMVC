@@ -124,6 +124,15 @@ namespace LaborDAL.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int>("EmailVerificationAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmailVerificationCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EmailVerificationCodeExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("EmailVerificationExpiry")
                         .HasColumnType("datetime2");
 
@@ -152,6 +161,9 @@ namespace LaborDAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastEmailVerificationAttempt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(100)

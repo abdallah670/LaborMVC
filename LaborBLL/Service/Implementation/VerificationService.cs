@@ -22,8 +22,10 @@ namespace LaborBLL.Service.Implementation
 
         // Rate limiting settings
         private static readonly TimeSpan EmailResendCooldown = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan EmailCodeCooldown = TimeSpan.FromMinutes(1);
         private static readonly TimeSpan PhoneVerificationCooldown = TimeSpan.FromMinutes(1);
         private static readonly int MaxPhoneAttempts = 5;
+        private static readonly int MaxEmailCodeAttempts = 5;
 
         public VerificationService(
             UserManager<AppUser> userManager,
@@ -153,6 +155,181 @@ namespace LaborBLL.Service.Implementation
             {
                 var timeSinceExpirySet = DateTime.UtcNow.AddHours(24) - user.EmailVerificationExpiry.Value;
                 if (timeSinceExpirySet < EmailResendCooldown)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Email Verification Code (Registration)
+
+        public async Task<Response<bool>> SendEmailVerificationCodeAsync(string userId, string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return new Response<bool>(false, false, "User not found.");
+                }
+
+                // Check if email is already verified
+                if (user.EmailConfirmed)
+                {
+                    return new Response<bool>(false, false, "Email is already verified.");
+                }
+
+                // Generate 6-digit code
+                var code = new Random().Next(100000, 999999).ToString();
+
+                // Store hashed code and expiry
+                user.EmailVerificationCode = _userManager.PasswordHasher.HashPassword(user, code);
+                user.EmailVerificationCodeExpiry = DateTime.UtcNow.AddMinutes(15);
+                user.LastEmailVerificationAttempt = DateTime.UtcNow;
+                user.EmailVerificationAttempts = 0;
+
+                await _userManager.UpdateAsync(user);
+
+                // Send email with verification code
+                var userName = $"{user.FirstName} {user.LastName}".Trim();
+                await _emailService.SendVerificationCodeAsync(email, userName, code);
+
+                _logger.LogInformation("Email verification code sent to user {UserId} at {Email}", userId, email);
+
+                return new Response<bool>(true, true, "Verification code sent successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending email verification code for user {UserId}", userId);
+                return new Response<bool>(false, false, "Failed to send verification code.");
+            }
+        }
+
+        public async Task<Response<bool>> VerifyEmailCodeAsync(string userId, string code)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return new Response<bool>(false, false, "User not found.");
+                }
+
+                // Check if code has expired
+                if (!user.EmailVerificationCodeExpiry.HasValue || user.EmailVerificationCodeExpiry.Value < DateTime.UtcNow)
+                {
+                    return new Response<bool>(false, false, "Verification code has expired. Please request a new one.");
+                }
+
+                // Check max attempts
+                if (user.EmailVerificationAttempts >= MaxEmailCodeAttempts)
+                {
+                    return new Response<bool>(false, false, "Too many failed attempts. Please request a new code.");
+                }
+
+                // Verify code
+                var result = _userManager.PasswordHasher.VerifyHashedPassword(
+                    user, user.EmailVerificationCode, code);
+
+                if (result != PasswordVerificationResult.Success)
+                {
+                    user.EmailVerificationAttempts++;
+                    await _userManager.UpdateAsync(user);
+
+                    _logger.LogWarning("Invalid email verification code attempt {Attempt} for user {UserId}",
+                        user.EmailVerificationAttempts, userId);
+
+                    return new Response<bool>(false, false, "Invalid verification code.");
+                }
+
+                // Mark email as confirmed using Identity's ConfirmEmailAsync
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
+
+                if (!confirmResult.Succeeded)
+                {
+                    return new Response<bool>(false, false, "Failed to confirm email. Please try again.");
+                }
+
+                // Explicitly ensure EmailConfirmed is set (in case ConfirmEmailAsync didn't save it)
+                user.EmailConfirmed = true;
+
+                // Clear verification code data
+                user.EmailVerificationCode = null;
+                user.EmailVerificationCodeExpiry = null;
+                user.EmailVerificationAttempts = 0;
+                user.LastEmailVerificationAttempt = null;
+
+                // Save all changes
+                var updateResult = await _userManager.UpdateAsync(user);
+
+                if (!updateResult.Succeeded)
+                {
+                    _logger.LogError("Failed to update user after email confirmation: {Errors}",
+                        string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                }
+
+                // Update verification tier
+                await UpdateVerificationTierAsync(userId);
+
+                _logger.LogInformation("Email verified with code for user {UserId}", userId);
+
+                return new Response<bool>(true, true, "Email verified successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying email code for user {UserId}", userId);
+                return new Response<bool>(false, false, "Failed to verify email code.");
+            }
+        }
+
+        public async Task<Response<bool>> ResendEmailVerificationCodeAsync(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return new Response<bool>(false, false, "User not found.");
+                }
+
+                if (user.EmailConfirmed)
+                {
+                    return new Response<bool>(false, false, "Email is already verified.");
+                }
+
+                // Check rate limit
+                if (!await CanRequestEmailCodeAsync(userId))
+                {
+                    return new Response<bool>(false, false, "Please wait 1 minute before requesting a new code.");
+                }
+
+                // Reset attempts on resend
+                user.EmailVerificationAttempts = 0;
+                await _userManager.UpdateAsync(user);
+
+                return await SendEmailVerificationCodeAsync(userId, user.Email!);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resending email verification code for user {UserId}", userId);
+                return new Response<bool>(false, false, "Failed to resend verification code.");
+            }
+        }
+
+        public async Task<bool> CanRequestEmailCodeAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return false;
+
+            if (user.LastEmailVerificationAttempt.HasValue)
+            {
+                var timeSinceLastAttempt = DateTime.UtcNow - user.LastEmailVerificationAttempt.Value;
+                if (timeSinceLastAttempt < EmailCodeCooldown)
                 {
                     return false;
                 }

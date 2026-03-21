@@ -33,6 +33,30 @@ namespace LaborBLL.Service.Abstract
 
         #endregion
 
+        #region Email Verification Code (Registration)
+
+        /// <summary>
+        /// Send email verification code after registration
+        /// </summary>
+        Task<Response<bool>> SendEmailVerificationCodeAsync(string userId, string email);
+
+        /// <summary>
+        /// Verify email with 6-digit code
+        /// </summary>
+        Task<Response<bool>> VerifyEmailCodeAsync(string userId, string code);
+
+        /// <summary>
+        /// Resend email verification code with rate limiting
+        /// </summary>
+        Task<Response<bool>> ResendEmailVerificationCodeAsync(string userId);
+
+        /// <summary>
+        /// Check if user can request email verification code
+        /// </summary>
+        Task<bool> CanRequestEmailCodeAsync(string userId);
+
+        #endregion
+
         #region Phone Verification
 
         /// <summary>

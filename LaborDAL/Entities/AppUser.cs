@@ -62,7 +62,7 @@ namespace LaborDAL.Entities
         public DateTime? LastPhoneVerificationAttempt { get; set; }
 
         /// <summary>
-        /// Email verification token
+        /// Email verification token (for link-based verification)
         /// </summary>
         public string? EmailVerificationToken { get; set; }
 
@@ -70,6 +70,26 @@ namespace LaborDAL.Entities
         /// Email verification token expiry
         /// </summary>
         public DateTime? EmailVerificationExpiry { get; set; }
+
+        /// <summary>
+        /// Email verification code (6-digit code for registration)
+        /// </summary>
+        public string? EmailVerificationCode { get; set; }
+
+        /// <summary>
+        /// Email verification code expiry
+        /// </summary>
+        public DateTime? EmailVerificationCodeExpiry { get; set; }
+
+        /// <summary>
+        /// Number of email verification attempts
+        /// </summary>
+        public int EmailVerificationAttempts { get; set; } = 0;
+
+        /// <summary>
+        /// Last email verification attempt timestamp
+        /// </summary>
+        public DateTime? LastEmailVerificationAttempt { get; set; }
 
         /// <summary>
         /// User's average rating from reviews

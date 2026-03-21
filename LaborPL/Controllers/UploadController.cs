@@ -1,8 +1,10 @@
+using LaborBLL.Common;
 using LaborBLL.Service.Abstract;
 using LaborDAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace LaborPL.Controllers
 {
@@ -19,19 +21,22 @@ namespace LaborPL.Controllers
         private readonly IFileUploadValidationService _fileValidation;
         private readonly UserManager<AppUser> _userManager;
         private readonly ILogger<UploadController> _logger;
+        private readonly FileUploadSecuritySettings _settings;
 
         public UploadController(
             IImageProcessingService imageProcessing,
             IStorageService storage,
             IFileUploadValidationService fileValidation,
             UserManager<AppUser> userManager,
-            ILogger<UploadController> logger)
+            ILogger<UploadController> logger,
+            IOptions<FileUploadSecuritySettings> settings)
         {
             _imageProcessing = imageProcessing;
             _storage = storage;
             _fileValidation = fileValidation;
             _userManager = userManager;
             _logger = logger;
+            _settings = settings.Value;
         }
 
         /// <summary>
@@ -244,18 +249,33 @@ namespace LaborPL.Controllers
 
             try
             {
-                var frontUrl = await UploadIdDocumentFile(frontDocument, userId, "front");
+                var frontResult = await UploadIdDocumentFile(frontDocument, userId, "front");
+                if (!frontResult.IsValid)
+                {
+                    return BadRequest(CreateDetailedErrorResponse(frontResult, frontDocument, "front"));
+                }
+
                 string? backUrl = null;
                 string? selfieUrl = null;
 
                 if (backDocument != null && backDocument.Length > 0)
                 {
-                    backUrl = await UploadIdDocumentFile(backDocument, userId, "back");
+                    var backResult = await UploadIdDocumentFile(backDocument, userId, "back");
+                    if (!backResult.IsValid)
+                    {
+                        return BadRequest(CreateDetailedErrorResponse(backResult, backDocument, "back"));
+                    }
+                    backUrl = backResult.Url;
                 }
 
                 if (selfie != null && selfie.Length > 0)
                 {
-                    selfieUrl = await UploadIdDocumentFile(selfie, userId, "selfie");
+                    var selfieResult = await UploadIdDocumentFile(selfie, userId, "selfie");
+                    if (!selfieResult.IsValid)
+                    {
+                        return BadRequest(CreateDetailedErrorResponse(selfieResult, selfie, "selfie"));
+                    }
+                    selfieUrl = selfieResult.Url;
                 }
 
                 _logger.LogInformation("ID documents uploaded successfully for user {UserId}", userId);
@@ -266,7 +286,7 @@ namespace LaborPL.Controllers
                     message = "Documents uploaded successfully.",
                     data = new
                     {
-                        frontUrl,
+                        frontUrl = frontResult.Url,
                         backUrl,
                         selfieUrl
                     }
@@ -279,7 +299,7 @@ namespace LaborPL.Controllers
             }
         }
 
-        private async Task<string> UploadIdDocumentFile(IFormFile file, string userId, string documentType)
+        private async Task<UploadResult> UploadIdDocumentFile(IFormFile file, string userId, string documentType)
         {
             // Validate file
             var validationResult = await _fileValidation.ValidateFileAsync(
@@ -288,7 +308,7 @@ namespace LaborPL.Controllers
 
             if (!validationResult.IsValid)
             {
-                throw new ArgumentException(validationResult.ErrorMessage);
+                return UploadResult.Failure(validationResult.ErrorMessage ?? "Validation failed");
             }
 
             // Generate unique filename
@@ -303,7 +323,87 @@ namespace LaborPL.Controllers
             // Upload to storage
             var url = await _storage.UploadAsync(fileBytes, fileName, "id-documents");
 
-            return url;
+            return UploadResult.Success(url);
+        }
+
+        private object CreateDetailedErrorResponse(UploadResult result, IFormFile file, string documentType)
+        {
+            // Extract error code from error message patterns
+            var errorCode = "UNKNOWN_ERROR";
+            var errorMessage = result.ErrorMessage ?? "Upload failed";
+
+            if (errorMessage.Contains("size", StringComparison.OrdinalIgnoreCase) ||
+                errorMessage.Contains("MB", StringComparison.OrdinalIgnoreCase))
+            {
+                errorCode = "FILE_TOO_LARGE";
+            }
+            else if (errorMessage.Contains("signature", StringComparison.OrdinalIgnoreCase) ||
+                     errorMessage.Contains("corrupted", StringComparison.OrdinalIgnoreCase))
+            {
+                errorCode = "SIGNATURE_MISMATCH";
+            }
+            else if (errorMessage.Contains("MIME", StringComparison.OrdinalIgnoreCase) ||
+                     errorMessage.Contains("type", StringComparison.OrdinalIgnoreCase))
+            {
+                errorCode = "INVALID_FILE_TYPE";
+            }
+            else if (errorMessage.Contains("extension", StringComparison.OrdinalIgnoreCase))
+            {
+                errorCode = "EXTENSION_NOT_ALLOWED";
+            }
+            else if (errorMessage.Contains("Rate limit", StringComparison.OrdinalIgnoreCase))
+            {
+                errorCode = "RATE_LIMIT_EXCEEDED";
+            }
+            else if (errorMessage.Contains("Executable", StringComparison.OrdinalIgnoreCase) ||
+                     errorMessage.Contains("malicious", StringComparison.OrdinalIgnoreCase))
+            {
+                errorCode = "SECURITY_VIOLATION";
+            }
+
+            return new
+            {
+                success = false,
+                message = errorMessage,
+                details = new
+                {
+                    errorCode,
+                    documentType,
+                    fileSize = file.Length,
+                    fileSizeFormatted = FormatFileSize(file.Length),
+                    maxSize = _settings.MaxFileSize,
+                    maxSizeFormatted = FormatFileSize(_settings.MaxFileSize),
+                    allowedTypes = _settings.AllowedExtensions,
+                    allowedMimeTypes = _settings.AllowedMimeTypes,
+                    actualType = file.ContentType,
+                    actualExtension = Path.GetExtension(file.FileName)
+                }
+            };
+        }
+
+        private static string FormatFileSize(long bytes)
+        {
+            const long KB = 1024;
+            const long MB = KB * 1024;
+            const long GB = MB * 1024;
+
+            if (bytes >= GB)
+                return $"{bytes / (double)GB:F2} GB";
+            if (bytes >= MB)
+                return $"{bytes / (double)MB:F2} MB";
+            if (bytes >= KB)
+                return $"{bytes / (double)KB:F2} KB";
+            return $"{bytes} bytes";
+        }
+
+        private class UploadResult
+        {
+            public bool IsValid { get; set; }
+            public string? Url { get; set; }
+            public string? ErrorMessage { get; set; }
+
+            public static UploadResult Success(string url) => new() { IsValid = true, Url = url };
+            public static UploadResult Failure(string error) => new() { IsValid = false, ErrorMessage = error };
         }
     }
 }
