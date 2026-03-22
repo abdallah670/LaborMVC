@@ -194,8 +194,8 @@
                                     <tr>
                                         <td class="ps-3">
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-light-soft rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 10px;">@booking.UserName[0]</div>
-                                                <div class="fw-bold">@booking.UserName</div>
+                                                <div class="bg-light-soft rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 10px;">@((booking.UserName ?? "U")[0])</div>
+                                                <div class="fw-bold">@(booking.UserName ?? "Unknown User")</div>
                                             </div>
                                         </td>
                                         <td class="text-muted">@(booking.StartTime?.ToString("MMM dd, yyyy") ?? "Awaiting schedule")</td>

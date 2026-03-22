@@ -30,57 +30,59 @@
         /* حاوية الأيقونة */
         .chat-action-item {
             position: relative;
-            margin: 0 2px;
-            list-style: none; /* Just in case */
+            margin: 0 4px;
+            display: flex;
+            align-items: center;
+            overflow: visible;
         }
 
         /* رابط المحادثات */
         .chat-nav-link {
             position: relative;
-            padding: 8px 15px !important;
-            border-radius: 40px !important;
-            transition: all 0.3s ease !important;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 5px 0;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px !important;
+            color: #6366f1 !important;
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+            overflow: visible;
+            border: 1px solid rgba(99, 102, 241, 0.15);
         }
 
             /* التأثير عند الهوفر */
             .chat-nav-link:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+                background: rgba(99, 102, 241, 0.15);
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
             }
 
             /* التأثير عند الضغط */
             .chat-nav-link:active {
-                transform: translateY(1px);
-                box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+                transform: translateY(0);
             }
 
         /* الحاوية الداخلية */
         .chat-icon-wrapper {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
             position: relative;
         }
 
         /* أيقونة القلب */
         .chat-icon {
-            font-size: 1.3rem;
-            color: white;
+            font-size: 1.2rem;
+            color: inherit;
             animation: heartbeat 1.5s ease-in-out infinite;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
         }
 
         /* نص المحادثات */
         .chat-text {
-            color: white;
-            font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 0.3px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
         }
 
         /* البادج (عداد المسجات) */

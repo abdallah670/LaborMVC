@@ -78,53 +78,54 @@
                             </li>
                         }
                     </ul>
-                     @if (User.Identity?.IsAuthenticated == true){
-                    <!-- Global Search Bar -->
-                    <form class="d-none d-lg-flex mx-auto position-relative" style="max-width: 400px; flex: 1;" asp-controller="Task" asp-action="Index" method="get">
-                        <div class="input-group lm-header-search shadow-sm rounded-pill bg-white border" style="height: 42px;">
-                            <span class="input-group-text bg-transparent border-0 ps-3">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text" name="Keyword" class="form-control border-0 bg-transparent py-2" style="font-size: 0.9rem;" placeholder="Search tasks..." aria-label="Search">
-                            <button class="btn btn-primary px-3 rounded-pill m-1" style="height: 32px; width: 50px; display: flex; align-items: center; justify-content: center;" type="submit">Go</button>
-                        </div>
-                    </form>
-                    }
-
-                    <div class="lm-nav-actions">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            @await Html.PartialAsync("_ChatFloatingIcon")
-
-                            <div class="dropdown ms-2">
-                                @await Html.PartialAsync("UserInfoPartial")
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2 mt-3" style="min-width: 240px;">
-                                    <li class="px-3 py-2 border-bottom mb-2 d-md-none">
-                                        <p class="mb-0 fw-bold">User Menu</p>
-                                    </li>
-                                    <li><a class="dropdown-item rounded-3 py-2" asp-controller="Account" asp-action="MyProfile"><i class="bi bi-person-badge me-2"></i>My Profile</a></li>
-                                    <li><a class="dropdown-item rounded-3 py-2" asp-controller="Payment" asp-action="MyPaymentHistory"><i class="bi bi-wallet2 me-2"></i>Payment History</a></li>
-                                    <li><a class="dropdown-item rounded-3 py-2" asp-controller="Rating" asp-action="GetMyRate" asp-route-userId="@User.FindFirstValue(ClaimTypes.NameIdentifier)"><i class="bi bi-star me-2"></i>My Ratings</a></li>
-                                    <li><hr class="dropdown-divider opacity-50"></li>
-                                    <li>
-                                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item rounded-3 py-2 text-danger">
-                                                <i class="bi bi-box-arrow-right me-2"></i>Sign Out
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
+                    
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <!-- Global Search Bar (Visible on desktop) -->
+                        <form class="d-none d-lg-flex mx-auto position-relative" style="max-width: 400px; flex: 1; z-index: 1050;" asp-controller="Task" asp-action="Index" method="get">
+                            <div class="input-group lm-header-search shadow-sm rounded-pill bg-white border overflow-hidden" style="height: 42px;">
+                                <span class="input-group-text bg-transparent border-0 ps-3">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" name="Keyword" class="form-control border-0 bg-transparent py-2" style="font-size: 0.9rem;" placeholder="Search tasks..." aria-label="Search">
+                                <button class="btn btn-primary px-3 rounded-pill m-1" style="height: 32px; width: 50px; display: flex; align-items: center; justify-content: center;" type="submit">Go</button>
                             </div>
-                        }
-                        else
-                        {
-                            <a class="btn btn-link lm-nav-link" asp-controller="Account" asp-action="Login">Login</a>
-                            <a class="btn btn-primary rounded-pill px-4" asp-controller="Account" asp-action="Register">Join Now</a>
-                        }
+                        </form>
+                    }
+                </div>
 
-                        
-                    </div>
+                <!-- Profile Actions (Outside collapse to keep visible on mobile) -->
+                <div class="lm-nav-actions ms-auto ms-lg-3 d-flex align-items-center" style="flex-shrink: 0; z-index: 1060; overflow: visible;">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @await Html.PartialAsync("_ChatFloatingIcon")
+
+                        <div class="dropdown ms-2">
+                            @await Html.PartialAsync("UserInfoPartial")
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2 mt-3" style="min-width: 240px;">
+                                <li class="px-3 py-2 border-bottom mb-2 d-md-none">
+                                    <p class="mb-0 fw-bold">User Menu</p>
+                                </li>
+                                <li><a class="dropdown-item rounded-3 py-2" asp-controller="Account" asp-action="MyProfile"><i class="bi bi-person-badge me-2"></i>My Profile</a></li>
+                                <li><a class="dropdown-item rounded-3 py-2" asp-controller="Payment" asp-action="MyPaymentHistory"><i class="bi bi-wallet2 me-2"></i>Payment History</a></li>
+                                <li><a class="dropdown-item rounded-3 py-2" asp-controller="Rating" asp-action="GetMyRate" asp-route-userId="@User.FindFirstValue(ClaimTypes.NameIdentifier)"><i class="bi bi-star me-2"></i>My Ratings</a></li>
+                                <li><hr class="dropdown-divider opacity-50"></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item rounded-3 py-2 text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-link lm-nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                        <a class="btn btn-primary rounded-pill px-4" asp-controller="Account" asp-action="Register">Join Now</a>
+                    }
                 </div>
             </div>
         </nav>
