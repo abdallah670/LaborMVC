@@ -105,26 +105,26 @@ namespace LaborBLL.Service
         /// <summary>
         /// Authenticates a user
         /// </summary>
-        public async Task<Response<ProfileViewModel>> LoginAsync(LoginViewModel model)
+        public async Task<Response<UserProfileDisplayViewModel>> LoginAsync(LoginViewModel model)
         {
             try
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user == null)
                 {
-                    return new Response<ProfileViewModel>(null, false, "Invalid email or password.");
+                    return new Response<UserProfileDisplayViewModel>(null, false, "Invalid email or password.");
                 }
 
                 if (user.IsDeleted)
                 {
-                    return new Response<ProfileViewModel>(null, false, "This account has been deactivated.");
+                    return new Response<UserProfileDisplayViewModel>(null, false, "This account has been deactivated.");
                 }
 
                 // Check if email is verified
                 if (!user.EmailConfirmed)
                 {
                     _logger.LogWarning("Login attempt for unverified email: {Email}", model.Email);
-                    return new Response<ProfileViewModel>(null, false, "Please verify your email before logging in. Check your inbox for the verification code.");
+                    return new Response<UserProfileDisplayViewModel>(null, false, "Please verify your email before logging in. Check your inbox for the verification code.");
                 }
 
                 var result = await _signInManager.PasswordSignInAsync(
@@ -136,28 +136,28 @@ namespace LaborBLL.Service
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in: {Email}", model.Email);
-                    return new Response<ProfileViewModel>(_mapper.Map<ProfileViewModel>(user), true, null);
+                    return new Response<UserProfileDisplayViewModel>(_mapper.Map<UserProfileDisplayViewModel>(user), true, null);
                 }
 
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out: {Email}", model.Email);
-                    return new Response<ProfileViewModel>(null, false, "Account is locked out. Please try again later.");
+                    return new Response<UserProfileDisplayViewModel>(null, false, "Account is locked out. Please try again later.");
                 }
 
-                return new Response<ProfileViewModel>(null, false, "Invalid email or password.");
+                return new Response<UserProfileDisplayViewModel>(null, false, "Invalid email or password.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login: {Email}", model.Email);
-                return new Response<ProfileViewModel>(null, false, "An error occurred during login.");
+                return new Response<UserProfileDisplayViewModel>(null, false, "An error occurred during login.");
             }
         }
 
         /// <summary>
         /// Gets the profile of a user by their ID
         /// </summary>
-        public async Task<ProfileViewModel?> GetProfileAsync(string userId)
+        public async Task<UserProfileDisplayViewModel?> GetProfileAsync(string userId)
         {
             try
             {
@@ -167,7 +167,7 @@ namespace LaborBLL.Service
                     return null;
                 }
 
-                return _mapper.Map<ProfileViewModel>(user);
+                return _mapper.Map<UserProfileDisplayViewModel>(user);
             }
             catch (Exception ex)
             {
@@ -179,7 +179,7 @@ namespace LaborBLL.Service
         /// <summary>
         /// Gets the profile of a user with all details including ratings and statistics
         /// </summary>
-        public async Task<ProfileViewModel?> GetProfileWithDetailsAsync(string userId, string? viewerId = null)
+        public async Task<UserProfileDisplayViewModel?> GetProfileWithDetailsAsync(string userId, string? viewerId = null)
         {
             try
             {
@@ -189,17 +189,17 @@ namespace LaborBLL.Service
                     return null;
                 }
 
-                var profile = _mapper.Map<ProfileViewModel>(user);
+                var profile = _mapper.Map<UserProfileDisplayViewModel>(user);
 
                 // Get ratings for this user
                 var ratings = await _unitOfWork.RatingRepo.GetAllRatingByUserId(userId);
                 if (ratings != null && ratings.Any())
                 {
-                    profile.TotalRatingsReceived = ratings.Count;
+                    profile.TotalRatingsCount = ratings.Count;
                     profile.AverageRating = (decimal)ratings.Average(r => r.Score);
                     
                     // Map ratings to AllRatingViewModel
-                    profile.Ratings = ratings.Select(r => new LaborBLL.ModelVM.AllRatingViewModel
+                    profile.RecentRatings = ratings.Select(r => new LaborBLL.ModelVM.AllRatingViewModel
                     {
                         id = r.Id.ToString(),
                         RaterId = r.RaterId,
@@ -263,7 +263,7 @@ namespace LaborBLL.Service
         /// <summary>
         /// Updates a user's profile
         /// </summary>
-        public async Task<Response<bool>> UpdateProfileAsync(ProfileViewModel model)
+        public async Task<Response<bool>> UpdateProfileAsync(UserProfileUpdateModel model)
         {
             try
             {
@@ -297,7 +297,7 @@ namespace LaborBLL.Service
         /// <summary>
         /// Gets a user by their email
         /// </summary>
-        public async Task<ProfileViewModel?> GetByEmailAsync(string email)
+        public async Task<UserProfileDisplayViewModel?> GetByEmailAsync(string email)
         {
             try
             {
@@ -307,7 +307,7 @@ namespace LaborBLL.Service
                     return null;
                 }
 
-                return _mapper.Map<ProfileViewModel>(user);
+                return _mapper.Map<UserProfileDisplayViewModel>(user);
             }
             catch (Exception ex)
             {

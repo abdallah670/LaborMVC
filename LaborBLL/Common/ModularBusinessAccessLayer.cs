@@ -1,6 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
 using LaborBLL.Mapping;
 using LaborBLL.Service;
-using LaborBLL.Service.Abstract;
 using LaborBLL.Service.Abstract;
 using LaborBLL.Service.Implementation;
 using LaborBLL.Service.Implementation.Rating;
@@ -62,6 +62,9 @@ namespace LaborBLL.Common
 
             //Images
             services.AddScoped<IImageProcessingService, ImageProcessingService>();
+
+            // Redesign tracking service
+            services.AddScoped<IRedesignService, RedesignService>();
 
             // Storage service
             services.AddScoped<IStorageService, LocalStorageService>();

@@ -1,4 +1,4 @@
-@model LaborBLL.ModelVM.ProfileViewModel
+@model LaborBLL.ModelVM.UserProfileDisplayViewModel
 @{
     ViewData["Title"] = "User Details";
     var currentUserId = ViewBag.CurrentUserId as string;
@@ -74,7 +74,7 @@
                                 }
                                 <span class="ms-2 text-dark">@Model.AverageRating.Value.ToString("0.0")</span>
                             </div>
-                            <small class="text-muted">(@Model.TotalRatingsReceived reviews)</small>
+                            <small class="text-muted">(@Model.TotalRatingsCount reviews)</small>
                         }
                         else
                         {
@@ -215,7 +215,7 @@
                         <div class="col-md-6">
                             <label class="text-muted small">Member Since</label>
                             <p class="mb-0">
-                                <i class="bi bi-calendar me-2"></i>@Model.CreatedAt.ToString("MMMM dd, yyyy")
+                                <i class="bi bi-calendar me-2"></i>@Model.MemberSince.ToString("MMMM dd, yyyy")
                             </p>
                         </div>
                         <div class="col-md-6">
@@ -251,7 +251,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="text-center">
-                                    <h3 class="text-warning mb-1">@Model.TotalRatingsReceived</h3>
+                                    <h3 class="text-warning mb-1">@Model.TotalRatingsCount</h3>
                                     <small class="text-muted">Total Reviews</small>
                                 </div>
                             </div>
@@ -293,14 +293,14 @@
             }
 
             <!-- Ratings List -->
-            @if (Model.Ratings != null && Model.Ratings.Any())
+            @if (Model.RecentRatings != null && Model.RecentRatings.Any())
             {
                 <div class="card shadow-sm">
                     <div class="card-header bg-transparent">
                         <h5 class="mb-0"><i class="bi bi-star me-2"></i>Recent Reviews</h5>
                     </div>
                     <div class="card-body">
-                        @foreach (var rating in Model.Ratings.OrderByDescending(r => r.CreatedAt).Take(10))
+                        @foreach (var rating in Model.RecentRatings.OrderByDescending(r => r.CreatedAt).Take(10))
                         {
                             <div class="border-bottom pb-3 mb-3">
                                 <div class="d-flex justify-content-between align-items-start">
@@ -327,10 +327,10 @@
                                 </div>
                             </div>
                         }
-                        @if (Model.Ratings.Count > 10)
+                        @if (Model.TotalRatingsCount > 10)
                         {
                             <p class="text-muted text-center mb-0">
-                                And @((Model.Ratings.Count - 10)) more reviews...
+                                And @((Model.TotalRatingsCount - 10)) more reviews...
                             </p>
                         }
                     </div>

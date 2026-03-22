@@ -1,0 +1,248 @@
+@using LaborBLL.Service.Abstract
+@model RedesignProgressViewModel
+@{
+    ViewData["Title"] = "UI/UX Redesign Tracker";
+}
+
+<div class="container-fluid py-4 min-vh-100 bg-light-soft">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Admin</a></li>
+                    <li class="breadcrumb-item active">Redesign Tracker</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">
+                <i class="bi bi-magic text-primary me-2"></i>Modernization Roadmap
+            </h2>
+            <p class="text-muted small">Tracking the transition to SaaS Dashboard 2026 design system.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill">
+                <i class="bi bi-clock-history me-1"></i> Live Feedback System
+            </span>
+        </div>
+    </div>
+
+    <!-- Overall Progress Card -->
+    <div class="lm-card mb-4 border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-md-4 bg-primary text-white p-4 d-flex flex-column justify-content-center text-center">
+                    <div class="display-4 fw-bold mb-0">@Model.OverallProgress%</div>
+                    <div class="text-white-50 small text-uppercase fw-semibold tracking-wider">Overall Completion</div>
+                </div>
+                <div class="col-md-8 p-4 bg-white">
+                    <div class="row text-center mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="h3 fw-bold mb-0">@Model.Phases.Count</div>
+                            <div class="text-muted small">Phases</div>
+                        </div>
+                        <div class="col-6 col-md-3 border-start">
+                            <div class="h3 fw-bold mb-0">@Model.TotalTasks</div>
+                            <div class="text-muted small">Total Tasks</div>
+                        </div>
+                        <div class="col-6 col-md-3 border-start">
+                            <div class="h3 fw-bold mb-0 text-success">@Model.CompletedTasks</div>
+                            <div class="text-muted small">Completed</div>
+                        </div>
+                        <div class="col-6 col-md-3 border-start">
+                            <div class="h3 fw-bold mb-0 text-primary">@(Model.TotalTasks - Model.CompletedTasks)</div>
+                            <div class="text-muted small">Remaining</div>
+                        </div>
+                    </div>
+                    <div class="progress rounded-pill bg-light" style="height: 12px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                             role="progressbar" style="width: @Model.OverallProgress%;" 
+                             aria-valuenow="@Model.OverallProgress" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phases List -->
+    <div class="row">
+        <div class="col-xl-8">
+            <h5 class="fw-bold mb-3 d-flex align-items-center">
+                <i class="bi bi-layers text-primary me-2"></i>Implementation Phases
+            </h5>
+            
+            @foreach (var phase in Model.Phases)
+            {
+                var phaseId = "phase-" + Model.Phases.IndexOf(phase);
+                <div class="lm-card lm-card-hover scroll-reveal mb-4 border-0 shadow-sm border-start border-4 @(phase.Status.Contains("✔") || phase.Progress == 100 ? "border-success" : phase.Status.Contains("🔄") ? "border-primary" : "border-secondary")">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase">Phase @(Model.Phases.IndexOf(phase) + 1)</span>
+                            <h5 class="mb-0 fw-bold">@phase.Title</h5>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge @(phase.Status.Contains("✔") || phase.Progress == 100 ? "bg-success-soft text-success" : phase.Status.Contains("🔄") ? "bg-primary-soft text-primary" : "bg-light text-muted") px-3 py-2 rounded-pill">
+                                @phase.Status
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="progress flex-grow-1 me-3 rounded-pill bg-light" style="height: 8px;">
+                                <div class="progress-bar @(phase.Progress == 100 ? "bg-success" : "bg-primary")" 
+                                     role="progressbar" style="width: @phase.Progress%" 
+                                     aria-valuenow="@phase.Progress" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="fw-bold small">@phase.Progress%</span>
+                        </div>
+
+                        <div class="list-group list-group-flush border-top">
+                            @foreach (var task in phase.Tasks)
+                            {
+                                <div class="list-group-item bg-transparent px-0 py-3 d-flex align-items-start gap-3">
+                                    <div class="mt-1">
+                                        @if (task.IsCompleted)
+                                        {
+                                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                <i class="bi bi-check-lg small"></i>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light text-muted border rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                <i class="bi bi-circle small"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-0 fw-bold @(task.IsCompleted ? "text-muted text-decoration-line-through" : "")">
+                                                @task.Title
+                                            </h6>
+                                            <span class="badge @(task.Priority == "Critical" ? "bg-danger-soft text-danger" : task.Priority == "High" ? "bg-warning-soft text-warning" : "bg-info-soft text-info") small px-2">
+                                                @task.Priority
+                                            </span>
+                                        </div>
+                                        <p class="text-muted small mb-2">@task.Description</p>
+                                        
+                                        @if (task.DoneCriteria.Any())
+                                        {
+                                            <div class="bg-light-soft p-2 rounded small">
+                                                <div class="text-uppercase fw-bold text-muted mb-1" style="font-size: 10px;">Verification Matrix</div>
+                                                <ul class="list-unstyled mb-0 row">
+                                                    @foreach (var criteria in task.DoneCriteria)
+                                                    {
+                                                        <li class="col-md-6 mb-1 d-flex align-items-center">
+                                                            <i class="bi bi-arrow-right-short text-primary me-1"></i> @criteria
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-xl-4">
+            <div class="sticky-top" style="top: 1rem;">
+                <h5 class="fw-bold mb-3 d-flex align-items-center">
+                    <i class="bi bi-journal-text text-primary me-2"></i>Audit Context
+                </h5>
+                
+                <div class="lm-card border-0 shadow-sm bg-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary-soft text-primary p-3 rounded me-3">
+                                <i class="bi bi-file-earmark-code fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Live Documentation</h6>
+                                <p class="text-muted small mb-0">Parsed from project root</p>
+                            </div>
+                        </div>
+                        <code class="d-block bg-dark text-white p-3 rounded small mb-3">
+                            UI_REDESIGN_TASKS.md
+                        </code>
+                        <p class="small text-muted">
+                            This tracker is synchronized with the project's markdown configuration. Every task defined in the audit is visualized here in real-time.
+                        </p>
+                        <hr>
+                        <div class="d-grid">
+                            <a href="#" class="btn btn-outline-primary btn-sm rounded-pill">
+                                <i class="bi bi-pencil me-1"></i> View Markdown Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lm-card border-0 shadow-sm bg-dark text-white mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-lightning-charge text-warning me-2"></i>Design Philosophy
+                        </h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-3 d-flex gap-3">
+                                <i class="bi bi-grid-1x2 text-white-50"></i>
+                                <div><strong>Atomic UI</strong>: Components are built in isolation for maximum reusability.</div>
+                            </li>
+                            <li class="mb-3 d-flex gap-3">
+                                <i class="bi bi-palette text-white-50"></i>
+                                <div><strong>Design Tokens</strong>: No hardcoded values; everything maps to CSS variables.</div>
+                            </li>
+                            <li class="mb-0 d-flex gap-3">
+                                <i class="bi bi-phone text-white-50"></i>
+                                <div><strong>Responsive First</strong>: Every modernized view is verified on mobile.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-soft { background-color: #f8fafc; }
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+    
+    .tracking-wider { letter-spacing: 0.05em; }
+    
+    .lm-card {
+        background: #fff;
+        border-radius: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    [data-theme="dark"] .lm-card {
+        background: #1e293b;
+        color: #f1f5f9;
+        border: 1px solid #334155;
+    }
+    
+    [data-theme="dark"] .bg-light-soft {
+        background-color: #0f172a;
+    }
+    
+    [data-theme="dark"] .card-header, 
+    [data-theme="dark"] .list-group-item {
+        background-color: transparent !important;
+        border-color: #334155 !important;
+        color: #f1f5f9;
+    }
+    
+    [data-theme="dark"] .bg-white {
+        background-color: #1e293b !important;
+    }
+    
+    [data-theme="dark"] .text-muted {
+        color: #94a3b8 !important;
+    }
+</style>

@@ -56,22 +56,52 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="IdVerifications" method="get" class="row g-3">
+                <input type="hidden" name="filter" value="@currentFilter" />
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" 
+                               placeholder="Search by name, email, document number or User ID..." 
+                               value="@ViewBag.SearchTerm">
+                    </div>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm))
+                {
+                    <div class="col-12">
+                        <a href="@Url.Action("IdVerifications", new { filter = currentFilter })" class="text-muted small">
+                            <i class="fas fa-times-circle me-1"></i>Clear search results
+                        </a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
     <!-- Filter Tabs -->
     <div class="card">
         <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs">
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "pending" ? "active" : "")" href="@Url.Action("IdVerifications", new { filter = "pending" })">
+                    <a class="nav-link @(currentFilter == "pending" ? "active" : "")" href="@Url.Action("IdVerifications", new { filter = "pending", search = ViewBag.SearchTerm })">
                         <i class="fas fa-clock me-1"></i> Pending
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "approved" ? "active" : "")" href="@Url.Action("IdVerifications", new { filter = "approved" })">
+                    <a class="nav-link @(currentFilter == "approved" ? "active" : "")" href="@Url.Action("IdVerifications", new { filter = "approved", search = ViewBag.SearchTerm })">
                         <i class="fas fa-check-circle me-1"></i> Approved
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "rejected" ? "active" : "")" href="@Url.Action("IdVerifications", new { filter = "rejected" })">
+                    <a class="nav-link @(currentFilter == "rejected" ? "active" : "")" href="@Url.Action("IdVerifications", new { filter = "rejected", search = ViewBag.SearchTerm })">
                         <i class="fas fa-times-circle me-1"></i> Rejected
                     </a>
                 </li>
@@ -107,8 +137,8 @@
                                 <tr>
                                     <td>@item.Id</td>
                                     <td>
-                                        <a href="@Url.Action("UserDetails", new { id = item.UserId })" class="text-decoration-none">
-                                            @item.UserId.Substring(0, 8)...
+                                        <a href="@Url.Action("UserDetails", new { id = item.UserId })" class="text-decoration-none fw-bold">
+                                            @(item.User != null ? $"{item.User.FirstName} {item.User.LastName}" : item.UserId)
                                         </a>
                                     </td>
                                     <td>

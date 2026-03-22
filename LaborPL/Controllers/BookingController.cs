@@ -1,4 +1,4 @@
-﻿
+
 
 using LaborBLL.Service.Implementation;
 using LaborDAL.Repo.Abstract;
@@ -14,8 +14,9 @@ namespace LaborPL.Controllers
         private readonly IRatingService ratingService;
         private readonly IEscrowService escrowService;
         private readonly IPaymentService paymentService;
+        private readonly IUserService userService;
 
-        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService,IPaymentService paymentService)
+        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService,IPaymentService paymentService, IUserService userService)
         {
             this.bookingService = bookingService;
             this.disputeService = disputeService;
@@ -23,6 +24,7 @@ namespace LaborPL.Controllers
             this.ratingService = ratingService;
             this.escrowService = escrowService;
             this.paymentService = paymentService;
+            this.userService = userService;
         }
         #region Creat Booking
         [HttpGet]
@@ -63,7 +65,7 @@ namespace LaborPL.Controllers
         #region Dashboard
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Dashboard(string filter = "all", string role = "all")
+        public async Task<IActionResult> Dashboard(string filter = "all", string role = "all", string? search = null)
         {
             var userId = userManager.GetUserId(User);
             var response = await bookingService.GetBookingsByUserIdAsync(userId);
@@ -79,10 +81,21 @@ namespace LaborPL.Controllers
             if (role?.ToLower() == "poster")
                 allBookings = allBookings.Where(b => b.PosterId == userId);
 
+            // Apply keyword search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                allBookings = allBookings.Where(b => 
+                    (b.TaskTitle != null && b.TaskTitle.ToLower().Contains(lowerSearch)) || 
+                    (b.WorkerName != null && b.WorkerName.ToLower().Contains(lowerSearch)) ||
+                    (b.PosterName != null && b.PosterName.ToLower().Contains(lowerSearch)));
+            }
+
             var list = allBookings.ToList();
 
             ViewBag.CurrentRole = role;
             ViewBag.CurrentFilter = filter;
+            ViewBag.CurrentSearch = search;
 
             ViewBag.TotalBookings = list.Count();
             ViewBag.UpcomingCount = list.Count(b => b.Status == BookingStatus.Scheduled);
@@ -205,19 +218,11 @@ namespace LaborPL.Controllers
         #region poster and worker can see other profile
         public async Task<IActionResult> ProfilePoster(string id)
         {
-            var user = await userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+            if (string.IsNullOrEmpty(id)) return BadRequest();
 
-            var model = new ProfileViewModel
-            {
-                Id = user.Id,
-                FirstName = $"{user.FirstName} {user.LastName}",
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                Bio = user.Bio,
-                Country = user.Country,
-                AverageRating = user.AverageRating // ✅ أضف السطر ده
-            };
+            var model = await userService.GetProfileWithDetailsAsync(id);
+            if (model == null) return NotFound();
+
             return View(model);
         } 
         #endregion

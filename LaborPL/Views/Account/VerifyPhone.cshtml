@@ -2,118 +2,101 @@
     ViewData["Title"] = "Verify Phone Number";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-phone-fill me-2"></i>Verify Phone Number
-                    </h4>
+<div class="auth-container fade-in">
+    <div class="auth-card">
+        <div class="lm-card p-4">
+            @Html.AntiForgeryToken()
+            
+            <!-- Step 1: Enter Phone Number -->
+            <div id="step1">
+                <div class="text-center mb-4">
+                    <div class="bg-primary-soft p-3 rounded-circle d-inline-block mb-3">
+                        <i class="bi bi-phone fs-2 text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">Secure Your Account</h4>
+                    <p class="text-muted small">Verify your phone number to enable important features</p>
                 </div>
-                <div class="card-body">
-                    @Html.AntiForgeryToken()
-                    
-                    <!-- Step 1: Enter Phone Number -->
-                    <div id="step1">
-                        <h5 class="mb-3">Enter your phone number</h5>
-                        <div class="mb-3">
-                            <label for="countryCode" class="form-label">Country Code</label>
-                            <select class="form-select" id="countryCode">
-                                <option value="+20" selected>Egypt (+20)</option>
-                                <option value="+966">Saudi Arabia (+966)</option>
-                                <option value="+971">UAE (+971)</option>
-                                <option value="+965">Kuwait (+965)</option>
-                                <option value="+974">Qatar (+974)</option>
-                                <option value="+973">Bahrain (+973)</option>
-                                <option value="+968">Oman (+968)</option>
-                                <option value="+962">Jordan (+962)</option>
-                                <option value="+961">Lebanon (+961)</option>
-                                <option value="+1">USA (+1)</option>
-                                <option value="+44">UK (+44)</option>
-                                <option value="+49">Germany (+49)</option>
-                                <option value="+33">France (+33)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phoneNumber" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phoneNumber" 
-                                   placeholder="10xxxxxxxx" maxlength="15">
-                            <div class="form-text">Enter your phone number without country code</div>
-                        </div>
-                        <div id="step1Error" class="alert alert-danger d-none"></div>
-                        <div class="d-grid">
-                            <button type="button" class="btn btn-primary" id="btnSendCode">
-                                <i class="bi bi-send me-2"></i>Send Verification Code
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Step 2: Enter Verification Code -->
-                    <div id="step2" class="d-none">
-                        <h5 class="mb-3">Enter verification code</h5>
-                        <p class="text-muted">We've sent a 6-digit code to <span id="phoneDisplay"></span></p>
-                        
-                        <div class="mb-3">
-                            <label for="verificationCode" class="form-label">Verification Code</label>
-                            <input type="text" class="form-control form-control-lg text-center" 
-                                   id="verificationCode" placeholder="123456" maxlength="6">
-                        </div>
-                        
-                        <div id="step2Error" class="alert alert-danger d-none"></div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-primary" id="btnVerifyCode">
-                                <i class="bi bi-check-circle me-2"></i>Verify Code
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="btnResendCode" disabled>
-                                <i class="bi bi-arrow-repeat me-2"></i>Resend Code
-                                <span id="resendCountdown" class="ms-1"></span>
-                            </button>
-                            <button type="button" class="btn btn-link" id="btnChangeNumber">
-                                Change phone number
-                            </button>
-                        </div>
-                    </div>
+                <div class="mb-4">
+                    <label class="form-label text-uppercase small fw-bold">Region</label>
+                    <select class="form-select" id="countryCode">
+                        <option value="+20" selected>Egypt (+20)</option>
+                        <option value="+966">Saudi Arabia (+966)</option>
+                        <option value="+971">UAE (+971)</option>
+                        <option value="+965">Kuwait (+965)</option>
+                        <option value="+974">Qatar (+974)</option>
+                        <option value="+973">Bahrain (+973)</option>
+                        <option value="+968">Oman (+968)</option>
+                        <option value="+962">Jordan (+962)</option>
+                        <option value="+961">Lebanon (+961)</option>
+                        <option value="+1">USA (+1)</option>
+                    </select>
+                </div>
 
-                    <!-- Step 3: Success -->
-                    <div id="step3" class="d-none">
-                        <div class="text-center">
-                            <i class="bi bi-check-circle-fill text-success display-1"></i>
-                            <h5 class="mt-3 text-success">Phone Verified!</h5>
-                            <p class="text-muted">Your phone number has been successfully verified.</p>
-                            <a href="@Url.Action("MyProfile")" class="btn btn-primary">
-                                <i class="bi bi-person me-2"></i>Back to Profile
-                            </a>
-                        </div>
-                    </div>
+                <div class="mb-4">
+                    <label for="phoneNumber" class="form-label text-uppercase small fw-bold">Phone Number</label>
+                    <input type="tel" class="form-control form-control-lg" id="phoneNumber" 
+                           placeholder="10xxxxxxxx" maxlength="15">
+                    <div class="smaller text-muted mt-2">Enter your digits without the leading zero if applicable</div>
+                </div>
+
+                <div id="step1Error" class="alert alert-danger p-2 small d-none mb-3"></div>
+
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary lg" id="btnSendCode">
+                        Send Verification Code
+                    </button>
+                    <a href="@Url.Action("MyProfile")" class="btn btn-link btn-sm text-muted mt-2">
+                        Cancel
+                    </a>
                 </div>
             </div>
 
-            <!-- Info Card -->
-            <div class="card mt-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Why Verify Your Phone?</h5>
+            <!-- Step 2: Enter Verification Code -->
+            <div id="step2" class="d-none">
+                <div class="text-center mb-4">
+                    <div class="bg-primary-soft p-3 rounded-circle d-inline-block mb-3">
+                        <i class="bi bi-shield-lock-fill fs-2 text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">Enter Code</h4>
+                    <p class="text-muted small">We've sent a 6-digit code to:<br><span id="phoneDisplay" class="fw-bold text-dark"></span></p>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <i class="bi bi-shield-check text-success me-2"></i>
-                            <strong>Account Security:</strong> Protects your account from unauthorized access
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-bell text-primary me-2"></i>
-                            <strong>Instant Notifications:</strong> Get SMS alerts for important updates
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-star-fill text-warning me-2"></i>
-                            <strong>Trust Badge:</strong> Shows you're a verified member
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-cash text-success me-2"></i>
-                            <strong>Secure Payments:</strong> Required for payment processing
-                        </li>
-                    </ul>
+                
+                <div class="mb-4 text-center">
+                    <input type="text" class="form-control lm-otp-input" 
+                           id="verificationCode" placeholder="000000" maxlength="6">
+                </div>
+                
+                <div id="step2Error" class="alert alert-danger p-2 small d-none mb-3"></div>
+                
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary lg" id="btnVerifyCode">
+                        Verify and Proceed
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnResendCode" disabled>
+                        Resend Code <span id="resendCountdown" class="fw-bold"></span>
+                    </button>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-link btn-sm text-muted" id="btnChangeNumber">
+                        Wrong number? Change it
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Success -->
+            <div id="step3" class="d-none">
+                <div class="text-center py-4">
+                    <div class="bg-success-soft p-4 rounded-circle d-inline-block mb-4">
+                        <i class="bi bi-check-lg display-4 text-success"></i>
+                    </div>
+                    <h4 class="fw-bold text-success mb-2">Verified!</h4>
+                    <p class="text-muted mb-4">Your phone remains secure and verified.</p>
+                    <div class="d-grid">
+                        <a href="@Url.Action("MyProfile")" class="btn btn-primary">
+                            Finish and Return
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

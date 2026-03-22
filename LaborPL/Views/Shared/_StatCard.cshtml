@@ -1,0 +1,11 @@
+@model LaborPL.Models.StatCardViewModel
+
+<div class="lm-card lm-stat-card bg-@Model.ColorClass-soft h-100 shadow-none">
+    <div class="d-flex flex-column">
+        <span class="lm-stat-label mb-1">@Model.Title</span>
+        <span class="lm-stat-value">@Model.Value</span>
+    </div>
+    <div class="lm-stat-icon-wrapper">
+        <i class="@Model.IconClass lm-stat-icon"></i>
+    </div>
+</div>

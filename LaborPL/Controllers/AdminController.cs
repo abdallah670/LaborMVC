@@ -22,6 +22,7 @@ namespace LaborPL.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRedesignService _redesignService;
 
         public AdminController(
             IUserService userService,
@@ -32,7 +33,8 @@ namespace LaborPL.Controllers
             UserManager<AppUser> userManager,
             ILogger<AdminController> logger,
             IMapper mapper,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IRedesignService redesignService)
         {
             _userService = userService;
             _verificationService = verificationService;
@@ -43,6 +45,7 @@ namespace LaborPL.Controllers
             _logger = logger;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _redesignService = redesignService;
         }
 
         // GET: /Admin/Index
@@ -59,11 +62,24 @@ namespace LaborPL.Controllers
         }
 
         // GET: /Admin/Users
-        public async Task<IActionResult> Users(string filter = "all")
+        public async Task<IActionResult> Users(string filter = "all", string search = "")
         {
             ViewBag.CurrentFilter = filter;
+            ViewBag.SearchTerm = search;
 
             var users = await _userRepository.GetAllAsync();
+
+            // Apply search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                users = users.Where(u => 
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(lowerSearch)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(lowerSearch)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(lowerSearch)) ||
+                    (u.PhoneNumber != null && u.PhoneNumber.ToLower().Contains(lowerSearch))
+                );
+            }
 
             // Apply filters
             users = filter?.ToLower() switch
@@ -74,15 +90,15 @@ namespace LaborPL.Controllers
                 _ => users
             };
 
-            // Statistics
+            // Statistics (always from full list)
             var allUsers = await _userRepository.GetAllAsync();
             ViewBag.TotalUsers = allUsers.Count();
             ViewBag.WorkersCount = allUsers.Count(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker));
             ViewBag.PostersCount = allUsers.Count(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Poster));
             ViewBag.VerifiedUsers = allUsers.Count(u => u.IDVerified);
 
-            // Map AppUser entities to ProfileViewModel
-            var userViewModels = _mapper.Map<IEnumerable<ProfileViewModel>>(users);
+            // Map AppUser entities to UserProfileDisplayViewModel
+            var userViewModels = _mapper.Map<IEnumerable<UserProfileDisplayViewModel>>(users);
 
             return View(userViewModels);
         }
@@ -90,20 +106,47 @@ namespace LaborPL.Controllers
         #region ID Verification Management
 
         // GET: /Admin/IdVerifications
-        public async Task<IActionResult> IdVerifications(string filter = "pending")
+        public async Task<IActionResult> IdVerifications(string filter = "pending", string search = "")
         {
             ViewBag.CurrentFilter = filter;
+            ViewBag.SearchTerm = search;
 
             IEnumerable<IDVerification> verifications;
-
-            // Apply filters
-            verifications = filter?.ToLower() switch
+            
+            // Apply status filter
+            switch (filter.ToLower())
             {
-                "pending" => await _unitOfWork.IDVerifications.GetPendingVerificationsAsync(),
-                "approved" => await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Approved),
-                "rejected" => await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Rejected),
-                _ => await _unitOfWork.IDVerifications.GetPendingVerificationsAsync()
-            };
+                case "pending":
+                    verifications = await _unitOfWork.IDVerifications.GetPendingVerificationsAsync();
+                    break;
+                case "approved":
+                    verifications = await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Approved);
+                    break;
+                case "rejected":
+                    verifications = await _unitOfWork.IDVerifications.GetByStatusAsync(VerificationStatus.Rejected);
+                    break;
+                case "all":
+                    verifications = await _unitOfWork.IDVerifications.GetAllAsync();
+                    break;
+                default:
+                    verifications = await _unitOfWork.IDVerifications.GetPendingVerificationsAsync();
+                    break;
+            }
+
+            // Apply search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                verifications = verifications.Where(v => 
+                    (v.User != null && (
+                        (v.User.FirstName != null && v.User.FirstName.ToLower().Contains(lowerSearch)) || 
+                        (v.User.LastName != null && v.User.LastName.ToLower().Contains(lowerSearch)) ||
+                        (v.User.Email != null && v.User.Email.ToLower().Contains(lowerSearch)))
+                    ) ||
+                    (v.DocumentNumber != null && v.DocumentNumber.ToLower().Contains(lowerSearch)) ||
+                    (v.UserId != null && v.UserId.ToLower().Contains(lowerSearch))
+                );
+            }
 
             // Statistics
             var pending = await _unitOfWork.IDVerifications.GetPendingVerificationsAsync();
@@ -235,8 +278,8 @@ namespace LaborPL.Controllers
             ViewBag.VerifiedCount = allUsers.Count(u => u.IDVerified);
             ViewBag.RejectedCount = 0; // TODO: Track rejected verifications
 
-            // Map AppUser entities to ProfileViewModel
-            var userViewModels = _mapper.Map<IEnumerable<ProfileViewModel>>(users);
+            // Map AppUser entities to UserProfileDisplayViewModel
+            var userViewModels = _mapper.Map<IEnumerable<UserProfileDisplayViewModel>>(users);
 
             return View(userViewModels);
         }
@@ -301,9 +344,10 @@ namespace LaborPL.Controllers
         }
 
         // GET: /Admin/Disputes
-        public async Task<IActionResult> Disputes(string filter = "open")
+        public async Task<IActionResult> Disputes(string filter = "open", string search = "")
         {
             ViewBag.CurrentFilter = filter;
+            ViewBag.SearchTerm = search;
 
             // Get dispute statistics
             var stats = await _disputeService.GetDisputeStatsAsync();
@@ -321,7 +365,21 @@ namespace LaborPL.Controllers
                 _ => null
             };
 
-            var disputes = await _disputeService.GetAllDisputesAsync(statusFilter);
+            var result = await _disputeService.GetAllDisputesAsync(statusFilter);
+            var disputes = result;
+
+            // Apply search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                disputes = disputes.Where(d => 
+                    (d.TaskTitle != null && d.TaskTitle.ToLower().Contains(lowerSearch)) ||
+                    (d.RaisedByName != null && d.RaisedByName.ToLower().Contains(lowerSearch)) ||
+                    d.Id.ToString().Contains(lowerSearch) ||
+                    d.BookingId.ToString().Contains(lowerSearch)
+                );
+            }
+
             return View(disputes);
         }
 
@@ -520,5 +578,12 @@ namespace LaborPL.Controllers
         }
 
         #endregion
+
+        // GET: /Admin/RedesignProgress
+        public async Task<IActionResult> RedesignProgress()
+        {
+            var model = await _redesignService.GetProgressAsync();
+            return View(model);
+        }
     }
 }

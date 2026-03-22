@@ -477,6 +477,11 @@ namespace LaborBLL.Service.Implementation
         {
             try
             {
+                if (request == null)
+                {
+                    return new Response<int>(0, false, "Invalid verification request data.");
+                }
+
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {

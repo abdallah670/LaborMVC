@@ -1,10 +1,10 @@
-﻿
+
 
 namespace LaborBLL.ModelVM
 {
     public class BookingDetailViewModel
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string TaskTitle { get; set; }
         public string TaskDescription { get; set; }
         public string PosterId { get; set; }

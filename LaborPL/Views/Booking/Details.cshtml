@@ -1,234 +1,159 @@
-﻿@model BookingDetailViewModel
+@model BookingDetailViewModel
 @using LaborDAL.Enums
 @using System.Security.Claims
-
 @{
     Layout = "_Layout";
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    ViewData["Title"] = "Booking Details";
-
-    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    ViewData["Title"] = "Engagement Executive Details";
 
     if (Model == null)
     {
-        <div class="alert alert-danger m-5 text-center p-5">
-            <i class="bi bi-exclamation-triangle-fill display-1 text-danger"></i>
-            <h2 class="mt-4">Booking Not Found</h2>
-            <p class="lead">The booking details you're looking for don't exist or you don't have permission to view them.</p>
-            <a asp-action="Dashboard" class="btn btn-primary btn-lg mt-3">
-                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        <div class="dashboard-container fade-in py-5 text-center">
+            <div class="bg-danger-soft text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 120px; height: 120px;">
+                <i class="bi bi-shield-lock-fill display-1"></i>
+            </div>
+            <h2 class="fw-bold">Engagement Restricted</h2>
+            <p class="text-muted max-w-500 mx-auto">The requested engagement details are inaccessible or the identifier is invalid.</p>
+            <a asp-action="Dashboard" class="btn btn-primary btn-lg rounded-pill px-5 mt-4 shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i>Return to Dashboard
             </a>
         </div>
         return;
     }
 
-    bool isPoster = currentUserId == Model.PosterId;
-    bool isWorker = currentUserId == Model.WorkerId;
+    bool isPoster = userId == Model.PosterId;
+    bool isWorker = userId == Model.WorkerId;
+    var otherUserId = isPoster ? Model.WorkerId : Model.PosterId;
 }
 
-<div class="container-fluid px-3 px-lg-4 py-4" style="background-color: #f8f9fa; min-height: 100vh;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0 fw-bold">
-            <i class="bi bi-calendar-check me-2 text-primary"></i>
-            Booking Details
-        </h4>
-        <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
+<div class="dashboard-container fade-in py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item small"><a asp-action="Dashboard" class="text-decoration-none">Engagements</a></li>
+                    <li class="breadcrumb-item small active" aria-current="page">#@Model.Id.ToString("0000")</li>
+                </ol>
+            </nav>
+            <h2 class="lm-dashboard-title mb-0">Engagement #@Model.Id.ToString("0000")</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Dashboard" class="btn btn-white border rounded-pill px-4 shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i>Dashboard
+            </a>
+            @if (Model.Status == BookingStatus.Completed && (isWorker || isPoster))
+            {
+                <a asp-action="RaiseDispute" asp-route-bookingId="@Model.Id" class="btn btn-white text-danger border rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Raise Dispute
+                </a>
+            }
+        </div>
     </div>
 
     <div class="row g-4">
-        <!-- العمود الأيسر -->
+        <!-- Sidebar: Intelligence & Meta -->
         <div class="col-lg-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="bi bi-info-circle me-2 text-primary"></i>
-                        Booking Information
+            <div class="lm-card p-0 mb-4 overflow-hidden border-0 shadow-sm">
+                <div class="bg-primary-soft p-4 border-bottom">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-info-circle text-primary me-2"></i>Specifications
                     </h6>
                 </div>
-                <div class="card-body">
-                    @if (!isPoster)
-                    {
-                        <div class="mb-3 pb-2 border-bottom">
-                            <small class="text-muted d-block mb-1">Poster Name</small>
-                            <strong>
-                                <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.PosterId })"
-                                   class="text-decoration-none text-dark">
-                                    <i class="bi bi-person-circle me-1"></i>@Model.PosterName
-                                </a>
-                            </strong>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-2">Primary Actor</p>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">@(isPoster ? Model.WorkerName : Model.PosterName)</h6>
+                                <small class="text-muted">@(isPoster ? "Assigned Workforce" : "Project Commissioner")</small>
+                            </div>
                         </div>
-                    }
-
-                    @if (isPoster)
-                    {
-                        <div class="mb-3 pb-2 border-bottom">
-                            <small class="text-muted d-block mb-1">Worker Name</small>
-                            <strong>
-                                <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.WorkerId })"
-                                   class="text-decoration-none text-dark">
-                                    <i class="bi bi-person-badge me-1"></i>@Model.WorkerName
-                                </a>
-                            </strong>
-                        </div>
-                    }
-
-                    <div class="mb-3 pb-2 border-bottom">
-                        <small class="text-muted d-block mb-1">Start Time</small>
-                        <strong class="d-flex align-items-center">
-                            <i class="bi bi-clock me-2 text-warning"></i>
-                            @(Model.StartTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet")
-                        </strong>
                     </div>
 
-                    <div class="mb-3 pb-2 border-bottom">
-                        <small class="text-muted d-block mb-1">End Time</small>
-                        <strong class="d-flex align-items-center">
-                            <i class="bi bi-clock-fill me-2 text-warning"></i>
-                            @(Model.EndTime?.ToString("MMM dd, yyyy HH:mm") ?? "Not Scheduled Yet")
-                        </strong>
-                    </div>
-
-                    <div class="mb-3 pb-2 border-bottom">
-                        <small class="text-muted d-block mb-1">Agreed Rate</small>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-primary fs-5">
-                                <i class="bi bi-currency-dollar me-1"></i>
-                                $@Model.AgreedRate.ToString("N2")
-                            </strong>
-
-                            @* ✅ إظهار زرار Change فقط لو Scheduled *@
+                    <div class="mb-4">
+                        <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-2">Financial Agreement</p>
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light-soft rounded-4 border border-white">
+                            <div>
+                                <h4 class="text-primary fw-bold mb-0">$@Model.AgreedRate.ToString("N2")</h4>
+                                <small class="text-muted">Locked Rate</small>
+                            </div>
                             @if (isPoster && Model.Status == BookingStatus.Scheduled)
                             {
-                                <button type="button"
-                                        class="btn btn-outline-primary btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#updatePriceModal">
-                                    <i class="bi bi-pencil-square me-1"></i>
-                                    Change
+                                <button type="button" class="btn btn-white btn-sm shadow-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#updatePriceModal">
+                                    <i class="bi bi-pencil"></i>
                                 </button>
                             }
                         </div>
                     </div>
 
-                    <div class="mb-3 pb-2 border-bottom">
-                        <small class="text-muted d-block mb-1">
-                            <i class="bi bi-clock-history me-1"></i>Last Updated Price
-                        </small>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-calendar3 text-primary me-2"></i>
-                            <strong class="text-dark">
-                                @* ✅ إصلاح DateTime.MinValue *@
-                                @if (Model.lastUpdateRate != null && Model.lastUpdateRate != DateTime.MinValue)
-                                {
-                                    @Model.lastUpdateRate.ToString("MMM dd, yyyy")
-                                    <span class="text-muted mx-1">at</span>
-                                    @Model.lastUpdateRate.ToString("HH:mm")
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Not updated yet</span>
-                                }
-                            </strong>
-                        </div>
-                    </div>
-
-                    @* ✅ Modal فقط لو Scheduled *@
-                    @if (isPoster && Model.Status == BookingStatus.Scheduled)
-                    {
-                        <div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="updatePriceModalLabel">
-                                            <i class="bi bi-pencil-square me-2"></i>
-                                            Change Price
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-2">Timeline</p>
+                            <div class="p-3 bg-light-soft rounded-4 border border-white">
+                                <div class="d-flex gap-3 mb-3">
+                                    <i class="bi bi-calendar-check text-warning"></i>
+                                    <div>
+                                        <h6 class="mb-0 smaller fw-bold">Commencement</h6>
+                                        <small class="text-muted">@(Model.StartTime?.ToString("MMM dd · HH:mm") ?? "Pending")</small>
                                     </div>
-
-                                    <form asp-action="UpdatePrice" method="post">
-                                        <input type="hidden" asp-for="Id" />
-                                        <input type="hidden" asp-for="StartTime" />
-                                        <input type="hidden" asp-for="EndTime" />
-                                        <input type="hidden" asp-for="Status" />
-                                        <input type="hidden" asp-for="WorkerId" />
-                                        <input type="hidden" asp-for="PosterId" />
-
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label asp-for="AgreedRate" class="form-label fw-bold">New Price ($)</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">$</span>
-                                                    <input asp-for="AgreedRate"
-                                                           class="form-control form-control-lg"
-                                                           type="number"
-                                                           step="0.01"
-                                                           min="0"
-                                                           value="@Model.AgreedRate" />
-                                                </div>
-                                                <span asp-validation-for="AgreedRate" class="text-danger"></span>
-                                            </div>
-                                            <div class="alert alert-info bg-light border-0">
-                                                <i class="bi bi-info-circle me-2"></i>
-                                                Current price: <strong>$@Model.AgreedRate.ToString("N2")</strong>
-                                            </div>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                <i class="bi bi-x-lg me-1"></i>Cancel
-                                            </button>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-check-lg me-1"></i>Save Changes
-                                            </button>
-                                        </div>
-                                    </form>
+                                </div>
+                                <div class="d-flex gap-3">
+                                    <i class="bi bi-calendar-x text-danger"></i>
+                                    <div>
+                                        <h6 class="mb-0 smaller fw-bold">Completion</h6>
+                                        <small class="text-muted">@(Model.EndTime?.ToString("MMM dd · HH:mm") ?? "Pending")</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    }
+                    </div>
 
-                    <div class="mb-3">
-                        <small class="text-muted d-block mb-1">Status</small>
-                        <span class="badge @GetStatusBadgeClass(Model.Status) px-3 py-2">
-                            @Model.Status
-                        </span>
+                    <div>
+                        <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-2">Deployment Status</p>
+                        <span class="badge @GetStatusBadgeClass(Model.Status) rounded-pill px-4 py-2 w-100 fs-6 shadow-sm">@Model.Status</span>
                     </div>
                 </div>
             </div>
+
+            @if (Model.Status == BookingStatus.Disputed)
+            {
+                <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 d-flex gap-3">
+                    <i class="bi bi-shield-exclamation fs-3"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Dispute Resolution Active</h6>
+                        <small>This engagement is under investigation by the mediation team. Documentation may be required.</small>
+                    </div>
+                </div>
+            }
         </div>
 
-        <!-- العمود الأوسط -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="bi bi-list-task me-2 text-primary"></i>
-                        Tasks
-                    </h6>
-                </div>
-                <div class="card-body">
+        <!-- Main Workspace: Actions & Collaboration -->
+        <div class="col-lg-5">
+            <!-- Strategic Actions -->
+            <div class="lm-card mb-4 border-0 shadow-sm p-4">
+                <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-lightning-charge text-primary"></i> Engagement Control
+                </h6>
+
+                <div class="d-grid gap-3">
                     @if (Model.Status == BookingStatus.Scheduled && (isWorker || isPoster))
                     {
-                        <div class="d-grid gap-2">
-                            <button type="button" data-bs-toggle="modal" data-bs-target="#cancelModal"
-                                    class="btn btn-outline-danger">
-                                <i class="bi bi-x-circle me-2"></i>Cancel Booking
-                            </button>
-                        </div>
+                        <button type="button" data-bs-toggle="modal" data-bs-target="#cancelModal" class="btn btn-light-soft text-danger py-3 rounded-4 fw-bold shadow-sm transition-all border border-danger-subtle">
+                            <i class="bi bi-x-circle me-2"></i>Revoke Engagement
+                        </button>
                     }
 
                     @if (Model.Status == BookingStatus.Scheduled && isWorker && !isPoster)
                     {
                         <form asp-controller="Booking" asp-action="Start" asp-route-id="@Model.Id" method="post">
                             @Html.AntiForgeryToken()
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-play-circle me-2"></i>Start Work
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg transition-all">
+                                <i class="bi bi-play-circle me-2"></i>Initiate Operations
+                            </button>
                         </form>
                     }
 
@@ -236,11 +161,9 @@
                     {
                         <form asp-controller="Booking" asp-action="Complete" asp-route-id="@Model.Id" method="post">
                             @Html.AntiForgeryToken()
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-check-circle me-2"></i>Mark as Completed
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-success w-100 py-3 rounded-4 fw-bold shadow-lg transition-all">
+                                <i class="bi bi-check-circle me-2"></i>Finalize Mission
+                            </button>
                         </form>
                     }
 
@@ -248,429 +171,256 @@
                     {
                         <form asp-controller="Booking" asp-action="ConfirmCompletion" asp-route-id="@Model.Id" method="post">
                             @Html.AntiForgeryToken()
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check2-all me-2"></i>Confirm Completion
-                                </button>
-                            </div>
-                        </form>
-                    }
-
-                    @if (Model.Status == BookingStatus.Disputed)
-                    {
-                        <div class="alert alert-warning d-flex align-items-center mb-0">
-                            <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
-                            <div>This booking is under dispute review.</div>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            @if (Model.Status == BookingStatus.Completed || Model.Status == BookingStatus.Cancelled)
-            {
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-transparent border-bottom py-3">
-                        <h6 class="mb-0 fw-bold">
-                            <i class="bi bi-star me-2 text-primary"></i>
-                            Rate the @(isPoster ? "Worker" : "Poster")
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <form asp-action="Rate" asp-controller="Booking" method="post">
-                            <input type="hidden" name="bookingId" value="@Model.Id" />
-                            <input type="hidden" name="RatedId" value="@ViewBag.RatedId" />
-
-                            <div class="star-rating mb-3">
-                                @for (int i = 5; i >= 1; i--)
-                                {
-                                    <input type="radio" name="Score" value="@i" id="star_@i"
-                                           @(ViewBag.ExistingScore == i ? "checked" : "") />
-                                    <label for="star_@i" title="@i stars">&#9733;</label>
-                                }
-                            </div>
-
-                            <div class="mb-3">
-                                <textarea name="Comment" class="form-control" rows="2"
-                                      placeholder="Write your comment here...">@ViewBag.ExistingComment</textarea>
-                                <small class="text-muted">Optional: Share your experience</small>
-                            </div>
-
-                            <button type="submit" class="btn btn-warning w-100">
-                                <i class="bi bi-send me-2"></i>
-                                @(ViewBag.ExistingScore > 0 ? "Update Rating" : "Submit Rating")
+                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg transition-all">
+                                <i class="bi bi-check2-all me-2"></i>Authenticate Final Output
                             </button>
                         </form>
+                    }
+                </div>
+
+                @if (Model.Status == BookingStatus.Scheduled)
+                {
+                    <div class="mt-4 p-3 bg-info-soft rounded-4 border border-info-subtle">
+                        <small class="text-info-emphasis d-flex align-items-center gap-2">
+                            <i class="bi bi-info-circle"></i> Awaiting operational trigger from service provider.
+                        </small>
                     </div>
+                }
+            </div>
+
+            <!-- Experience Feedback -->
+            @if (Model.Status == BookingStatus.Completed || Model.Status == BookingStatus.Cancelled)
+            {
+                <div class="lm-card border-0 shadow-sm p-4">
+                    <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-star-half text-warning"></i> Outcome Evaluation
+                    </h6>
+                    <form asp-action="Rate" asp-controller="Booking" method="post">
+                        <input type="hidden" name="bookingId" value="@Model.Id" />
+                        <input type="hidden" name="RatedId" value="@ViewBag.RatedId" />
+
+                        <div class="experience-rating mb-4 d-flex justify-content-center">
+                            <div class="star-rating d-flex flex-row-reverse gap-2">
+                                @for (int i = 5; i >= 1; i--)
+                                {
+                                    <input type="radio" name="Score" value="@i" id="star_@i" class="d-none" @(ViewBag.ExistingScore == i ? "checked" : "") />
+                                    <label for="star_@i" class="fs-1 cursor-pointer transition-all" style="color: @(ViewBag.ExistingScore >= i ? "#ffc107" : "#e9ecef")"><i class="bi bi-star-fill"></i></label>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <textarea name="Comment" class="form-control rounded-4 p-3 bg-light border-0 shadow-inner" rows="3" placeholder="Describe the strategic collaboration quality...">@ViewBag.ExistingComment</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 py-3 rounded-4 fw-bold shadow-sm">
+                            <i class="bi bi-send me-2"></i>@(ViewBag.ExistingScore > 0 ? "Refine Evaluation" : "Publish Evaluation")
+                        </button>
+                    </form>
                 </div>
             }
         </div>
 
-        <!-- العمود الأيمن -->
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="bi bi-shield-lock me-2 text-primary"></i>
-                        Privacy
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <i class="bi bi-shield-check text-success me-2"></i>
-                            <span>Your data is secure</span>
-                        </div>
-                        @if (Model.Status == BookingStatus.Completed && (isWorker || isPoster))
-                        {
-                            <a asp-action="RaiseDispute" asp-route-bookingId="@Model.Id"
-                               class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-exclamation-triangle me-1"></i>Raise Dispute
-                            </a>
-                        }
-                    </div>
-                    @if (Model.Status == BookingStatus.Completed)
-                    {
-                        <small class="text-muted d-block mt-2">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Disputes must be raised within 48 hours of completion
-                        </small>
-                    }
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-transparent border-bottom py-3">
+        <!-- Communications Hub -->
+        <div class="col-lg-4">
+            <div class="lm-card p-0 border-0 shadow-lg overflow-hidden h-100 d-flex flex-column" style="min-height: 500px;">
+                <div class="bg-white p-4 border-bottom shadow-sm z-index-1">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-chat-dots fs-5 text-primary"></i>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="position-relative">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-weight: 700;">
+                                    @((isPoster ? Model.WorkerName : Model.PosterName)?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                </div>
+                                <span class="position-absolute bottom-0 end-0 p-1 bg-secondary border border-2 border-white rounded-circle" id="onlineStatusIndicator" style="width: 12px; height: 12px;"></span>
+                            </div>
                             <div>
-                                <h6 class="mb-0 fw-bold">Messages</h6>
-                                <small class="text-muted">
-                                    Chatting with
-                                    <span class="fw-semibold text-dark">
-                                        @if (!isPoster)
-                                        {
-                                            @Model.PosterName
-                                        }
-                                        else
-                                        {
-
-                                            @Model.WorkerName
-                                        }
-                                    </span>
-                                </small>
+                                <h6 class="mb-0 fw-bold">@(isPoster ? Model.WorkerName : Model.PosterName)</h6>
+                                <small class="text-muted" id="onlineStatusText">Status Synchronizing...</small>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-success" id="onlineStatus">Online</span>
-                            @if (!isPoster)
-                            {
-                                <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.PosterId })"
-                                   class="btn btn-sm btn-outline-primary rounded-circle p-1"
-                                   style="width: 32px; height: 32px;" title="View Profile">
-                                    <i class="bi bi-person"></i>
-                                </a>
-                            }
-                            else
-                            {
-                                <a href="@Url.Action("ProfilePoster", "Booking", new { id = Model.WorkerId })"
-                                   class="btn btn-sm btn-outline-primary rounded-circle p-1"
-                                   style="width: 32px; height: 32px;" title="View Profile">
-                                    <i class="bi bi-person"></i>
-                                </a>
-                            }
+                        <div class="dropdown">
+                            <button class="btn btn-white btn-sm rounded-circle border shadow-sm" style="width: 32px; height: 32px;" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2 mt-2">
+                                <li><a class="dropdown-item rounded-3 py-2" href="@Url.Action("ProfilePoster", "Booking", new { id = otherUserId })"><i class="bi bi-person-circle me-2 text-primary"></i>View Full Dossier</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item rounded-3 py-2 text-danger" href="#"><i class="bi bi-flag me-2"></i>Report Abnormality</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
-                <div class="card-body p-0" style="height: 350px; overflow-y: auto; background-color: #f8fafc;" id="messagesList">
+                <div class="flex-grow-1 p-4 overflow-y-auto bg-light-soft" id="chatChannel" style="height: 400px; scroll-behavior: smooth;">
                     <div class="no-messages text-center py-5">
-                        <div class="mb-3">
-                            <i class="bi bi-chat-dots fs-1 text-muted"></i>
+                        <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-chat-pulse text-primary fs-3"></i>
                         </div>
-                        <p class="fw-semibold mb-1">No messages yet</p>
-                        <small class="text-muted">
-                            Start the conversation with
-                            <span class="fw-semibold">
-                                @if (!isPoster)
-                                {
-                                    @Model.PosterName
-                                }
-                                else
-                                {
-
-                                    @Model.WorkerName
-                                }
-                            </span>
-                        </small>
+                        <p class="fw-bold mb-1">Encrypted Channel Established</p>
+                        <small class="text-muted d-block">Communication is monitored for platform integrity.</small>
                     </div>
                 </div>
 
-                <div class="card-footer bg-white border-top p-3">
-                    <div class="input-group">
-                        <input type="text" id="messageInput" class="form-control"
-                               placeholder="Type your message..."
-                               autocomplete="off"
-                               aria-label="Message input">
-                        <button id="sendButton" class="btn btn-primary" type="button">
-                            <i class="bi bi-send-fill"></i>
-                        </button>
+                <div class="bg-white p-3 border-top">
+                    <div class="input-group gap-2 p-1 bg-light rounded-pill border">
+                        <input type="text" id="communicationInput" class="form-control border-0 bg-transparent ps-3" placeholder="Relay information..." autocomplete="off">
+                        <button id="broadcastButton" class="btn btn-primary rounded-circle shadow-sm" style="width: 44px; height: 44px;"><i class="bi bi-send-fill"></i></button>
                     </div>
-                    <small class="text-muted d-block mt-2 text-end">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Press Enter to send
-                    </small>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Cancel Modal -->
+<!-- Financial Realignment Modal -->
+@if (isPoster && Model.Status == BookingStatus.Scheduled)
+{
+    <div class="modal fade" id="updatePriceModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="p-4 p-md-5">
+                    <h4 class="fw-bold mb-2">Realignment of Funds</h4>
+                    <p class="text-muted mb-4">Adjust the agreed executive compensation for this engagement.</p>
+                    
+                    <form asp-action="UpdatePrice" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="StartTime" />
+                        <input type="hidden" asp-for="EndTime" />
+                        <input type="hidden" asp-for="Status" />
+                        <input type="hidden" asp-for="WorkerId" />
+                        <input type="hidden" asp-for="PosterId" />
+
+                        <div class="mb-4">
+                            <label class="smaller text-muted text-uppercase fw-bold mb-2 ls-1 d-block">New Proposed Value ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 shadow-sm">$</span>
+                                <input asp-for="AgreedRate" class="form-control form-control-lg border-0 shadow-sm rounded-4" type="number" step="0.01" min="0" value="@Model.AgreedRate" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light-soft flex-fill py-3 rounded-pill fw-bold" data-bs-dismiss="modal">Maintain Current</button>
+                            <button type="submit" class="btn btn-primary flex-fill py-3 rounded-pill fw-bold shadow-sm">Authorize Change</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Deletion & Revocation Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cancel Booking</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to cancel this booking?</p>
-                <small class="text-muted">This action cannot be undone.</small>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@Model.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-danger">Confirm Cancel</button>
-                </form>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="p-4 p-md-5 text-center">
+                <div class="bg-danger-soft text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-exclamation-octagon fs-1"></i>
+                </div>
+                <h3 class="fw-bold mb-2">Revoke Engagement?</h3>
+                <p class="text-muted mb-5">Revoking this mission may impact your platform reputation score. This action is definitive.</p>
+                
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-light-soft flex-fill py-3 rounded-pill fw-bold" data-bs-dismiss="modal">Keep Active</button>
+                    <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow-sm">Confirm Revocation</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .star-rating {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-        gap: 0.5rem;
-    }
-
-        .star-rating input {
-            display: none;
-        }
-
-        .star-rating label {
-            font-size: 2rem;
-            color: #ddd;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-            .star-rating label:hover,
-            .star-rating label:hover ~ label,
-            .star-rating input:checked ~ label {
-                color: #ffc107;
-            }
-
-    .message-container {
-        margin-bottom: 1rem;
-        display: flex;
-        flex-direction: column;
-        padding: 0 1rem;
-    }
-
-        .message-container.outgoing {
-            align-items: flex-end;
-        }
-
-        .message-container.incoming {
-            align-items: flex-start;
-        }
-
-    .message-sender {
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        color: #6c757d;
-    }
-
-    .message-bubble {
-        max-width: 80%;
-        padding: 0.5rem 1rem;
-        border-radius: 1rem;
-        position: relative;
-        word-wrap: break-word;
-    }
-
-        .message-bubble.outgoing {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom-right-radius: 0.25rem;
-        }
-
-        .message-bubble.incoming {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-bottom-left-radius: 0.25rem;
-        }
-
-    .message-time {
-        font-size: 0.7rem;
-        color: #adb5bd;
-        margin-top: 0.2rem;
-    }
-
-    #messagesList::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #messagesList::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    #messagesList::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-        #messagesList::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-    @@media (max-width: 768px) {
-        .star-rating label {
-            font-size: 1.8rem;
-        }
-
-        .message-bubble {
-            max-width: 90%;
-        }
-    }
+    .experience-rating label { cursor: pointer; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .experience-rating label:hover { transform: scale(1.3); color: #ffc107 !important; }
+    .experience-rating input:checked ~ label { color: #ffc107 !important; }
+    
+    .chat-bubble { max-width: 85%; padding: 12px 20px; border-radius: 20px; margin-bottom: 4px; font-size: 0.95rem; line-height: 1.5; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .chat-bubble.outgoing { background: var(--lm-primary); color: white; border-bottom-right-radius: 4px; border-top-right-radius: 4px; margin-left: auto; }
+    .chat-bubble.incoming { background: white; color: var(--lm-dark); border-bottom-left-radius: 4px; border-top-left-radius: 4px; margin-right: auto; }
+    .chat-meta { font-size: 0.75rem; color: #94a3b8; margin-bottom: 20px; display: block; }
+    .chat-meta.outgoing { text-align: right; }
+    
+    #chatChannel::-webkit-scrollbar { width: 5px; }
+    #chatChannel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
-
-@functions {
-    string GetStatusBadgeClass(BookingStatus status) => status switch
-    {
-        BookingStatus.Scheduled => "bg-warning text-dark",
-        BookingStatus.InProgress => "bg-info text-dark",
-        BookingStatus.CompletedfromWorker => "bg-info text-dark",
-        BookingStatus.Completed => "bg-success",
-        BookingStatus.Cancelled => "bg-danger",
-        BookingStatus.Disputed => "bg-dark",
-        _ => "bg-secondary"
-    };
-}
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var bookingId = @Model.Id;
-            var currentUserId = "@userId";
-            var otherUserId = "@(isPoster? Model.WorkerId: Model.PosterId)";
+            const bookingId = @Model.Id;
+            const currentUserId = "@userId";
+            const targetId = "@otherUserId";
+            const channel = document.getElementById('chatChannel');
+            const relayInput = document.getElementById('communicationInput');
+            const broadcastBtn = document.getElementById('broadcastButton');
 
-            var messagesList = document.getElementById('messagesList');
-            var messageInput = document.getElementById('messageInput');
-            var sendButton = document.getElementById('sendButton');
+            function syncDisplay(payload) {
+                const empty = channel.querySelector('.no-messages');
+                if (empty) empty.remove();
 
-            function displayMessage(message) {
-                var noMessages = messagesList.querySelector('.no-messages');
-                if (noMessages) noMessages.remove();
-
-                var isOutgoing = message.senderId === currentUserId;
-                var timeString = new Date(message.sentAt).toLocaleTimeString('ar-EG', {
-                    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Africa/Cairo'
-                });
-                var senderName = isOutgoing ? 'You' : (message.senderName || 'User');
-
-                var wrapper = document.createElement('div');
-                wrapper.className = `message-container ${isOutgoing ? 'outgoing' : 'incoming'}`;
-                wrapper.innerHTML = `
-                    <div class="message-sender">${senderName}</div>
-                    <div class="message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}">${escapeHtml(message.content)}</div>
-                    <div class="message-time">${timeString}</div>
+                const isAuth = payload.senderId === currentUserId;
+                const clock = new Date(payload.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                const segment = document.createElement('div');
+                segment.className = `chat-frame ${isAuth ? 'outgoing text-end' : 'incoming'}`;
+                segment.innerHTML = `
+                    <div class="chat-bubble ${isAuth ? 'outgoing' : 'incoming'}">${escapeHTML(payload.content)}</div>
+                    <span class="chat-meta ${isAuth ? 'outgoing' : 'incoming'}">${isAuth ? 'You' : (payload.senderName || 'Contact')} · ${clock}</span>
                 `;
-                messagesList.appendChild(wrapper);
-                messagesList.scrollTop = messagesList.scrollHeight;
+                channel.appendChild(segment);
+                channel.scrollTop = channel.scrollHeight;
             }
 
-            function escapeHtml(str) {
-                return str.replace(/&/g, "&amp;").replace(/</g, "&lt;")
-                          .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-            }
+            function escapeHTML(s) { return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
-            var connection = new signalR.HubConnectionBuilder()
-                .withUrl("/chatHub")
-                .withAutomaticReconnect()
-                .build();
-
-            connection.on("ReceiveMessage", function (message) {
-                if (message.senderId === currentUserId) return;
-                displayMessage(message);
+            const hub = new signalR.HubConnectionBuilder().withUrl("/chatHub").withAutomaticReconnect().build();
+            hub.on("ReceiveMessage", p => { if (p.senderId !== currentUserId) syncDisplay(p); });
+            hub.start().then(() => hub.invoke("JoinBookingGroup", bookingId)).then(async () => {
+                const r = await fetch(`/Message/GetMessages?bookingId=${bookingId}`);
+                const d = await r.json();
+                if (d.success && d.messages?.length) { channel.innerHTML = ''; d.messages.forEach(syncDisplay); }
             });
 
-            connection.start()
-                .then(() => connection.invoke("JoinBookingGroup", bookingId))
-                .then(loadMessages);
+            const transmit = () => {
+                const val = relayInput.value.trim();
+                if (!val) return;
+                syncDisplay({ senderId: currentUserId, content: val, sentAt: new Date().toISOString(), senderName: 'You' });
+                relayInput.value = '';
+                fetch('/Message/SendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId: bookingId, content: val }) });
+            };
 
-            function loadMessages() {
-                fetch(`/Message/GetMessages?bookingId=${bookingId}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success && data.messages && data.messages.length > 0) {
-                            messagesList.innerHTML = '';
-                            data.messages.forEach(displayMessage);
-                        }
-                    });
-            }
+            broadcastBtn.onclick = transmit;
+            relayInput.onkeypress = e => { if (e.key === 'Enter') transmit(); };
 
-            function sendMessage() {
-                var content = messageInput.value.trim();
-                if (!content) return;
-
-                displayMessage({
-                    senderId: currentUserId,
-                    content: content,
-                    sentAt: new Date().toISOString(),
-                    senderName: 'You'
-                });
-
-                messageInput.value = '';
-                messageInput.focus();
-
-                fetch('/Message/SendMessage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bookingId: bookingId, content: content })
-                })
-                .then(r => r.json())
-                .then(data => { if (!data.success) console.error('❌ Failed to send message'); });
-            }
-
-            sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-            });
-
-            async function checkUserStatus() {
+            const monitorStatus = async () => {
                 try {
-                    const response = await fetch(`/Chat/GetUserStatus?userId=${otherUserId}`);
-                    const data = await response.json();
-                    const badge = document.getElementById('onlineStatus');
-                    if (data.isOnline) {
-                        badge.textContent = 'Online';
-                        badge.className = 'badge bg-success';
-                    } else {
-                        badge.textContent = 'Offline';
-                        badge.className = 'badge bg-secondary';
-                    }
-                } catch (e) { console.error('❌ Status error:', e); }
-            }
+                    const r = await fetch(`/Chat/GetUserStatus?userId=${targetId}`);
+                    const d = await r.json();
+                    const b = document.getElementById('onlineStatusIndicator');
+                    const t = document.getElementById('onlineStatusText');
+                    b.className = `position-absolute bottom-0 end-0 p-1 border border-2 border-white rounded-circle ${d.isOnline ? 'bg-success' : 'bg-secondary'}`;
+                    t.textContent = d.isOnline ? 'Online - Responding' : 'Offline - Awaiting Return';
+                } catch {}
+            };
+            monitorStatus(); setInterval(monitorStatus, 8000);
+        });
+    </script>
+}
 
-            checkUserStatus();
-            setInterval(checkUserStatus, 5000);
+@functions {
+    string GetStatusBadgeClass(BookingStatus s) => s switch {
+        BookingStatus.Scheduled => "bg-warning-soft text-warning",
+        BookingStatus.InProgress => "bg-info-soft text-info",
+        BookingStatus.CompletedfromWorker => "bg-primary-soft text-primary",
+        BookingStatus.Completed => "bg-success-soft text-success",
+        BookingStatus.Cancelled => "bg-danger-soft text-danger",
+        BookingStatus.Disputed => "bg-dark text-white",
+        _ => "bg-light text-muted"
+    };
+}
+    setInterval(checkUserStatus, 5000);
         });
     </script>
 }

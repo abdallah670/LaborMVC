@@ -1,4 +1,4 @@
-@model IEnumerable<LaborBLL.ModelVM.ProfileViewModel>
+@model IEnumerable<LaborBLL.ModelVM.UserProfileDisplayViewModel>
 @{
     ViewData["Title"] = "ID Verifications";
     var currentFilter = ViewBag.CurrentFilter as string ?? "pending";
@@ -108,7 +108,7 @@
                                     
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">
-                                            <i class="bi bi-calendar me-1"></i>@user.CreatedAt.ToString("MMM dd, yyyy")
+                                            <i class="bi bi-calendar me-1"></i>@user.MemberSince.ToString("MMM dd, yyyy")
                                         </small>
                                         @if (!user.IDVerified)
                                         {

@@ -4,175 +4,181 @@
     ViewData["Title"] = "Post a Task";
 }
 
-<div class="create-task-container fade-in">
+<div class="dashboard-container fade-in py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary-gradient text-white">
-                    <h3 class="mb-0"><i class="bi bi-clipboard-plus me-2"></i>Post a New Task</h3>
-                    <p class="mb-0 opacity-75">Describe what you need and find the right worker</p>
+        <div class="col-lg-9">
+            <div class="lm-dashboard-header mb-4 text-center">
+                <h1 class="lm-dashboard-title">Launch a New Task</h1>
+                <p class="text-muted">Fill in the details below to find the perfect professional for your needs.</p>
+            </div>
+
+            <div class="lm-card p-0 overflow-hidden shadow-lg border-0">
+                <div class="bg-primary-soft p-4 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                            <i class="bi bi-clipboard-plus fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">Task Specification</h4>
+                            <p class="text-muted mb-0 small">Please provide accurate information for better matches.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-4">
+
+                <div class="p-4 p-md-5">
                     <form asp-action="Create" method="post" id="createTaskForm">
-                        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+                        <div asp-validation-summary="All" class="alert alert-danger-soft border-0 mb-4 py-2 small"></div>
 
                         <!-- Basic Info Section -->
-                        <div class="form-section mb-4">
-                            <h5 class="section-title"><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
-                            <div class="row g-3">
+                        <div class="mb-5">
+                            <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                                <span class="bg-light-soft text-primary rounded-pill px-3 py-1 fs-6">1</span>
+                                Core Information
+                            </h5>
+                            <div class="row g-4">
                                 <div class="col-12">
-                                    <label asp-for="Title" class="form-label"></label>
-                                    <input asp-for="Title" class="form-control" placeholder="e.g., Need help moving furniture this weekend" />
-                                    <span asp-validation-for="Title" class="field-validation-error"></span>
+                                    <label asp-for="Title" class="form-label smaller fw-bold text-muted text-uppercase">Task Headline</label>
+                                    <input asp-for="Title" class="form-control lm-input rounded-3 py-2 px-3" placeholder="e.g., Expert Furniture Assembly Required" />
+                                    <span asp-validation-for="Title" class="text-danger smaller"></span>
                                 </div>
                                 <div class="col-12">
-                                    <label asp-for="Description" class="form-label"></label>
-                                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Provide detailed description of what needs to be done, including any specific requirements, tools needed, access instructions, etc."></textarea>
-                                    <span asp-validation-for="Description" class="field-validation-error"></span>
-                                    <div class="form-text">
-                                        <span id="charCount">0</span>/5000 characters
+                                    <label asp-for="Description" class="form-label smaller fw-bold text-muted text-uppercase">Detailed Requirements</label>
+                                    <textarea asp-for="Description" class="form-control lm-input rounded-3 py-2 px-3" rows="6" placeholder="Describe the scope, tools needed, and any specific instructions..."></textarea>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span asp-validation-for="Description" class="text-danger smaller"></span>
+                                        <small class="text-muted"><span id="charCount">0</span> / 5000 characters</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label asp-for="Category" class="form-label"></label>
-                                    <select asp-for="Category" class="form-select" asp-items="Html.GetEnumSelectList<TaskCategory>()">
-                                        <option value="">Select a category</option>
+                                    <label asp-for="Category" class="form-label smaller fw-bold text-muted text-uppercase">Task Category</label>
+                                    <select asp-for="Category" class="form-select lm-form-select rounded-3 py-2 px-3" asp-items="Html.GetEnumSelectList<TaskCategory>()">
+                                        <option value="">Select Category</option>
                                     </select>
-                                    <span asp-validation-for="Category" class="field-validation-error"></span>
+                                    <span asp-validation-for="Category" class="text-danger smaller"></span>
                                 </div>
                                 <div class="col-md-6">
-                                    <label asp-for="RequiredSkills" class="form-label"></label>
-                                    <input asp-for="RequiredSkills" class="form-control" placeholder="e.g., Heavy lifting, Assembly, Electrical" />
-                                    <span asp-validation-for="RequiredSkills" class="field-validation-error"></span>
-                                    <div class="form-text">Separate skills with commas</div>
+                                    <label asp-for="RequiredSkills" class="form-label smaller fw-bold text-muted text-uppercase">Desired Expertise</label>
+                                    <input asp-for="RequiredSkills" class="form-control lm-input rounded-3 py-2 px-3" placeholder="e.g., Electrical, Heavy Lifting, Painting" />
+                                    <div class="form-text smaller text-muted">Separate skills with commas</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Budget Section -->
-                        <div class="form-section mb-4">
-                            <h5 class="section-title"><i class="bi bi-cash me-2"></i>Budget & Payment</h5>
-                            <div class="row g-3">
+                        <div class="mb-5">
+                            <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                                <span class="bg-light-soft text-success rounded-pill px-3 py-1 fs-6">2</span>
+                                Financials & Capacity
+                            </h5>
+                            <div class="row g-4">
                                 <div class="col-md-4">
-                                    <label asp-for="BudgetType" class="form-label"></label>
-                                    <select asp-for="BudgetType" class="form-select" id="budgetType">
+                                    <label asp-for="BudgetType" class="form-label smaller fw-bold text-muted text-uppercase">Payment Model</label>
+                                    <select asp-for="BudgetType" class="form-select lm-form-select rounded-3 py-2 px-3" id="budgetType">
                                         @foreach (var item in Html.GetEnumSelectList<BudgetType>())
                                         {
                                             <option value="@item.Value">@item.Text</option>
                                         }
                                     </select>
-                                    <span asp-validation-for="BudgetType" class="field-validation-error"></span>
                                 </div>
                                 <div class="col-md-4">
-                                    <label asp-for="Budget" class="form-label"></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input asp-for="Budget" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                                    <label asp-for="Budget" class="form-label smaller fw-bold text-muted text-uppercase">Target Budget</label>
+                                    <div class="input-group lm-input-group border rounded-3 overflow-hidden">
+                                        <span class="input-group-text bg-light border-0 px-3">$</span>
+                                        <input asp-for="Budget" class="form-control border-0 py-2 px-3" type="number" step="0.01" placeholder="0.00" />
                                     </div>
-                                    <span asp-validation-for="Budget" class="field-validation-error"></span>
+                                    <span asp-validation-for="Budget" class="text-danger smaller"></span>
                                 </div>
                                 <div class="col-md-4" id="estimatedHoursField">
-                                    <label asp-for="EstimatedHours" class="form-label"></label>
-                                    <div class="input-group">
-                                        <input asp-for="EstimatedHours" class="form-control" type="number" step="0.5" placeholder="Hours" />
-                                        <span class="input-group-text">hrs</span>
+                                    <label asp-for="EstimatedHours" class="form-label smaller fw-bold text-muted text-uppercase">Est. Duration</label>
+                                    <div class="input-group lm-input-group border rounded-3 overflow-hidden">
+                                        <input asp-for="EstimatedHours" class="form-control border-0 py-2 px-3" type="number" step="0.5" placeholder="Hours" />
+                                        <span class="input-group-text bg-light border-0 px-3">hrs</span>
                                     </div>
-                                    <span asp-validation-for="EstimatedHours" class="field-validation-error"></span>
                                 </div>
-                            </div>
-                            <div class="row g-3 mt-2">
                                 <div class="col-md-6">
-                                    <label asp-for="WorkersNeeded" class="form-label"></label>
-                                    <input asp-for="WorkersNeeded" class="form-control" type="number" min="1" max="100" />
-                                    <span asp-validation-for="WorkersNeeded" class="field-validation-error"></span>
+                                    <label asp-for="WorkersNeeded" class="form-label smaller fw-bold text-muted text-uppercase">Professionals Needed</label>
+                                    <input asp-for="WorkersNeeded" class="form-control lm-input rounded-3 py-2 px-3" type="number" min="1" max="100" />
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Schedule Section -->
-                        <div class="form-section mb-4">
-                            <h5 class="section-title"><i class="bi bi-calendar me-2"></i>Schedule</h5>
-                            <div class="row g-3">
+                        <!-- Timeline & Location -->
+                        <div class="mb-5">
+                            <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                                <span class="bg-light-soft text-warning rounded-pill px-3 py-1 fs-6">3</span>
+                                Logistics & Schedule
+                            </h5>
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <label asp-for="StartDate" class="form-label"></label>
-                                    <input asp-for="StartDate" class="form-control" type="datetime-local" />
-                                    <span asp-validation-for="StartDate" class="field-validation-error"></span>
+                                    <label asp-for="StartDate" class="form-label smaller fw-bold text-muted text-uppercase">Earliest Start</label>
+                                    <input asp-for="StartDate" class="form-control lm-input rounded-3 py-2 px-3" type="datetime-local" />
                                 </div>
                                 <div class="col-md-6">
-                                    <label asp-for="DueDate" class="form-label"></label>
-                                    <input asp-for="DueDate" class="form-control" type="datetime-local" />
-                                    <span asp-validation-for="DueDate" class="field-validation-error"></span>
+                                    <label asp-for="DueDate" class="form-label smaller fw-bold text-muted text-uppercase">Deadline</label>
+                                    <input asp-for="DueDate" class="form-control lm-input rounded-3 py-2 px-3" type="datetime-local" />
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <div class="form-check form-switch">
+                            
+                            <div class="mt-4 p-3 bg-light-soft rounded-3">
+                                <div class="form-check form-switch mb-0">
                                     <input asp-for="IsUrgent" class="form-check-input" type="checkbox" id="urgentSwitch">
-                                    <label class="form-check-label" for="urgentSwitch">
-                                        <i class="bi bi-lightning-fill text-warning"></i> This is urgent (needs to start within 24 hours)
+                                    <label class="form-check-label fw-bold text-dark" for="urgentSwitch">
+                                        <i class="bi bi-lightning-fill text-warning me-2"></i> Priority Processing (Urgent Task)
                                     </label>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Location Section -->
-                        <div class="form-section mb-4">
-                            <h5 class="section-title"><i class="bi bi-geo-alt me-2"></i>Location</h5>
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
+                            <div class="mt-4">
+                                <div class="form-check form-switch mb-4">
                                     <input asp-for="IsRemote" class="form-check-input" type="checkbox" id="remoteSwitch">
-                                    <label class="form-check-label" for="remoteSwitch">
-                                        <i class="bi bi-wifi text-info"></i> This task can be done remotely
+                                    <label class="form-check-label fw-bold text-dark" for="remoteSwitch">
+                                        <i class="bi bi-wifi text-info me-2"></i> Virtual / Remote Execution
                                     </label>
                                 </div>
-                            </div>
-                            <div id="locationFields">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Auto-Detect Location</label>
-                                        <button type="button" id="detectLocationBtn" class="btn btn-outline-primary w-100">
-                                            <i class="bi bi-crosshair me-1"></i>Detect My Location
-                                        </button>
-                                        <div id="locationStatus" class="mt-2 small"></div>
+
+                                <div id="locationFields" class="p-4 border rounded-4 bg-light shadow-sm-inset transition-all">
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <label class="form-label smaller fw-bold text-muted text-uppercase mb-0">Geographic Positioning</label>
+                                                <button type="button" id="detectLocationBtn" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                                    <i class="bi bi-crosshair me-1"></i>Detect My Coordinates
+                                                </button>
+                                            </div>
+                                            <div id="mapPicker" class="map-picker-container rounded-4 shadow-sm" style="height: 300px;"></div>
+                                            <div id="locationStatus" class="mt-2 text-center smaller"></div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="Location" class="form-label smaller fw-bold text-muted text-uppercase">Deployment Address</label>
+                                            <input asp-for="Location" class="form-control lm-input rounded-3 py-2 px-3" placeholder="Specify the exact location..." />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="City" class="form-label smaller fw-bold text-muted text-uppercase">Regional Hub (City)</label>
+                                            <input asp-for="City" class="form-control lm-input rounded-3 py-2 px-3" placeholder="City" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="Country" class="form-label smaller fw-bold text-muted text-uppercase">Sovereign State (Country)</label>
+                                            <input asp-for="Country" class="form-control lm-input rounded-3 py-2 px-3" placeholder="Country" />
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Select on Map</label>
-                                        <div id="mapPicker" class="map-picker-container"></div>
-                                    </div>
+                                    <input type="hidden" asp-for="Latitude" id="latitudeInput" />
+                                    <input type="hidden" asp-for="Longitude" id="longitudeInput" />
+                                    <input type="hidden" asp-for="LocationUrl" id="locationUrlInput" />
                                 </div>
-                                <div class="row g-3 mt-2">
-                                    <div class="col-12">
-                                        <label asp-for="Location" class="form-label"></label>
-                                        <input asp-for="Location" class="form-control" placeholder="Full address where the task will be performed" />
-                                        <span asp-validation-for="Location" class="field-validation-error"></span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="Country" class="form-label"></label>
-                                        <input asp-for="Country" class="form-control" placeholder="Country" />
-                                        <span asp-validation-for="Country" class="field-validation-error"></span>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="City" class="form-label"></label>
-                                        <input asp-for="City" class="form-control" placeholder="City" />
-                                        <span asp-validation-for="City" class="field-validation-error"></span>
-                                    </div>
-                                </div>
-                                <input type="hidden" asp-for="Latitude" id="latitudeInput" />
-                                <input type="hidden" asp-for="Longitude" id="longitudeInput" />
-                                <input type="hidden" asp-for="LocationUrl" id="locationUrlInput" />
                             </div>
                         </div>
 
-                        <!-- Submit Buttons -->
-                        <div class="d-flex gap-2 justify-content-between pt-3 border-top">
-                            <a asp-action="Index" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Cancel
+                        <!-- Footer Actions -->
+                        <div class="d-flex flex-column flex-md-row gap-3 pt-5 border-top">
+                            <a asp-action="Index" class="btn btn-light-soft px-4 py-2 order-2 order-md-1">
+                                <i class="bi bi-x-lg me-2"></i>Discard
                             </a>
-                            <div class="d-flex gap-2">
-                                <button type="submit" name="saveAsDraft" value="true" class="btn btn-outline-primary">
-                                    <i class="bi bi-save me-1"></i>Save as Draft
+                            <div class="ms-md-auto d-flex gap-2 order-1 order-md-2 w-100 w-md-auto">
+                                <button type="submit" name="saveAsDraft" value="true" class="btn btn-outline-primary flex-fill px-4 py-2">
+                                    <i class="bi bi-save me-2"></i>Draft
                                 </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle me-1"></i>Post Task
+                                <button type="submit" class="btn btn-primary shadow-sm flex-fill px-5 py-2 fw-bold">
+                                    <i class="bi bi-rocket-takeoff me-2"></i>Publish Task
                                 </button>
                             </div>
                         </div>
@@ -185,115 +191,63 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin="" />
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
-            crossorigin=""></script>
-    
-    <!-- Location Service -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="~/js/locationService.js"></script>
-    <!-- Map Picker -->
     <script src="~/js/mapPicker.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Character counter for description
             const descriptionField = document.querySelector('textarea[name="Description"]');
             const charCountSpan = document.getElementById('charCount');
-            
             descriptionField.addEventListener('input', function() {
                 charCountSpan.textContent = this.value.length;
-                if (this.value.length > 5000) {
-                    charCountSpan.classList.add('text-danger');
-                } else {
-                    charCountSpan.classList.remove('text-danger');
-                }
+                this.value.length > 5000 ? charCountSpan.classList.add('text-danger') : charCountSpan.classList.remove('text-danger');
             });
             
-            // Budget type toggle
             const budgetTypeSelect = document.getElementById('budgetType');
             const estimatedHoursField = document.getElementById('estimatedHoursField');
+            const toggleHours = () => budgetTypeSelect.value === '1' ? estimatedHoursField.classList.remove('d-none') : estimatedHoursField.classList.add('d-none');
+            budgetTypeSelect.addEventListener('change', toggleHours);
+            toggleHours();
             
-            function toggleEstimatedHours() {
-                if (budgetTypeSelect.value === '1') { // Hourly
-                    estimatedHoursField.style.display = 'block';
-                } else {
-                    estimatedHoursField.style.display = 'none';
-                }
-            }
-            
-            budgetTypeSelect.addEventListener('change', toggleEstimatedHours);
-            toggleEstimatedHours(); // Initial state
-            
-            // Remote toggle
             const remoteSwitch = document.getElementById('remoteSwitch');
             const locationFields = document.getElementById('locationFields');
-            
             remoteSwitch.addEventListener('change', function() {
-                if (this.checked) {
-                    locationFields.style.opacity = '0.5';
-                    locationFields.style.pointerEvents = 'none';
-                } else {
-                    locationFields.style.opacity = '1';
-                    locationFields.style.pointerEvents = 'auto';
-                }
+                this.checked ? locationFields.classList.add('opacity-50', 'pointer-events-none', 'grayscale') : locationFields.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
             });
             
-            // Initialize map picker
             let mapPicker = new MapPicker('mapPicker', {
-                defaultLat: 30.0444,
-                defaultLng: 31.2357,
-                defaultZoom: 12,
-                onLocationChange: function(data) {
+                defaultLat: 30.0444, defaultLng: 31.2357, defaultZoom: 12,
+                onLocationChange: (data) => {
                     document.getElementById('latitudeInput').value = data.latitude;
                     document.getElementById('longitudeInput').value = data.longitude;
                     document.getElementById('locationUrlInput').value = data.locationUrl;
                 }
             });
             
-            // Auto-detect location
             document.getElementById('detectLocationBtn').addEventListener('click', async function() {
-                const btn = this;
-                const statusEl = document.getElementById('locationStatus');
-                
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Detecting...';
-                statusEl.innerHTML = '<span class="text-muted">Getting your location...</span>';
-                
+                const btn = this; const statusEl = document.getElementById('locationStatus');
+                btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Detecting...';
                 try {
-                    if (!LocationService.isGeolocationAvailable()) {
-                        throw new Error('Geolocation is not supported by your browser.');
-                    }
-                    
-                    if (!LocationService.isSecureContext()) {
-                        throw new Error('Location detection requires HTTPS.');
-                    }
-                    
                     const position = await LocationService.getCurrentPosition();
                     mapPicker.setLocation(position.latitude, position.longitude);
-                    
                     const address = await LocationService.reverseGeocode(position.latitude, position.longitude);
-                    
                     if (address.success) {
                         document.querySelector('input[name="Location"]').value = address.address;
                         document.querySelector('input[name="Country"]').value = address.country || '';
                         document.querySelector('input[name="City"]').value = address.city || '';
+                        statusEl.innerHTML = '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Location synchronized</span>';
                     }
-                    
-                    statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Location detected!</span>';
-                    
-                } catch (error) {
-                    statusEl.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> ${error.message}</span>`;
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-crosshair me-1"></i>Detect My Location';
-                }
+                } catch (e) { statusEl.innerHTML = `<span class="text-danger small fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>${e.message}</span>`; }
+                finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-crosshair me-1"></i>Detect My Coordinates'; }
             });
         });
     </script>
 }
+
+<style>
+    .grayscale { filter: grayscale(100%); transition: filter 0.3s; }
+    .shadow-sm-inset { box-shadow: inset 0 1px 2px rgba(0,0,0,.075); }
+    .pointer-events-none { pointer-events: none; }
+</style>

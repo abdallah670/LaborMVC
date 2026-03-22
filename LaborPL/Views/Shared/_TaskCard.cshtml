@@ -1,0 +1,84 @@
+@model LaborBLL.ModelVM.TaskListViewModel
+
+<div class="lm-card h-100 p-0 overflow-hidden fade-in cursor-pointer" onclick="location.href='@Url.Action("Details", "Task", new { id = Model.Id })'">
+    <div class="p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge bg-primary-soft text-primary fs-xs text-uppercase">@Model.CategoryDisplay</span>
+            <div class="d-flex gap-1">
+                @if (Model.IsUrgent)
+                {
+                    <span class="badge bg-danger text-white fs-xs"><i class="bi bi-lightning-fill me-1"></i>Urgent</span>
+                }
+                @if (Model.IsRemote)
+                {
+                    <span class="badge bg-info text-white fs-xs"><i class="bi bi-wifi me-1"></i>Remote</span>
+                }
+            </div>
+        </div>
+
+        <h5 class="fw-bold mb-2 text-dark">@Model.Title</h5>
+        <p class="text-muted smaller mb-3 lh-sm">
+            @(Model.Description?.Length > 100 ? Model.Description[..100] + "..." : Model.Description)
+        </p>
+        
+        <div class="d-flex flex-column gap-2 mb-3">
+            <div class="d-flex align-items-center text-muted smaller">
+                <i class="bi bi-geo-alt me-2"></i>
+                <span>
+                    @if (!string.IsNullOrEmpty(Model.City))
+                    {
+                        @Model.City
+                        @if (Model.Distance.HasValue)
+                        {
+                            <span class="text-primary-soft fw-bold ms-1">(@Model.Distance.Value.ToString("0.0") km)</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="opacity-50">Remote / Global</span>
+                    }
+                </span>
+            </div>
+            <div class="d-flex align-items-center text-muted smaller">
+                <i class="bi bi-cash me-2"></i>
+                <span>
+                    <strong class="text-dark">@Model.BudgetTypeDisplay:</strong> 
+                    <span class="text-primary fw-bold">@Model.Budget.ToString("C")</span>
+                </span>
+            </div>
+            @if (Model.DueDate.HasValue)
+            {
+                <div class="d-flex align-items-center text-muted smaller">
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <span>Due @Model.DueDate.Value.ToString("MMM dd")</span>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="bg-light px-3 py-2 d-flex justify-content-between align-items-center border-top">
+        <div class="d-flex align-items-center">
+            @if (!string.IsNullOrEmpty(Model.PosterProfilePicture))
+            {
+                <img src="@Model.PosterProfilePicture" alt="@Model.PosterName" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+            }
+            else
+            {
+                <div class="rounded-circle bg-primary-soft text-primary d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 10px; font-weight: bold;">
+                    @(Model.PosterName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                </div>
+            }
+            <div>
+                <p class="mb-0 smaller fw-bold text-dark">@Model.PosterName</p>
+                @if (Model.PosterRating.HasValue)
+                {
+                    <div class="d-flex align-items-center" style="font-size: 10px;">
+                        <i class="bi bi-star-fill text-warning me-1"></i>
+                        <span class="text-muted fw-bold">@Model.PosterRating.Value.ToString("F1")</span>
+                    </div>
+                }
+            </div>
+        </div>
+        <span class="badge bg-white text-muted border smaller">@Model.ApplicationCount apps</span>
+    </div>
+</div>

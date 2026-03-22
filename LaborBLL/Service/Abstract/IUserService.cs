@@ -1,3 +1,6 @@
+using LaborBLL.ModelVM;
+using LaborBLL.Response;
+using System.Threading.Tasks;
 
 namespace LaborBLL.Service.Abstract
 {
@@ -15,29 +18,29 @@ namespace LaborBLL.Service.Abstract
         /// <summary>
         /// Authenticates a user
         /// </summary>
-        Task<Response<ProfileViewModel>> LoginAsync(LoginViewModel model);
+        Task<Response<UserProfileDisplayViewModel>> LoginAsync(LoginViewModel model);
 
         /// <summary>
         /// Gets the profile of a user by their ID
         /// </summary>
-        Task<ProfileViewModel?> GetProfileAsync(string userId);
+        Task<UserProfileDisplayViewModel?> GetProfileAsync(string userId);
 
         /// <summary>
         /// Gets the profile of a user with all details including ratings and statistics
         /// </summary>
         /// <param name="userId">The ID of the user to get profile for</param>
         /// <param name="viewerId">Optional viewer ID to customize response based on viewer</param>
-        Task<ProfileViewModel?> GetProfileWithDetailsAsync(string userId, string? viewerId = null);
+        Task<UserProfileDisplayViewModel?> GetProfileWithDetailsAsync(string userId, string? viewerId = null);
 
         /// <summary>
         /// Updates a user's profile
         /// </summary>
-        Task<Response<bool>> UpdateProfileAsync(ProfileViewModel model);
+        Task<Response<bool>> UpdateProfileAsync(UserProfileUpdateModel model);
 
         /// <summary>
         /// Gets a user by their email
         /// </summary>
-        Task<ProfileViewModel?> GetByEmailAsync(string email);
+        Task<UserProfileDisplayViewModel?> GetByEmailAsync(string email);
 
         /// <summary>
         /// Checks if an email is already registered

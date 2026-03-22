@@ -1,69 +1,64 @@
+@model dynamic
 @{
-    ViewData["Title"] = "Select Dashboard";
+    ViewData["Title"] = "Choose Your Role";
 }
 
-<div class="dashboard-container fade-in">
+<div class="container py-5 mt-md-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="text-center mb-5">
-                <h2><i class="bi bi-grid-3x3-gap me-2"></i>Choose Your Dashboard</h2>
-                <p class="text-muted">You have access to both Worker and Poster dashboards. Select which one you'd like to use.</p>
+        <div class="col-lg-10 col-xl-8">
+            <div class="text-center mb-5 fade-in">
+                <span class="badge bg-primary-soft text-primary text-uppercase fs-xs fw-bold px-3 py-2 mb-3 rounded-pill">Getting Started</span>
+                <h1 class="display-5 fw-bold mb-3">Choose Your Journey</h1>
+                <p class="text-muted fs-5 mx-auto" style="max-width: 600px;">
+                    Select how you would like to proceed today. You can switch between roles anytime from your dashboard.
+                </p>
             </div>
 
-            <div class="row g-4">
-                <!-- Worker Dashboard Option -->
+            <div class="row g-4 slide-up">
+                <!-- Worker Role Card -->
                 <div class="col-md-6">
-                    <div class="card shadow h-100 border-primary border-2 hover-card">
-                        <div class="card-body text-center p-5">
+                    <a asp-action="Worker" class="text-decoration-none h-100 d-block">
+                        <div class="lm-card h-100 text-center p-5 transition-all hover-translate-y border-top-primary shadow-hover">
                             <div class="mb-4">
-                                <i class="bi bi-person-workspace display-1 text-primary"></i>
+                                <div class="bg-primary-soft text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-person-workspace display-4"></i>
+                                </div>
                             </div>
-                            <h4 class="card-title">Worker Dashboard</h4>
-                            <p class="card-text text-muted">
-                                Find tasks, manage your bookings, and track your applications.
+                            <h3 class="fw-bold mb-3 text-dark">I am a Worker</h3>
+                            <p class="text-muted mb-4 px-3">
+                                Find local tasks, apply for jobs, manage your bookings, and track your earnings.
                             </p>
-                            <ul class="list-unstyled text-start text-muted small mb-4">
-                                <li><i class="bi bi-check text-success me-2"></i>Browse available tasks</li>
-                                <li><i class="bi bi-check text-success me-2"></i>View your bookings</li>
-                                <li><i class="bi bi-check text-success me-2"></i>Track applications</li>
-                                <li><i class="bi bi-check text-success me-2"></i>Manage your work schedule</li>
-                            </ul>
-                            <a asp-action="Worker" class="btn btn-primary btn-lg w-100">
-                                <i class="bi bi-arrow-right me-2"></i>Go to Worker Dashboard
-                            </a>
+                            <div class="btn btn-primary lg w-100 shadow-sm">
+                                Enter Worker Dashboard <i class="bi bi-arrow-right ms-2"></i>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
-                <!-- Poster Dashboard Option -->
+                <!-- Poster Role Card -->
                 <div class="col-md-6">
-                    <div class="card shadow h-100 border-success border-2 hover-card">
-                        <div class="card-body text-center p-5">
+                    <a asp-action="Poster" class="text-decoration-none h-100 d-block">
+                        <div class="lm-card h-100 text-center p-5 transition-all hover-translate-y border-top-success shadow-hover">
                             <div class="mb-4">
-                                <i class="bi bi-clipboard-data display-1 text-success"></i>
+                                <div class="bg-success-soft text-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-clipboard-data display-4"></i>
+                                </div>
                             </div>
-                            <h4 class="card-title">Poster Dashboard</h4>
-                            <p class="card-text text-muted">
-                                Post tasks, review applications, and manage your hired workers.
+                            <h3 class="fw-bold mb-3 text-dark">I am a Poster</h3>
+                            <p class="text-muted mb-4 px-3">
+                                Post new tasks, review applications from workers, and manage your projects.
                             </p>
-                            <ul class="list-unstyled text-start text-muted small mb-4">
-                                <li><i class="bi bi-check text-success me-2"></i>Post new tasks</li>
-                                <li><i class="bi bi-check text-success me-2"></i>Review worker applications</li>
-                                <li><i class="bi bi-check text-success me-2"></i>Manage your tasks</li>
-                                <li><i class="bi bi-check text-success me-2"></i>Track active bookings</li>
-                            </ul>
-                            <a asp-action="Poster" class="btn btn-success btn-lg w-100">
-                                <i class="bi bi-arrow-right me-2"></i>Go to Poster Dashboard
-                            </a>
+                            <div class="btn btn-success lg w-100 shadow-sm">
+                                Enter Poster Dashboard <i class="bi bi-arrow-right ms-2"></i>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
 
-            <div class="text-center mt-4">
-                <p class="text-muted small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    You can switch between dashboards anytime using the menu
+            <div class="text-center mt-5 pt-3 fade-in">
+                <p class="text-muted smaller">
+                    Need help? <a href="#" class="text-primary fw-bold text-decoration-none border-bottom border-primary border-2">Visit our Support Center</a>
                 </p>
             </div>
         </div>
@@ -71,11 +66,28 @@
 </div>
 
 <style>
-    .hover-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    .border-top-primary { border-top: 4px solid var(--lm-primary) !important; }
+    .border-top-success { border-top: 4px solid var(--lm-success) !important; }
+    
+    .shadow-hover {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
     }
-    .hover-card:hover {
+    
+    .shadow-hover:hover {
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
         transform: translateY(-5px);
-        box-shadow: 0 1rem 3rem rgba(0,0,0,0.175) !important;
+    }
+    
+    .hover-translate-y:hover {
+        transform: translateY(-5px);
+    }
+    
+    .slide-up {
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>

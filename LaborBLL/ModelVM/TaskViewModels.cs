@@ -149,14 +149,11 @@ namespace LaborBLL.ModelVM
         public int WorkersNeeded { get; set; }
         public string? RequiredSkills { get; set; }
         public string? AttachmentUrls { get; set; }
-        public string PosterId { get; set; } = string.Empty;
-        public string? PosterName { get; set; }
-        public string? PosterProfilePicture { get; set; }
-        public decimal? PosterRating { get; set; }
-        public string? AssignedWorkerId { get; set; }
-        public string? AssignedWorkerName { get; set; }
-        public string? AssignedWorkerProfilePicture { get; set; }
-        public decimal? AssignedWorkerRating { get; set; }
+        
+        // Refactored User Summaries
+        public UserSummaryViewModel Poster { get; set; } = new();
+        public UserSummaryViewModel? AssignedWorker { get; set; }
+
         public DateTime? AssignedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string? CancellationReason { get; set; }
@@ -165,10 +162,13 @@ namespace LaborBLL.ModelVM
         public bool IsUrgent { get; set; }
         public DateTime CreatedAt { get; set; }
         public int ApplicationCount { get; set; }
+        
+        // Permissions Logic
         public bool CanEdit { get; set; }
         public bool CanDelete { get; set; }
         public bool CanApply { get; set; }
         public bool HasApplied { get; set; }
+        
         public List<TaskApplicationViewModel> Applications { get; set; } = new();
         public List<TaskListViewModel> SimilarTasks { get; set; } = new();
     }

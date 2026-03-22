@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using AutoMapper;
 
 namespace LaborPL.Controllers
 {
@@ -15,6 +16,7 @@ namespace LaborPL.Controllers
         private readonly IStripeService _stripeService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IVerificationService _verificationService;
+        private readonly IMapper _mapper;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
@@ -22,12 +24,14 @@ namespace LaborPL.Controllers
             IStripeService stripeService,
             IUnitOfWork unitOfWork,
             IVerificationService verificationService,
+            IMapper mapper,
             ILogger<AccountController> logger)
         {
             _userService = userService;
             _stripeService = stripeService;
             _unitOfWork = unitOfWork;
             _verificationService = verificationService;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -204,11 +208,25 @@ namespace LaborPL.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> MyProfile(ProfileViewModel model)
+        public async Task<IActionResult> MyProfile(UserProfileUpdateModel model)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (model.Id != userId)
+            {
+                return Forbid();
+            }
+
             if (!ModelState.IsValid)
             {
-                return View(model);
+                // Re-fetch the display properties (stats, ratings) that aren't in the update model
+                var profile = await _userService.GetProfileWithDetailsAsync(userId);
+                if (profile != null)
+                {
+                    // Map the submitted values back into the display model so the user doesn't lose their input
+                    _mapper.Map(model, profile);
+                    return View(profile);
+                }
+                return View("Error");
             }
 
             var response = await _userService.UpdateProfileAsync(model);
@@ -220,7 +238,16 @@ namespace LaborPL.Controllers
             }
 
             ModelState.AddModelError(string.Empty, response.ErrorMessage ?? "Failed to update profile.");
-            return View(model);
+            
+            // Same pattern for service-level errors
+            var errorProfile = await _userService.GetProfileWithDetailsAsync(userId);
+            if (errorProfile != null)
+            {
+                _mapper.Map(model, errorProfile);
+                return View(errorProfile);
+            }
+            
+            return View("Error");
         }
 
         #endregion
@@ -698,7 +725,7 @@ namespace LaborPL.Controllers
         /// Starts Stripe Connect onboarding for workers to receive payments
         /// </summary>
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Worker")]
         public async Task<IActionResult> ConnectStripe()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -711,13 +738,6 @@ namespace LaborPL.Controllers
             if (user == null)
             {
                 return NotFound();
-            }
-
-            // Check if user has Worker role flag (not ASP.NET Identity role)
-            if (!user.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker))
-            {
-                TempData["ErrorMessage"] = "You must be a worker to connect a Stripe account.";
-                return RedirectToAction(nameof(MyProfile));
             }
 
             // If user already has a connected account, check if it's enabled
@@ -770,7 +790,7 @@ namespace LaborPL.Controllers
         /// Return URL after Stripe Connect onboarding
         /// </summary>
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Worker")]
         public async Task<IActionResult> StripeConnectReturn()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -783,14 +803,7 @@ namespace LaborPL.Controllers
             if (user == null || string.IsNullOrEmpty(user.StripeAccountId))
             {
                 TempData["ErrorMessage"] = "Stripe account connection failed.";
-                return RedirectToAction(nameof(MyProfile));
-            }
-
-            // Check if user has Worker role flag
-            if (!user.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker))
-            {
-                TempData["ErrorMessage"] = "You must be a worker to connect a Stripe account.";
-                return RedirectToAction(nameof(MyProfile));
+                return RedirectToAction(nameof(Profile));
             }
 
             // Check if account is enabled
@@ -804,14 +817,14 @@ namespace LaborPL.Controllers
                 TempData["WarningMessage"] = "Your Stripe account is pending verification. You will be able to receive payments once verification is complete.";
             }
 
-            return RedirectToAction(nameof(MyProfile));
+            return RedirectToAction(nameof(Profile));
         }
 
         /// <summary>
         /// Check Stripe Connect status
         /// </summary>
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Worker")]
         public async Task<IActionResult> StripeStatus()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -822,12 +835,6 @@ namespace LaborPL.Controllers
 
             var user = await _unitOfWork.AppUsers.GetByIdAsync(userId);
             if (user == null || string.IsNullOrEmpty(user.StripeAccountId))
-            {
-                return Json(new { connected = false, enabled = false });
-            }
-
-            // Check if user has Worker role flag
-            if (!user.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker))
             {
                 return Json(new { connected = false, enabled = false });
             }
@@ -849,7 +856,7 @@ namespace LaborPL.Controllers
         #endregion
 
         #region Add Cookies and Claims for Authentication
-        private async Task SignInUserAsync(ProfileViewModel profile, bool isPersistent)
+        private async Task SignInUserAsync(UserProfileDisplayViewModel profile, bool isPersistent)
         {
             var claims = new List<Claim>
             {

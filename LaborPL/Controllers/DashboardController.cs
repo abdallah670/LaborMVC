@@ -108,25 +108,26 @@ namespace LaborPL.Controllers
                 var tasksResponse = await _taskService.GetTaskListAsync(searchModel, userId);
                 var availableTasks = tasksResponse.Success && tasksResponse.Result != null ? tasksResponse.Result.Results : new List<TaskListViewModel>();
 
-                // Calculate statistics
-                ViewBag.TotalBookings = bookings.Count();
-                ViewBag.ActiveBookings = bookings.Count(b => b.Status == BookingStatus.InProgress || b.Status == BookingStatus.Scheduled);
-                ViewBag.CompletedBookings = bookings.Count(b => b.Status == LaborDAL.Enums.BookingStatus.Completed);
-                ViewBag.PendingApplications = applications.Count(a => a.Status == LaborDAL.Enums.ApplicationStatus.Pending);
-                ViewBag.TotalApplications = applications.Count();
+                // Populate ViewModel
+                var viewModel = new WorkerDashboardViewModel
+                {
+                    TotalBookings = bookings.Count(),
+                    ActiveBookings = bookings.Count(b => b.Status == BookingStatus.InProgress || b.Status == BookingStatus.Scheduled),
+                    CompletedBookings = bookings.Count(b => b.Status == LaborDAL.Enums.BookingStatus.Completed),
+                    PendingApplications = applications.Count(a => a.Status == LaborDAL.Enums.ApplicationStatus.Pending),
+                    TotalApplications = applications.Count(),
+                    RecentBookings = bookings.Take(5).ToList(),
+                    RecentApplications = applications.Take(5).ToList(),
+                    AvailableTasks = availableTasks
+                };
 
-                // Pass data to view
-                ViewBag.Bookings = bookings.Take(5).ToList();
-                ViewBag.Applications = applications.Take(5).ToList();
-                ViewBag.AvailableTasks = availableTasks;
-
-                return View();
+                return View(viewModel);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading worker dashboard for user {UserId}", userId);
-                TempData["ErrorMessage"] = "Failed to load dashboard. Please try again.";
-                return View();
+                TempData["Error"] = "Failed to load dashboard. Please try again.";
+                return View(new WorkerDashboardViewModel());
             }
         }
 
@@ -225,6 +226,7 @@ namespace LaborPL.Controllers
                 ViewBag.CompletedBookings = allBookings.Count(b => b.Status == BookingStatus.Completed);
                 ViewBag.PendingVerifications = userList.Count(u => !u.IDVerified && !string.IsNullOrEmpty(u.IDDocumentUrl));
                 ViewBag.VerifiedUsers = userList.Count(u => u.IDVerified);
+                ViewBag.TotalRevenue = allBookings.Sum(b => b.AgreedRate);
 
                 // Recent activity (last 5 of each)
                 ViewBag.RecentUsers = userList.OrderByDescending(u => u.CreatedAt).Take(5).ToList();

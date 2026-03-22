@@ -1,99 +1,227 @@
-﻿@* /Views/Profile/MyRaters.cshtml *@
+@using System.Security.Claims
 @model LaborBLL.Response.Response<List<LaborBLL.ModelVM.AllRatingViewModel>>
-
 @{
-    ViewData["Title"] = "من قيمني";
-
-}
-@inject UserManager<AppUser> userManager
-@{
-    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    var user = userManager.FindByIdAsync(userId).Result;
+    var targetUser = ViewBag.TargetUser as LaborDAL.Entities.AppUser;
+    var isAdminView = ViewBag.IsAdminView as bool? ?? false;
+    var pendingRatings = ViewBag.PendingRatings as List<LaborBLL.ModelVM.BookingDashboardViewModel>;
+    ViewData["Title"] = isAdminView ? $"Ratings for {targetUser?.FirstName}" : "My Ratings";
 }
 
-<div class="container mt-4">
-    <!-- استخدام البيانات -->
-    <div class="row">
-        <div class="col-12">
-            <h1>Hello @user?.FirstName @user?.LastName </h1>
-           
+<div class="container py-5">
+    <!-- Profile Header -->
+    <div class="lm-card mb-4 p-4">
+        <div class="d-flex align-items-center gap-4">
+            <div class="profile-avatar-lg bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem; font-weight: 600;">
+                @if (!string.IsNullOrEmpty(targetUser?.ProfilePictureUrl))
+                {
+                    <img src="@targetUser.ProfilePictureUrl" class="rounded-circle w-100 h-100 object-fit-cover" alt="Profile">
+                }
+                else
+                {
+                    <span>@(targetUser?.FirstName?[0])@(targetUser?.LastName?[0])</span>
+                }
+            </div>
+            <div>
+                <h1 class="h3 mb-1">
+                    @if (isAdminView)
+                    {
+                        <span class="badge bg-soft-warning text-warning fs-6 mb-2 py-1 px-2 border border-warning">Admin Oversight Mode</span>
+                        <br />
+                    }
+                    @(isAdminView ? $"{targetUser?.FirstName} {targetUser?.LastName}'s Profile" : $"Welcome, {targetUser?.FirstName}!")
+                </h1>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-calendar3 me-2"></i>Member since @targetUser?.CreatedAt.ToString("MMMM yyyy")
+                </p>
+            </div>
+            <div class="ms-auto text-end">
+                <div class="d-flex align-items-center gap-2 mb-2 justify-content-end">
+                    <span class="h4 mb-0 fw-bold">@targetUser?.AverageRating.ToString()</span>
+                    <div class="text-warning">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= Math.Round(targetUser?.AverageRating ?? 0))
+                            {
+                                <i class="bi bi-star-fill"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-star"></i>
+                            }
+                        }
+                    </div>
+                </div>
+                <span class="text-muted small">Based on @(Model.Result?.Count ?? 0) reviews</span>
+            </div>
         </div>
     </div>
 
-    <!-- عرض قائمة المقيّمين -->
-    @if (Model.Result != null )
-    {
-        <div class="row">
-            @foreach (var rater in Model.Result)
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Pending Ratings Section -->
+            @if (pendingRatings != null && pendingRatings.Any() && !isAdminView)
             {
-
-
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="mb-3">
-                        <strong> Name</strong>
-                        <p class="text-muted mb-0">
-                            <a href="@Url.Action("ProfilePoster", "Booking", new { id = rater.RaterId })">@rater.RaterName</a>
-                        </p><strong> from Bookin</strong>
-                        <p class="text-muted mb-0">
-                                    <a href="@Url.Action("Details", "Booking", new { id = rater.bookingId })">Go To Booking</a>
-                        </p>
+                <div class="mb-5">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+                            <span class="p-1 px-2 bg-primary-soft text-primary rounded small">@pendingRatings.Count</span>
+                            Awaiting Your Rating
+                        </h2>
                     </div>
-                            
-
-                            <div class="rating mb-2">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    if (i <= rater.Score)
-                                    {
-                                        <i class="fas fa-star text-warning"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="far fa-star text-warning"></i>
-                                    }
-                                }
-                                <span class="ms-2">@rater.Score/5</span>
-                                @{
-                                    var rating = rater.Score ;
-                                    var fullStar = (int)Math.Floor(rating);
-                                    var hasHalfStar = rating - fullStar >= 0.5m;
-                                }
-
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    if (i <= fullStar)
-                                    {
-                                        <i class="bi bi-star-fill text-warning fs-4 me-1"></i>
-                                    }
-                                    else if (i == fullStar + 1 && hasHalfStar)
-                                    {
-                                        <i class="bi bi-star-half text-warning fs-4 me-1"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-star text-warning fs-4 me-1"></i>
-                                    }
-                                }
+                    <div class="row g-3">
+                        @foreach (var pending in pendingRatings)
+                        {
+                            <div class="col-12">
+                                <div class="lm-card p-3 border-start border-4 border-primary">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h4 class="h6 mb-1">Booking #@pending.Id</h4>
+                                            <p class="text-muted small mb-0">
+                                                Completed on @(pending.EndTime?.ToString("MMM dd, yyyy") ?? "Recently") • 
+                                                <strong>@pending.AgreedRate.ToString("C")</strong>
+                                            </p>
+                                        </div>
+                                        <a href="@Url.Action("Details", "Booking", new { id = pending.Id })" class="btn btn-primary btn-sm rounded-pill px-3">
+                                            Rate Now <i class="bi bi-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-
-                          
-                            <h4>Her Comment @rater.comment </h4>
-
-                            <small class="text-muted">
-                              Date: @rater.CreatedAt.ToString("dd/MM/yyyy")
-                            </small>
-                        </div>
+                        }
                     </div>
                 </div>
             }
+
+            <!-- Existing Ratings -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="h5 mb-0">Rating History</h2>
+                <div class="dropdown">
+                    <button class="btn btn-link link-muted p-0 text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Sort by: Newest
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item active" href="#">Newest First</a></li>
+                        <li><a class="dropdown-item" href="#">Highest Rating</a></li>
+                        <li><a class="dropdown-item" href="#">Lowest Rating</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            @if (Model.Result != null && Model.Result.Any())
+            {
+                <div class="stack gap-3">
+                    @foreach (var rater in Model.Result)
+                    {
+                        <div class="lm-card p-4 hover-shadow transition">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar bg-light text-muted rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                        @(string.IsNullOrEmpty(rater.RaterName) ? "?" : rater.RaterName[0].ToString())
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0 h6">
+                                            <a href="@Url.Action("ProfilePoster", "Booking", new { id = rater.RaterId })" class="text-dark text-decoration-none fw-bold">
+                                                @rater.RaterName
+                                            </a>
+                                        </h5>
+                                        <span class="text-muted small">@rater.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                </div>
+                                <div class="text-warning">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= rater.Score)
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="p-3 bg-light rounded-3 mb-3">
+                                <p class="mb-0 font-italic text-secondary">
+                                    <i class="bi bi-quote fs-4 text-primary opacity-25 me-2"></i>
+                                    @rater.comment
+                                </p>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3 small">
+                                <span class="text-muted">Booking Reference:</span>
+                                <a href="@Url.Action("Details", "Booking", new { id = rater.bookingId })" class="badge bg-primary-soft text-primary text-decoration-none">
+                                    <i class="bi bi-link-45deg me-1"></i>View Project
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="lm-card p-5 text-center">
+                    <div class="display-6 text-muted mb-3 opacity-25">
+                        <i class="bi bi-star"></i>
+                    </div>
+                    <h3 class="h5 mb-2">No ratings yet</h3>
+                    <p class="text-muted mx-auto" style="max-width: 300px;">
+                        @(isAdminView ? "This user hasn't received any feedback from the community yet." : "You haven't received any feedback yet. Complete your first task to get rated!")
+                    </p>
+                </div>
+            }
         </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            No one Has evaluated You Yet 
+
+        <!-- Sidebar Stats -->
+        <div class="col-lg-4">
+            <div class="lm-card p-4 sticky-top" style="top: 2rem;">
+                <h3 class="h6 mb-4 fw-bold">Rating Breakdown</h3>
+                
+                @{
+                    var distribution = Model.Result?.GroupBy(r => (int)r.Score).ToDictionary(g => g.Key, g => g.Count()) ?? new Dictionary<int, int>();
+                    var total = Model.Result?.Count ?? 0;
+                }
+
+                @for (int i = 5; i >= 1; i--)
+                {
+                    var count = distribution.ContainsKey(i) ? distribution[i] : 0;
+                    var percent = total > 0 ? (count * 100 / total) : 0;
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="small text-muted me-3" style="width: 20px;">@i</span>
+                        <div class="progress flex-grow-1" style="height: 6px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: @percent%"></div>
+                        </div>
+                        <span class="small text-muted ms-3" style="width: 30px;">@count</span>
+                    </div>
+                }
+
+                <hr class="my-4">
+
+                <div class="alert alert-primary-soft small border-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Ratings are verified and linked to completed work bookings.
+                </div>
+                
+                @if (isAdminView)
+                {
+                    <a href="@Url.Action("Users", "Admin")" class="btn btn-outline-secondary w-100 btn-sm mt-2">
+                        <i class="bi bi-arrow-left me-2"></i>Back to User Management
+                    </a>
+                }
+            </div>
         </div>
-    }
+    </div>
 </div>
+
+<style>
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1) !important; }
+    .text-primary-soft { color: rgba(13, 110, 253, 0.1) !important; }
+    .alert-primary-soft { background-color: rgba(13, 110, 253, 0.05); color: #084298; }
+    .profile-avatar-lg { border: 4px solid #fff; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1); }
+    .hover-shadow:hover { transform: translateY(-3px); box-shadow: 0 1rem 3rem rgba(0,0,0,0.1) !important; }
+    .transition { transition: all 0.3s ease; }
+    .badge.bg-primary-soft { border: 1px solid rgba(13, 110, 253, 0.2); }
+</style>

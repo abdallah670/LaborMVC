@@ -1,7 +1,7 @@
-﻿@model IEnumerable<LaborBLL.ModelVM.BookingDashboardViewModel>
-
+@model IEnumerable<LaborBLL.ModelVM.BookingDashboardViewModel>
+@using LaborDAL.Enums
 @{
-    ViewData["Title"] = "My Bookings";
+    ViewData["Title"] = "Executive Dashboard";
     var currentFilter = ViewBag.CurrentFilter as string ?? "all";
     var currentRole = ViewBag.CurrentRole as string ?? "all";
 
@@ -9,212 +9,207 @@
     bool isPoster = User.IsInRole("Poster");
 }
 
-<div class="booking-dashboard-container fade-in">
+<div class="dashboard-container fade-in py-4">
+    <!-- Page Header -->
+    <div class="lm-dashboard-header mb-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-4">
+            <div>
+                <h1 class="lm-dashboard-title">Engagement Control</h1>
+                <p class="text-muted mb-0">Manage your scheduled deployments, active tasks, and financial outcomes.</p>
+            </div>
+            @if (isWorker)
+            {
+                <a asp-controller="Task" asp-action="Index" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Discover New Missions
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="lm-card h-100 p-4 border-0 shadow-sm transition-all hover-translate-y bg-white text-center">
+                <div class="bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi bi-layers fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">@ViewBag.TotalBookings</h3>
+                <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-0">Total</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="lm-card h-100 p-4 border-0 shadow-sm transition-all hover-translate-y bg-white text-center">
+                <div class="bg-warning-soft text-warning rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi bi-calendar-event fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">@ViewBag.UpcomingCount</h3>
+                <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-0">Upcoming</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="lm-card h-100 p-4 border-0 shadow-sm transition-all hover-translate-y bg-white text-center">
+                <div class="bg-info-soft text-info rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi bi-activity fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">@ViewBag.InProgressCount</h3>
+                <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-0">Active</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="lm-card h-100 p-4 border-0 shadow-sm transition-all hover-translate-y bg-white text-center">
+                <div class="bg-success-soft text-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi bi-check-all fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">@ViewBag.CompletedCount</h3>
+                <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-0">Ready</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="lm-card h-100 p-4 border-0 shadow-sm transition-all hover-translate-y bg-white text-center">
+                <div class="bg-danger-soft text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi bi-x-circle fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">@ViewBag.CancelCount</h3>
+                <p class="smaller text-muted text-uppercase fw-bold ls-1 mb-0">Revoked</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="lm-card h-100 p-4 border-0 shadow p-4 border-0 shadow-sm transition-all hover-translate-y bg-primary text-white text-center">
+                <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi bi-currency-dollar fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">@ViewBag.TotalEarnings?.ToString("N0")</h3>
+                <p class="smaller text-white-50 text-uppercase fw-bold ls-1 mb-0">Equity</p>
+            </div>
+        </div>
+    </div>
 
     @if (isWorker && isPoster)
     {
-        <div class="mb-3">
-            <ul class="nav nav-tabs">
-                <li class="nav-item">
-                    <a class="nav-link @(currentRole == "worker" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-role="worker"
-                       asp-route-filter="@currentFilter">
-                        As Worker
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(currentRole == "poster" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-role="poster"
-                       asp-route-filter="@currentFilter">
-                        As Poster
-                    </a>
-                </li>
-            </ul>
+        <div class="d-flex justify-content-center mb-5">
+            <div class="bg-white p-2 rounded-pill shadow-sm border d-flex gap-2">
+                <a class="btn @(currentRole == "worker" ? "btn-primary" : "btn-white") rounded-pill px-4 fw-bold transition-all"
+                   asp-action="Dashboard" asp-route-role="worker" asp-route-filter="@currentFilter">
+                   <i class="bi bi-hammer me-2"></i>Service Provider
+                </a>
+                <a class="btn @(currentRole == "poster" ? "btn-primary" : "btn-white") rounded-pill px-4 fw-bold transition-all"
+                   asp-action="Dashboard" asp-route-role="poster" asp-route-filter="@currentFilter">
+                   <i class="bi bi-briefcase me-2"></i>Task Manager
+                </a>
+            </div>
         </div>
     }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="bi bi-calendar3 me-2"></i>My Bookings</h2>
-            <p class="text-muted mb-0">Manage your scheduled tasks and appointments</p>
-        </div>
-        @if (isWorker)
-        {
-            <a asp-controller="Task" asp-action="Index" class="btn btn-primary">
-                <i class="bi bi-search me-1"></i>Find More Tasks
-            </a>
-        }
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-primary text-white">
-                <div class="card-body text-center">
-                    <h3 class="mb-0">@ViewBag.TotalBookings</h3>
-                    <small>Total Bookings</small>
+    <!-- Filtering & List -->
+    <div class="lm-card p-0 overflow-hidden shadow-sm border-0">
+        <div class="bg-light-soft p-4 border-bottom">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="nav-pills-container">
+                    <ul class="nav nav-pills gap-2">
+                        <li class="nav-item">
+                            <a class="nav-link rounded-pill px-4 @(currentFilter == "all" ? "active" : "bg-white border shadow-sm text-dark")"
+                               asp-action="Dashboard" asp-route-filter="all" asp-route-role="@currentRole" asp-route-search="@ViewBag.CurrentSearch">All Assignments</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link rounded-pill px-4 @(currentFilter == "upcoming" ? "active" : "bg-white border shadow-sm text-dark")"
+                               asp-action="Dashboard" asp-route-filter="upcoming" asp-route-role="@currentRole" asp-route-search="@ViewBag.CurrentSearch">Upcoming</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link rounded-pill px-4 @(currentFilter == "inprogress" ? "active" : "bg-white border shadow-sm text-dark")"
+                               asp-action="Dashboard" asp-route-filter="inprogress" asp-route-role="@currentRole" asp-route-search="@ViewBag.CurrentSearch">Active</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link rounded-pill px-4 @(currentFilter == "completed" ? "active" : "bg-white border shadow-sm text-dark")"
+                               asp-action="Dashboard" asp-route-filter="completed" asp-route-role="@currentRole" asp-route-search="@ViewBag.CurrentSearch">Completed</a>
+                        </li>
+                    </ul>
+                </div>
+            
+                  
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-warning">
-                <div class="card-body text-center">
-                    <h3 class="mb-0">@ViewBag.UpcomingCount</h3>
-                    <small>Upcoming</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-info text-white">
-                <div class="card-body text-center">
-                    <h3 class="mb-0">@ViewBag.InProgressCount</h3>
-                    <small>In Progress</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-danger text-white">
-                <div class="card-body text-center">
-                    <h3 class="mb-0">@ViewBag.CancelCount</h3>
-                    <small>Cancelled</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-success text-white">
-                <div class="card-body text-center">
-                    <h3 class="mb-0">@ViewBag.CompletedCount</h3>
-                    <small>Completed</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow">
-        <div class="card-header bg-transparent">
-            <ul class="nav nav-pills card-header-pills">
-                <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "all" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-filter="all"
-                       asp-route-role="@currentRole">
-                        All
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "upcoming" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-filter="upcoming"
-                       asp-route-role="@currentRole">
-                        Upcoming
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "inprogress" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-filter="inprogress"
-                       asp-route-role="@currentRole">
-                        In Progress
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "completed" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-filter="completed"
-                       asp-route-role="@currentRole">
-                        Completed
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "cancel" ? "active" : "")"
-                       asp-action="Dashboard"
-                       asp-route-filter="cancel"
-                       asp-route-role="@currentRole">
-                        Cancel
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="card-body">
+        <div class="p-4 p-md-5 bg-white">
             @if (Model.Any())
             {
-                @foreach (var booking in Model)
-                {
-                    <div class="booking-card card mb-3 shadow-sm">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-6">
-                                    <h5 class="mb-2">
-                                        <a asp-action="Details"
-                                           asp-route-id="@booking.Id"
-                                           class="text-decoration-none">
-                                            Booking #@booking.Id
-                                        </a>
-                                    </h5>
+                <div class="row g-4">
+                    @foreach (var booking in Model)
+                    {
+                        <div class="col-12">
+                            <div class="p-4 border rounded-4 bg-white shadow-hover transition-all">
+                                <div class="row align-items-center g-4">
+                                    <div class="col-lg-5">
+                                        <div class="d-flex align-items-center gap-4">
+                                            <div class="bg-primary-soft text-primary rounded-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 72px; height: 72px;">
+                                                <i class="bi bi-clipboard-check fs-2"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-1 fw-bold">
+                                                    <a asp-action="Details" asp-route-id="@booking.Id" class="text-dark hover-primary text-decoration-none">
+                                                        Booking #@booking.Id.ToString("0000")
+                                                    </a>
+                                                </h5>
+                                                <span class="badge @GetStatusBadgeClass(booking.Status) rounded-pill px-3 mb-2">@booking.Status</span>
+                                                @if (booking.StartTime.HasValue)
+                                                {
+                                                    <p class="text-muted smaller mb-0">
+                                                        <i class="bi bi-calendar-event me-2"></i>@booking.StartTime.Value.ToString("MMM dd, yyyy · hh:mm tt")
+                                                    </p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <span class="badge @GetStatusBadgeClass(booking.Status)">
-                                        @booking.Status
-                                    </span>
+                                    <div class="col-lg-3 text-lg-center border-start-lg">
+                                        <p class="smaller text-muted text-uppercase fw-bold mb-1 ls-1">Agreement Value</p>
+                                        <h4 class="text-primary fw-bold mb-0">$@booking.AgreedRate.ToString("N2")</h4>
+                                        <small class="text-muted">Standard Rate</small>
+                                    </div>
 
-                                    @if (booking.StartTime.HasValue)
-                                    {
-                                        <p class="text-muted mb-0 mt-2">
-                                            @booking.StartTime.Value.ToString("MMM dd, yyyy HH:mm")
-                                        </p>
-                                    }
-                                </div>
-
-                                <div class="col-md-3 text-md-center">
-                                    <h4 class="text-primary mb-0">
-                                        $@booking.AgreedRate.ToString("N2")
-                                    </h4>
-                                    <small class="text-muted">Agreed Rate</small>
-                                </div>
-
-                                <div class="col-md-3 text-md-end">
-                                    @if (isPoster && (booking.PaymentStatus == "Pending" || booking.PaymentStatus == "No Payment"))
-                                    {
-                                             <a asp-controller="Payment" asp-action="Checkout" asp-route-bookingId="@booking.Id" class="btn btn-warning btn-sm">
-                                  Checkout to View
-                                                                </a>
-                                    
-                                    }
-                                    else
-                                    {
-                                        <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-outline-primary btn-sm">
-                                            View Details
-                                        </a>
-                                    }
+                                    <div class="col-lg-4 text-lg-end">
+                                        @if (isPoster && (booking.PaymentStatus == "Pending" || booking.PaymentStatus == "No Payment"))
+                                        {
+                                            <a asp-controller="Payment" asp-action="Checkout" asp-route-bookingId="@booking.Id" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold shadow-sm">
+                                                <i class="bi bi-credit-card me-2"></i>Secure Payment
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-outline-primary btn-lg rounded-pill px-4 fw-bold">
+                                                <i class="bi bi-eye me-2"></i>Manage Engagement
+                                            </a>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
             }
             else
             {
                 <div class="text-center py-5">
-                    <h5>No bookings found</h5>
-                    <p class="text-muted">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4 shadow-inner" style="width: 120px; height: 120px;">
+                        <i class="bi bi-journal-x fs-1 text-muted opacity-50"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Zero engagements found</h3>
+                    <p class="text-muted max-w-500 mx-auto mb-5">
                         @if (currentFilter == "all")
                         {
-                            <span>You don't have any bookings yet.</span>
+                            <span>Your dashboard is currently waiting for new missions. Why not explore available tasks in the marketplace?</span>
                         }
                         else
                         {
-                            <span>No @currentFilter bookings found.</span>
+                            <span>It seems there are no @currentFilter engagements available under this classification.</span>
                         }
                     </p>
+                    @if (isWorker)
+                    {
+                        <a asp-controller="Task" asp-action="Index" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+                            <i class="bi bi-search me-2"></i>Scan Marketplace
+                        </a>
+                    }
                 </div>
             }
         </div>
@@ -222,17 +217,13 @@
 </div>
 
 @functions {
-    string GetStatusBadgeClass(LaborDAL.Enums.BookingStatus status)
-    {
-        return status switch
-        {
-            LaborDAL.Enums.BookingStatus.Scheduled => "bg-warning",
-            LaborDAL.Enums.BookingStatus.InProgress => "bg-info",
-            LaborDAL.Enums.BookingStatus.Completed => "bg-success",
-            LaborDAL.Enums.BookingStatus.Cancelled => "bg-danger",
-            LaborDAL.Enums.BookingStatus.Disputed => "bg-dark",
-            _ => "bg-secondary"
-        };
-    }
+    string GetStatusBadgeClass(BookingStatus status) => status switch {
+        BookingStatus.Scheduled => "bg-warning-soft text-warning",
+        BookingStatus.InProgress => "bg-info-soft text-info",
+        BookingStatus.Completed => "bg-success-soft text-success",
+        BookingStatus.Cancelled => "bg-danger-soft text-danger",
+        BookingStatus.Disputed => "bg-dark text-white",
+        _ => "bg-light text-muted"
+    };
 }
     

@@ -1,4 +1,4 @@
-﻿@model LaborBLL.ModelVM.ProfileViewModel
+@model LaborBLL.ModelVM.UserProfileDisplayViewModel
 @{
     ViewData["Title"] = "Worker Profile";
     Layout = "_Layout";
@@ -51,7 +51,7 @@
 
                     <p class="profile-member-since">
                         <i class="bi bi-calendar3 me-1"></i>
-                        Member since: @Model.CreatedAt.ToString("MMM dd, yyyy")
+                        Member since: @Model.MemberSince.ToString("MMM dd, yyyy")
                     </p>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-﻿@* Views/Shared/_ChatFloatingIcon.cshtml *@
+@* Views/Shared/_ChatFloatingIcon.cshtml *@
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<AppUser> UserManager
 
@@ -8,12 +8,11 @@
 
 @if (isAuthenticated)
 {
-    <!-- أيقونة المحادثات الفاخرة في النافبار -->
-    <li class="nav-item chat-nav-item">
-        <a asp-controller="Chat" asp-action="Index" class="nav-link chat-nav-link" id="chatNavIcon">
+    <div class="chat-action-item">
+        <a asp-controller="Chat" asp-action="Index" class="chat-nav-link" id="chatNavIcon">
             <div class="chat-icon-wrapper">
-                <i class="bi bi-chat-heart-fill chat-icon"></i>
-                <span class="chat-text">Contacts</span>
+                <i class="bi bi-chat-heart chat-icon"></i>
+                <span class="chat-text"></span>
                 <span class="chat-badge" id="unreadMessagesBadge">0</span>
 
                 <!-- التأثيرات الحركية -->
@@ -22,15 +21,17 @@
             </div>
 
             <!-- Tooltip صغير للموبايل -->
-            <span class="chat-mobile-tooltip">المحادثات</span>
+            <span class="chat-mobile-tooltip"></span>
         </a>
-    </li>
+    </div>
+}
 
     <style>
         /* حاوية الأيقونة */
-        .chat-nav-item {
+        .chat-action-item {
             position: relative;
             margin: 0 2px;
+            list-style: none; /* Just in case */
         }
 
         /* رابط المحادثات */
@@ -360,4 +361,3 @@
             }
         });
     </script>
-}

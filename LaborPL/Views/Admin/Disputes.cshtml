@@ -49,6 +49,26 @@
                 </div>
             </div>
         </div>
+    <!-- Search and Filter Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <form asp-action="Disputes" method="get" class="d-flex gap-2">
+                <input type="hidden" name="filter" value="@currentFilter" />
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" 
+                           placeholder="Search disputes by ID, task title, or user name..." 
+                           value="@ViewBag.SearchTerm">
+                    <button type="submit" class="btn btn-primary px-4">Search</button>
+                </div>
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm))
+                {
+                    <a asp-action="Disputes" asp-route-filter="@currentFilter" class="btn btn-outline-secondary">Clear</a>
+                }
+            </form>
+        </div>
     </div>
 
     <!-- Filter Tabs -->
@@ -56,23 +76,23 @@
         <div class="card-header bg-transparent">
             <ul class="nav nav-pills card-header-pills">
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "open" ? "active" : "")" asp-action="Disputes" asp-route-filter="open">
+                    <a class="nav-link @(currentFilter == "open" ? "active" : "")" asp-action="Disputes" asp-route-filter="open" asp-route-search="@ViewBag.SearchTerm">
                         <i class="bi bi-exclamation-circle me-1"></i>Open
                         <span class="badge bg-danger ms-1">@ViewBag.OpenCount</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "underreview" ? "active" : "")" asp-action="Disputes" asp-route-filter="underreview">
+                    <a class="nav-link @(currentFilter == "underreview" ? "active" : "")" asp-action="Disputes" asp-route-filter="underreview" asp-route-search="@ViewBag.SearchTerm">
                         <i class="bi bi-eye me-1"></i>Under Review
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "resolved" ? "active" : "")" asp-action="Disputes" asp-route-filter="resolved">
+                    <a class="nav-link @(currentFilter == "resolved" ? "active" : "")" asp-action="Disputes" asp-route-filter="resolved" asp-route-search="@ViewBag.SearchTerm">
                         <i class="bi bi-check-circle me-1"></i>Resolved
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentFilter == "all" ? "active" : "")" asp-action="Disputes" asp-route-filter="all">
+                    <a class="nav-link @(currentFilter == "all" ? "active" : "")" asp-action="Disputes" asp-route-filter="all" asp-route-search="@ViewBag.SearchTerm">
                         <i class="bi bi-grid me-1"></i>All
                     </a>
                 </li>

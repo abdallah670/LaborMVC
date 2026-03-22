@@ -1,82 +1,78 @@
-@model ProfileViewModel
+@model LaborBLL.ModelVM.UserProfileDisplayViewModel
 @{
     ViewData["Title"] = "Upload Profile Picture";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-camera-fill me-2"></i>Upload Profile Picture</h4>
-                </div>
-                <div class="card-body">
-                    <!-- Current Profile Picture -->
-                    <div class="text-center mb-4">
-                        <h6>Current Picture</h6>
-                        <div class="position-relative d-inline-block">
-                            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
-                            {
-                                <img src="@Model.ProfilePictureUrl" 
-                                     alt="Current Profile" 
-                                     class="rounded-circle"
-                                     style="width: 150px; height: 150px; object-fit: cover;"
-                                     id="current-picture" />
-                            }
-                            else
-                            {
-                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                                     style="width: 150px; height: 150px;"
-                                     id="current-picture-placeholder">
-                                    <i class="bi bi-person-fill text-white" style="font-size: 80px;"></i>
-                                </div>
-                            }
-                        </div>
-                    </div>
+<div class="auth-container fade-in">
+    <div class="auth-card">
+        <div class="lm-card p-4">
+            <div class="text-center mb-4">
+                <i class="bi bi-camera-fill fs-1 text-primary mb-2"></i>
+                <h4 class="fw-bold">Update Profile Photo</h4>
+                <p class="text-muted small">Choose a photo that clearly shows your face</p>
+            </div>
 
-                    <!-- Simple File Upload Form -->
-                    <form asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" id="uploadForm">
-                        <div class="mb-4">
-                            <label for="profilePicture" class="form-label">
-                                <i class="bi bi-image me-1"></i>Select Image
-                            </label>
-                            <input type="file" 
-                                   class="form-control" 
-                                   id="profilePicture" 
-                                   name="profilePicture"
-                                   accept="image/jpeg,image/png,image/gif"
-                                   required />
-                            <div class="form-text">
-                                <i class="bi bi-info-circle me-1"></i>
-                                JPEG, PNG, or GIF • Max 5MB • Recommended: 400x400px or larger
-                            </div>
+            <div class="text-center mb-4">
+                <div class="position-relative d-inline-block p-1 border rounded-circle">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <img src="@Model.ProfilePictureUrl" 
+                             alt="Current Profile" 
+                             class="rounded-circle"
+                             style="width: 120px; height: 120px; object-fit: cover;"
+                             id="current-picture" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                             style="width: 120px; height: 120px;"
+                             id="current-picture-placeholder">
+                            <i class="bi bi-person-fill text-muted opacity-50" style="font-size: 60px;"></i>
                         </div>
-
-                        <!-- Preview Container -->
-                        <div id="previewContainer" class="text-center mb-4 d-none">
-                            <h6>Preview</h6>
-                            <img id="imagePreview" class="rounded-circle" 
-                                 style="width: 150px; height: 150px; object-fit: cover;" />
-                        </div>
-
-                        @if (TempData["Error"] != null)
-                        {
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
-                            </div>
-                        }
-
-                        <div class="d-flex justify-content-between">
-                            <a href="@Url.Action("MyProfile", "Account")" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>Back to Profile
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="btnUpload">
-                                <i class="bi bi-cloud-upload me-1"></i>Upload Picture
-                            </button>
-                        </div>
-                    </form>
+                    }
                 </div>
             </div>
+
+            <form asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="mb-4">
+                    <label for="profilePicture" class="form-label text-uppercase small fw-bold">Select Image File</label>
+                    <input type="file" 
+                           class="form-control" 
+                           id="profilePicture" 
+                           name="profilePicture"
+                           accept="image/jpeg,image/png,image/gif"
+                           required />
+                    <div class="form-text smaller mt-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        JPG, PNG, GIF • Max 5MB
+                    </div>
+                </div>
+
+                <!-- Preview Container -->
+                <div id="previewContainer" class="text-center mb-4 d-none">
+                    <div class="small fw-bold text-uppercase text-primary mb-2">New Photo Preview</div>
+                    <div class="p-1 border border-primary rounded-circle d-inline-block">
+                        <img id="imagePreview" class="rounded-circle" 
+                             style="width: 120px; height: 120px; object-fit: cover;" />
+                    </div>
+                </div>
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger p-2 small mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+                    </div>
+                }
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary" id="btnUpload">
+                        <i class="bi bi-cloud-upload me-1"></i>Save Changes
+                    </button>
+                    <a href="@Url.Action("MyProfile", "Account")" class="btn btn-link btn-sm text-muted">
+                        Cancel
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

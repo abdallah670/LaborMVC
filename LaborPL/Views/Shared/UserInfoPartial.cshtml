@@ -2,72 +2,28 @@
 @{
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var user = userManager.FindByIdAsync(userId).Result;
+    var rating = user?.AverageRating ?? 0m;
 }
 
 @if (user != null)
 {
-    <div class="d-flex align-items-center">
-        <div class="d-flex align-items-center">
-            <style>
-                .rating-link {
-                    transition: transform 0.2s, opacity 0.2s;
-                    display: inline-block;
-                }
-
-                    .rating-link:hover {
-                        transform: scale(1.05);
-                        opacity: 0.9;
-                    }
-
-                    .rating-link:active {
-                        transform: scale(0.95);
-                    }
-            </style>
-
-            <!-- Profile Picture -->
-            <a asp-controller="Account" asp-action="MyProfile" class="me-2">
-                @if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
-                {
-                    <img src="@user.ProfilePictureUrl" alt="Profile" class="navbar-profile-pic" />
-                }
-                else
-                {
-                    <div class="navbar-profile-placeholder">
-                        <span>@(user.FirstName?.FirstOrDefault())@(user.LastName?.FirstOrDefault())</span>
-                    </div>
-                }
-            </a>
-
-            <a asp-controller="Rating" asp-action="GetMyRate"
-               asp-route-userId="@user.Id"
-               class="rating-link text-decoration-none">
-                <span class="badge text-bg-primary text-white me-1 ms-2"
-                      style="min-width:40px; text-align:center;">
-                    My Rating: @user.AverageRating?.ToString("0.0")
-                </span>
-            </a>
-            @{
-                var rating = user.AverageRating ?? 0m;
-                var fullStar = (int)Math.Floor(rating);
-                var hasHalfStar = rating - fullStar >= 0.5m;
-            }
-
-            @for (int i = 1; i <= 5; i++)
-            {
-                if (i <= fullStar)
-                {
-                    <i class="bi bi-star-fill text-warning fs-4 me-1"></i>
-                }
-                else if (i == fullStar + 1 && hasHalfStar)
-                {
-                    <i class="bi bi-star-half text-warning fs-4 me-1"></i>
-                }
-                else
-                {
-                    <i class="bi bi-star text-warning fs-4 me-1"></i>
-                }
-            }
-
+    <div class="lm-profile-toggle" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        @if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+        {
+            <img src="@user.ProfilePictureUrl" alt="Profile" class="lm-nav-avatar" />
+        }
+        else
+        {
+            <div class="navbar-profile-placeholder lm-nav-avatar d-flex align-items-center justify-content-center bg-primary text-white fw-bold">
+                <span>@(user.FirstName?.FirstOrDefault())@(user.LastName?.FirstOrDefault())</span>
+            </div>
+        }
+        <div class="d-none d-md-block">
+            <div class="lm-nav-user-name">@user.FirstName @user.LastName</div>
+            <div class="lm-nav-rating">
+                <i class="bi bi-star-fill"></i>
+                <span>@rating.ToString("0.0")</span>
+            </div>
         </div>
     </div>
-}
+}

@@ -1,201 +1,151 @@
-@model LaborBLL.ModelVM.ProfileViewModel
+@model LaborBLL.ModelVM.UserProfileDisplayViewModel
 @{
     ViewData["Title"] = Model.FirstName + " " + Model.LastName + " - Profile";
     Layout = "_Layout";
 }
 
-<div class="profile-container fade-in">
-    <div class="row">
-        <!-- Profile Sidebar -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow profile-sidebar">
-                <div class="card-body text-center">
-                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
-                    {
-                        <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="profile-avatar" />
-                    }
-                    else
-                    {
-                        <div class="profile-avatar-placeholder">    
-                            <span>@(Model.FirstName?.FirstOrDefault())@(Model.LastName?.FirstOrDefault())</span>
+<div class="container-fluid px-0 fade-in">
+    <!-- Premium Profile Header -->
+    <div class="profile-header mb-5">
+        <div class="profile-avatar-wrapper">
+            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+            {
+                <img src="@Model.ProfilePictureUrl" alt="Profile" class="profile-avatar-lg shadow-sm" />
+            }
+            else
+            {
+                <div class="profile-avatar-placeholder-lg shadow-sm">
+                    <span>@(Model.FirstName?.FirstOrDefault())@(Model.LastName?.FirstOrDefault())</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="container mt-n4">
+        <div class="row g-4">
+            <!-- Left Column: User Context -->
+            <div class="col-lg-4">
+                <div class="lm-card p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h4 class="fw-bold mb-1">@Model.FirstName @Model.LastName</h4>
+                            <p class="text-muted small mb-0"><i class="bi bi-patch-check-fill text-primary me-1"></i>Verified Member</p>
                         </div>
-                    }
-                    
-                    <h4 class="profile-name">@Model.FirstName @Model.LastName</h4>
-                    <p class="profile-email">@Model.Email</p>
-                    
-                    @if (Model.IDVerified)
-                    {
-                        <span class="profile-badge verified">
-                            <i class="bi bi-patch-check-fill me-1"></i>ID Verified
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="profile-badge not-verified">
-                            <i class="bi bi-exclamation-triangle me-1"></i>ID Not Verified
-                        </span>
-                    }
+                        @if (Model.IDVerified)
+                        {
+                            <span class="badge lm-status--success" title="ID Verified">
+                                <i class="bi bi-shield-check"></i>
+                            </span>
+                        }
+                    </div>
 
                     @if (Model.AverageRating.HasValue)
                     {
-                        <div class="profile-rating mt-3">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                <i class="bi bi-star-fill star @(i <= Math.Round(Model.AverageRating.Value) ? "filled" : "empty")"></i>
-                            }
-                            <span class="ms-2 text-muted">(@Model.AverageRating?.ToString("0.0"))</span>
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="text-warning me-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star-fill @(i <= Math.Round(Model.AverageRating.Value) ? "" : "text-muted opacity-25")"></i>
+                                }
+                            </div>
+                            <span class="fw-bold me-1">@Model.AverageRating?.ToString("0.0")</span>
+                            <span class="text-muted small">(@Model.TotalRatingsCount)</span>
                         </div>
-                        <small class="text-muted">@Model.TotalRatingsReceived reviews</small>
                     }
 
-                    <p class="profile-member-since mt-3">
-                        <i class="bi bi-calendar3 me-1"></i>
-                        Member since: @Model.CreatedAt.ToString("MMM dd, yyyy")
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Index", "Chat", new { userId = Model.Id })" class="btn btn-primary">
+                            <i class="bi bi-chat-dots me-2"></i>Send Message
+                        </a>
+                        @if (Model.IsWorker)
+                        {
+                            <button class="btn btn-outline-primary">
+                                <i class="bi bi-calendar-event me-2"></i>Book Now
+                            </button>
+                        }
+                    </div>
+
+                    <div class="border-top pt-3 mt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Location</span>
+                            <span class="fw-bold small">@(Model.Location ?? Model.Country ?? "Global")</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Member Since</span>
+                            <span class="fw-bold small">@Model.MemberSince.ToString("MMM yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Grid -->
+                <div class="row g-2">
+                    @if (Model.IsWorker)
+                    {
+                        <div class="col-6">
+                            <div class="profile-stat-item">
+                                <span class="profile-stat-value">@Model.CompletedJobsAsWorker</span>
+                                <span class="profile-stat-label">Jobs Done</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="profile-stat-item">
+                                <span class="profile-stat-value text-warning">@Model.TotalRatingsCount</span>
+                                <span class="profile-stat-label">Reviews</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Right Column: Details & Reviews -->
+            <div class="col-lg-8">
+                <div class="lm-card p-4 mb-4">
+                    <h5 class="fw-bold mb-3">About</h5>
+                    <p class="text-secondary leading-relaxed mb-4">
+                        @(Model.Bio ?? "No bio provided by the user.")
                     </p>
 
-                    <!-- Contact Button -->
-                    <a href="@Url.Action("Index", "Chat", new { userId = Model.Id })" class="btn btn-primary mt-3">
-                        <i class="bi bi-chat-dots me-2"></i>Contact
-                    </a>
+                    @if (!string.IsNullOrEmpty(Model.Skills))
+                    {
+                        <h6 class="fw-bold small text-uppercase text-muted mb-3">Expertise</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var skill in Model.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <span class="badge bg-light text-primary border px-3 py-2">@skill.Trim()</span>
+                            }
+                        </div>
+                    }
                 </div>
-            </div>
-        </div>
 
-        <!-- Profile Details -->
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary-gradient text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-person me-2"></i>@Model.FirstName's Profile
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1"><i class="bi bi-phone me-1"></i>Phone</h6>
-                            <p class="mb-3">@(Model.PhoneNumber ?? "Not provided")</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>Location</h6>
-                            <p class="mb-3">@(Model.Location ?? Model.Country ?? "Not provided")</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-1"><i class="bi bi-text-paragraph me-1"></i>Bio</h6>
-                        <p class="mb-3">@(Model.Bio ?? "No bio provided")</p>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-1"><i class="bi bi-tools me-1"></i>Skills</h6>
-                        @if (!string.IsNullOrEmpty(Model.Skills))
+                <!-- Reviews Section -->
+                @if (Model.RecentRatings != null && Model.RecentRatings.Any())
+                {
+                    <h5 class="fw-bold mb-3 px-1">Recent Reviews</h5>
+                    <div class="row g-3">
+                        @foreach (var rating in Model.RecentRatings.OrderByDescending(r => r.CreatedAt).Take(6))
                         {
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var skill in Model.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                                {
-                                    <span class="badge bg-primary">@skill.Trim()</span>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="mb-0 text-muted">No skills listed</p>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Statistics -->
-            @if (Model.IsWorker)
-            {
-                <div class="card shadow-sm mb-4 mt-4">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Worker Statistics</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <h3 class="text-primary">@Model.CompletedJobsAsWorker</h3>
-                                <small class="text-muted">Completed Jobs</small>
-                            </div>
-                            <div class="col-4">
-                                <h3 class="text-success">$@Model.TotalEarnings.ToString("N2")</h3>
-                                <small class="text-muted">Total Earnings</small>
-                            </div>
-                            <div class="col-4">
-                                <h3 class="text-warning">@Model.TotalRatingsReceived</h3>
-                                <small class="text-muted"> Reviews</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            @if (Model.IsPoster)
-            {
-                <div class="card shadow-sm mb-4 mt-4">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0"><i class="bi bi-clipboard-plus me-2"></i>Poster Statistics</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <h3 class="text-primary">@Model.TasksPosted</h3>
-                                <small class="text-muted">Tasks Posted</small>
-                            </div>
-                            <div class="col-4">
-                                <h3 class="text-info">@Model.TotalHires</h3>
-                                <small class="text-muted">Total Hires</small>
-                            </div>
-                            <div class="col-4">
-                                <h3 class="text-danger">$@Model.TotalSpent.ToString("N2")</h3>
-                                <small class="text-muted">Total Spent</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Reviews -->
-            @if (Model.Ratings != null && Model.Ratings.Any())
-            {
-                <div class="card shadow-sm mt-4">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0"><i class="bi bi-star me-2"></i>Reviews</h5>
-                    </div>
-                    <div class="card-body">
-                        @foreach (var rating in Model.Ratings.OrderByDescending(r => r.CreatedAt).Take(10))
-                        {
-                            <div class="border-bottom pb-2 mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <div class="text-warning">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            <i class="bi bi-star@(i <= rating.Score ? "-fill" : "")"></i>
-                                        }
+                            <div class="col-md-6">
+                                <div class="lm-card p-3 h-100 shadow-sm border-0 bg-light-subtle">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <div class="text-warning small">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star@(i <= rating.Score ? "-fill" : "")"></i>
+                                            }
+                                        </div>
+                                        <span class="text-muted smaller">@rating.CreatedAt.ToString("MMM yyyy")</span>
                                     </div>
-                                    <small class="text-muted">@rating.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    <p class="small text-secondary mb-2 fst-italic">"@rating.comment"</p>
+                                    @if (!string.IsNullOrEmpty(rating.RaterName))
+                                    {
+                                        <div class="text-end fw-bold smaller">— @rating.RaterName</div>
+                                    }
                                 </div>
-                                @if (!string.IsNullOrEmpty(rating.comment))
-                                {
-                                    <p class="mb-1 small">@rating.comment</p>
-                                }
-                                @if (rating.RaterId != null)
-                                {
-                                    <small class="text-muted">- @rating.RaterName</small>
-                                }
-                            </div>
-                        }
-                        @if (Model.Ratings.Count > 10)
-                        {
-                            <div class="text-center mt-3">
-                                <span class="text-muted">And @((Model.Ratings.Count - 10)) more reviews...</span>
                             </div>
                         }
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
     </div>
 </div>

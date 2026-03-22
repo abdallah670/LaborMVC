@@ -1,4 +1,4 @@
-﻿using LaborBLL.ModelVM;
+using LaborBLL.ModelVM;
 using LaborBLL.Response;
 using LaborBLL.Service.Abstract;
 using LaborDAL.Repo.Abstract;
@@ -154,7 +154,7 @@ namespace LaborPL.Controllers
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Worker,Both,Admin")]
-        public async Task<IActionResult> ByWorker()
+        public async Task<IActionResult> ByWorker(string filter = "all", string? search = null)
         {
             var userId = GetCurrentUserId();
             var result = await _applicationService.GetApplicationsByWorkerAsync(userId);
@@ -165,7 +165,32 @@ namespace LaborPL.Controllers
                 return View(Enumerable.Empty<TaskApplicationViewModel>());
             }
 
-            return View(result.Result);
+            var applications = result.Result;
+
+            // Apply keyword search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                applications = applications.Where(a => 
+                    (a.TaskTitle != null && a.TaskTitle.ToLower().Contains(lowerSearch)) || 
+                    (a.Message != null && a.Message.ToLower().Contains(lowerSearch)));
+            }
+
+            // Apply filter
+            applications = filter?.ToLower() switch
+            {
+                "pending" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Pending || a.Status == LaborDAL.Enums.ApplicationStatus.Viewed),
+                "accepted" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Accepted),
+                "rejected" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Rejected),
+                "withdrawn" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Withdrawn),
+                _ => applications
+            };
+
+            ViewBag.CurrentFilter = filter;
+            ViewBag.CurrentSearch = search;
+            ViewBag.PendingCount = result.Result.Count(a => a.Status == LaborDAL.Enums.ApplicationStatus.Pending || a.Status == LaborDAL.Enums.ApplicationStatus.Viewed);
+
+            return View(applications);
         }
 
         /// <summary>
@@ -173,7 +198,7 @@ namespace LaborPL.Controllers
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Poster,Both,Admin")]
-        public async Task<IActionResult> ByPoster()
+        public async Task<IActionResult> ByPoster(string filter = "all", string? search = null)
         {
             var userId = GetCurrentUserId();
             var tasksResult = await _taskService.GetMyTasksAsync(userId);
@@ -195,7 +220,32 @@ namespace LaborPL.Controllers
                 }
             }
 
-            return View(allApplications.OrderByDescending(a => a.CreatedAt));
+            var applications = allApplications.AsEnumerable();
+
+            // Apply keyword search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                applications = applications.Where(a => 
+                    (a.WorkerName != null && a.WorkerName.ToLower().Contains(lowerSearch)) || 
+                    (a.TaskTitle != null && a.TaskTitle.ToLower().Contains(lowerSearch)) ||
+                    (a.Message != null && a.Message.ToLower().Contains(lowerSearch)));
+            }
+
+            // Apply Status Filter
+            applications = filter?.ToLower() switch
+            {
+                "pending" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Pending || a.Status == LaborDAL.Enums.ApplicationStatus.Viewed),
+                "accepted" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Accepted),
+                "rejected" => applications.Where(a => a.Status == LaborDAL.Enums.ApplicationStatus.Rejected),
+                _ => applications
+            };
+
+            ViewBag.CurrentFilter = filter;
+            ViewBag.CurrentSearch = search;
+            ViewBag.PendingCount = allApplications.Count(a => a.Status == LaborDAL.Enums.ApplicationStatus.Pending || a.Status == LaborDAL.Enums.ApplicationStatus.Viewed);
+
+            return View(applications.OrderByDescending(a => a.CreatedAt));
         }
 
         #endregion

@@ -257,7 +257,7 @@ namespace LaborPL.Controllers
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Poster,Admin")]
-        public async Task<IActionResult> MyTasks()
+        public async Task<IActionResult> MyTasks(string filter = "all", string? search = null)
         {
             var userId = GetCurrentUserId();
             var result = await _taskService.GetMyTasksAsync(userId);
@@ -268,7 +268,39 @@ namespace LaborPL.Controllers
                 return View(Enumerable.Empty<TaskListViewModel>());
             }
 
-            return View(result.Result);
+            var tasks = result.Result;
+
+            // Apply keyword search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                tasks = tasks.Where(t => 
+                    t.Title.ToLower().Contains(lowerSearch) || 
+                    (t.Description != null && t.Description.ToLower().Contains(lowerSearch)));
+            }
+
+            // Apply status filter
+            tasks = filter?.ToLower() switch
+            {
+                "open" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Open),
+                "assigned" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Assigned),
+                "inprogress" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.InProgress),
+                "completed" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Completed),
+                "cancelled" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Cancelled),
+                _ => tasks
+            };
+
+            ViewBag.CurrentFilter = filter;
+            ViewBag.CurrentSearch = search;
+            
+            // Stats for tabs
+            ViewBag.TotalCount = result.Result.Count();
+            ViewBag.OpenCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Open);
+            ViewBag.AssignedCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Assigned);
+            ViewBag.InProgressCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.InProgress);
+            ViewBag.CompletedCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Completed);
+
+            return View(tasks);
         }
 
         /// <summary>

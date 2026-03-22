@@ -442,13 +442,18 @@ namespace LaborDAL.Repo.Implementation
             switch (sortBy?.ToLower())
             {
                 case "budget":
-                    return isDescending
+                case "budget_high":
+                    return isDescending || sortBy?.ToLower() == "budget_high"
                         ? query.OrderByDescending(t => t.Budget)
                         : query.OrderBy(t => t.Budget);
                 
+                case "budget_low":
+                    return query.OrderBy(t => t.Budget);
+
                 case "createdat":
                 case "date":
-                    return isDescending
+                case "newest":
+                    return isDescending || sortBy?.ToLower() == "newest"
                         ? query.OrderByDescending(t => t.CreatedAt)
                         : query.OrderBy(t => t.CreatedAt);
                 
@@ -463,6 +468,13 @@ namespace LaborDAL.Repo.Implementation
                         ? query.OrderByDescending(t => t.ViewCount)
                         : query.OrderBy(t => t.ViewCount);
                 
+                case "distance":
+                    // Distance sorting is handled by the distance filter logic above usually, 
+                    // but if we want to sort by distance explicitly, we'd need the user's lat/long
+                    // and then project a distance property. Since distance is already filtered,
+                    // we'll default to newest for now if distance is requested but no location logic is applied here.
+                    return query.OrderByDescending(t => t.CreatedAt);
+
                 default:
                     // Default: Featured first, then urgent, then newest
                     return query

@@ -14,36 +14,21 @@
             const longitudeInput = document.getElementById('longitudeInput');
             const radiusInput = document.getElementById('radiusInput');
             
-            // Handle form submission
             searchForm.addEventListener('submit', async function(e) {
                 const location = locationInput.value.trim();
-                const radius = radiusInput.value;
-                
-                // If location is provided but coordinates are not set, geocode the address
                 if (location && !latitudeInput.value && !longitudeInput.value) {
                     e.preventDefault();
-                    
                     try {
                         const result = await LocationService.geocode(location);
                         if (result.success) {
                             latitudeInput.value = result.latitude;
                             longitudeInput.value = result.longitude;
-                        } else {
-                            console.warn('Geocoding failed:', result.error);
-                            // Clear coordinates if geocoding fails
-                            latitudeInput.value = '';
-                            longitudeInput.value = '';
                         }
-                    } catch (error) {
-                        console.error('Geocoding error:', error);
-                    }
-                    
-                    // Re-submit the form after geocoding
+                    } catch (error) { console.error('Geocoding error:', error); }
                     searchForm.submit();
                 }
             });
             
-            // Clear coordinates when location input changes
             locationInput.addEventListener('input', function() {
                 latitudeInput.value = '';
                 longitudeInput.value = '';
@@ -52,299 +37,183 @@
     </script>
 }
 
-<div class="task-search-container fade-in">
-    <!-- Search Header -->
-    <div class="search-header mb-4">
-        <div class="card shadow">
-            <div class="card-body">
-                <h2 class="mb-3"><i class="bi bi-search me-2"></i>Find Tasks</h2>
-                <form id="taskSearchForm" asp-action="Index" method="get">
-                    <!-- Hidden fields for coordinates -->
-                    <input type="hidden" id="latitudeInput" name="Latitude" value="@Model.Latitude">
-                    <input type="hidden" id="longitudeInput" name="Longitude" value="@Model.Longitude">
-                    
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                <input type="text" name="Keyword" class="form-control" placeholder="Search tasks..." value="@Model.Keyword">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="Category" class="form-select">
-                                <option value="">All Categories</option>
-                                @foreach (TaskCategory category in Enum.GetValues(typeof(TaskCategory)))
-                                {
-                                    <option value="@((int)category)" selected="@(Model.Category == category ? "selected" : null)">
-                                        @category.ToString()
-                                    </option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="SortBy" class="form-select">
-                                <option value="">Sort By</option>
-                                <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Newest First</option>
-                                <option value="budget_high" selected="@(Model.SortBy == "budget_high" ? "selected" : null)">Highest Budget</option>
-                                <option value="budget_low" selected="@(Model.SortBy == "budget_low" ? "selected" : null)">Lowest Budget</option>
-                                <option value="distance" selected="@(Model.SortBy == "distance" ? "selected" : null)">Nearest First</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-filter me-1"></i>Filter
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Advanced Filters -->
-                    <div class="row g-3 mt-2">
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted">Min Budget ($)</label>
-                            <input type="number" name="MinBudget" class="form-control" placeholder="0" value="@Model.MinBudget">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted">Max Budget ($)</label>
-                            <input type="number" name="MaxBudget" class="form-control" placeholder="Any" value="@Model.MaxBudget">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted">Location</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                <input type="text" id="locationInput" name="Location" class="form-control" placeholder="City or Address" value="@Model.Location">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted">Radius (km)</label>
-                            <input type="number" id="radiusInput" name="RadiusKm" class="form-control" placeholder="Any distance" value="@Model.RadiusKm">
-                        </div>
-                    </div>
-                    
-                    <!-- Filter Tags -->
-                    <div class="filter-tags mt-3">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="IsRemote" id="remoteCheck" value="true" @(Model.IsRemote == true ? "checked" : "")>
-                            <label class="form-check-label" for="remoteCheck">
-                                <span class="badge bg-info"><i class="bi bi-wifi me-1"></i>Remote</span>
-                            </label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="IsUrgent" id="urgentCheck" value="true" @(Model.IsUrgent == true ? "checked" : "")>
-                            <label class="form-check-label" for="urgentCheck">
-                                <span class="badge bg-danger"><i class="bi bi-lightning me-1"></i>Urgent</span>
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
+<div class="dashboard-container fade-in py-4">
+    <div class="lm-dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="lm-dashboard-title">Explore Opportunities</h1>
+            <p class="text-muted mb-0">Find the perfect task that matches your skills and location.</p>
         </div>
-    </div>
-
-    <!-- Results Count -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <p class="text-muted mb-0">
-            <i class="bi bi-list-ul me-1"></i>
-            @Model.TotalCount @(Model.TotalCount == 1 ? "task" : "tasks") found
-        </p>
         @if (User.IsInRole("Poster") || User.IsInRole("Both"))
         {
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>Post a Task
+            <a asp-action="Create" class="btn btn-primary lg shadow-sm px-4">
+                <i class="bi bi-plus-circle me-2"></i>Post a Task
             </a>
         }
     </div>
 
-    <!-- Task Grid -->
+    <!-- Modern Search Card -->
+    <div class="lm-card mb-4 p-4">
+        <form id="taskSearchForm" asp-action="Index" method="get">
+            <input type="hidden" id="latitudeInput" name="Latitude" value="@Model.Latitude">
+            <input type="hidden" id="longitudeInput" name="Longitude" value="@Model.Longitude">
+            
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Search Query</label>
+                    <div class="input-group lm-input-group border rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-white border-0 ps-3"><i class="bi bi-search text-primary"></i></span>
+                        <input type="text" name="Keyword" class="form-control border-0 bg-white py-2" placeholder="What are you looking for?" value="@Model.Keyword">
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Category</label>
+                    <select name="Category" class="form-select lm-form-select border rounded-3 py-2">
+                        <option value="">All Disciplines</option>
+                        @foreach (TaskCategory category in Enum.GetValues(typeof(TaskCategory)))
+                        {
+                            <option value="@((int)category)" selected="@(Model.Category == category ? "selected" : null)">
+                                @category.ToString()
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Location Strategy</label>
+                    <div class="input-group lm-input-group border rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-white border-0 ps-3"><i class="bi bi-geo-alt text-success"></i></span>
+                        <input type="text" id="locationInput" name="Location" class="form-control border-0 bg-white py-2" placeholder="City or Zip Code" value="@Model.Location">
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                        <i class="bi bi-funnel me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+
+            <div class="collapse mt-3" id="advancedFilters">
+                <div class="row g-3 pt-3 border-top border-dashed">
+                    <div class="col-md-3 col-6">
+                        <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Min Budget</label>
+                        <div class="input-group lm-input-group border rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white border-0 ps-3 fs-xs">$</span>
+                            <input type="number" name="MinBudget" class="form-control border-0 bg-white py-2" placeholder="0" value="@Model.MinBudget">
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Max Budget</label>
+                        <div class="input-group lm-input-group border rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white border-0 ps-3 fs-xs">$</span>
+                            <input type="number" name="MaxBudget" class="form-control border-0 bg-white py-2" placeholder="Any" value="@Model.MaxBudget">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Sort Order</label>
+                        <select name="SortBy" class="form-select lm-form-select border rounded-3 py-2">
+                            <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Newest Listed</option>
+                            <option value="budget_high" selected="@(Model.SortBy == "budget_high" ? "selected" : null)">Highest Payout</option>
+                            <option value="budget_low" selected="@(Model.SortBy == "budget_low" ? "selected" : null)">Lowest Payout</option>
+                            <option value="distance" selected="@(Model.SortBy == "distance" ? "selected" : null)">Nearest First</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label smaller fw-bold text-muted text-uppercase mb-2">Distance (km)</label>
+                        <input type="number" id="radiusInput" name="RadiusKm" class="form-control border rounded-3 py-2" placeholder="Any range" value="@Model.RadiusKm">
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-4 mt-3">
+                    <div class="form-check lm-filter-check">
+                        <input class="form-check-input" type="checkbox" name="IsRemote" id="remoteCheck" value="true" @(Model.IsRemote == true ? "checked" : "")>
+                        <label class="form-check-label smaller fw-bold text-muted" for="remoteCheck">Remote Only</label>
+                    </div>
+                    <div class="form-check lm-filter-check">
+                        <input class="form-check-input" type="checkbox" name="IsUrgent" id="urgentCheck" value="true" @(Model.IsUrgent == true ? "checked" : "")>
+                        <label class="form-check-label smaller fw-bold text-muted" for="urgentCheck">Urgent Tasks</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <button class="btn btn-link text-muted smaller fw-bold text-decoration-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                    <span class="show-text">More Filters <i class="bi bi-chevron-down ms-1"></i></span>
+                    <span class="hide-text d-none">Fewer Filters <i class="bi bi-chevron-up ms-1"></i></span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Control -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light-soft text-muted px-2 py-1 fs-xs fw-bold">@Model.TotalCount MATCHES</span>
+            <span class="text-muted fs-xs">Showing Page @Model.Page of @Model.TotalPages</span>
+        </div>
+    </div>
+
     @if (Model.Results.Any())
     {
         <div class="row g-4">
             @foreach (var task in Model.Results)
             {
-                <div class="col-md-6 col-lg-4">
-                    <div class="task-card card h-100 shadow-sm">
-                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                            <span class="badge bg-primary">@task.CategoryDisplay</span>
-                            @if (task.IsUrgent)
-                            {
-                                <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i> Urgent</span>
-                            }
-                            @if (task.IsRemote)
-                            {
-                                <span class="badge bg-info"><i class="bi bi-wifi"></i> Remote</span>
-                            }
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">@task.Title</h5>
-                            <p class="card-text text-muted small">
-                                @(task.Description?.Length > 100 ? task.Description[..100] + "..." : task.Description)
-                            </p>
-                            
-                            <div class="task-meta mb-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-geo-alt text-muted me-2"></i>
-                                    <span class="small">
-                                        @if (!string.IsNullOrEmpty(task.City))
-                                        {
-                                            @task.City
-                                            @if (task.Distance.HasValue)
-                                            {
-                                                <span class="text-muted"> (@task.Distance.Value.ToString("0.0") km away)</span>
-                                            }
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">Location not specified</span>
-                                        }
-                                    </span>
-                                </div>
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-cash text-muted me-2"></i>
-                                    <span class="small">
-                                        <strong>@task.BudgetTypeDisplay:</strong> $@task.Budget.ToString("N2")
-                                    </span>
-                                </div>
-                                @if (task.DueDate.HasValue)
-                                {
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-calendar text-muted me-2"></i>
-                                        <span class="small">Due @task.DueDate.Value.ToString("MMM dd, yyyy")</span>
-                                    </div>
-                                }
-                            </div>
-                            
-                            <div class="task-footer d-flex justify-content-between align-items-center">
-                                <div class="poster-info d-flex align-items-center">
-                                    @if (!string.IsNullOrEmpty(task.PosterProfilePicture))
-                                    {
-                                        <img src="@task.PosterProfilePicture" alt="" class="poster-avatar me-2">
-                                    }
-                                    else
-                                    {
-                                        <div class="poster-avatar-placeholder me-2">
-                                            @(task.PosterName?.FirstOrDefault().ToString().ToUpper() ?? "U")
-                                        </div>
-                                    }
-                                    <div>
-                                        <p class="poster-name mb-0 small">@task.PosterName</p>
-                                        @if (task.PosterRating.HasValue)
-                                        {
-                                            <div class="poster-rating">
-                                                @for (int i = 1; i <= 5; i++)
-                                                {
-                                                    <i class="bi bi-star-fill star @(i <= Math.Round(task.PosterRating.Value) ? "filled" : "empty")" style="font-size: 0.7rem;"></i>
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                                <span class="badge bg-secondary">@task.ApplicationCount applications</span>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-eye me-1"></i>View Details
-                            </a>
-                        </div>
-                    </div>
+                <div class="col-md-6 col-xl-4 scale-in">
+                    @await Html.PartialAsync("_TaskCard", task)
                 </div>
             }
         </div>
 
-        <!-- Pagination -->
         @if (Model.TotalPages > 1)
         {
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    @if (Model.HasPreviousPage)
-                    {
-                        <li class="page-item">
-                            <a class="page-link" href="@Url.Action("Index", new { 
-                                Keyword = Model.Keyword, 
-                                Category = Model.Category, 
-                                MinBudget = Model.MinBudget,
-                                MaxBudget = Model.MaxBudget,
-                                Location = Model.Location,
-                                Latitude = Model.Latitude,
-                                Longitude = Model.Longitude,
-                                RadiusKm = Model.RadiusKm,
-                                IsRemote = Model.IsRemote,
-                                IsUrgent = Model.IsUrgent,
-                                SortBy = Model.SortBy,
-                                Page = Model.Page - 1 
-                            })">
-                                <i class="bi bi-chevron-left"></i>
-                            </a>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="page-item disabled">
-                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                        </li>
-                    }
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center lm-pagination gap-1">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link rounded-circle border-0 bg-light shadow-sm" href="@Url.Action("Index", new { Keyword = Model.Keyword, Category = Model.Category, MinBudget = Model.MinBudget, MaxBudget = Model.MaxBudget, Location = Model.Location, RadiusKm = Model.RadiusKm, IsRemote = Model.IsRemote, IsUrgent = Model.IsUrgent, SortBy = Model.SortBy, Page = Model.Page - 1 })">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
                     
                     @for (int i = 1; i <= Model.TotalPages; i++)
                     {
                         <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link" href="@Url.Action("Index", new { 
-                                Keyword = Model.Keyword, 
-                                Category = Model.Category, 
-                                MinBudget = Model.MinBudget,
-                                MaxBudget = Model.MaxBudget,
-                                Location = Model.Location,
-                                Latitude = Model.Latitude,
-                                Longitude = Model.Longitude,
-                                RadiusKm = Model.RadiusKm,
-                                IsRemote = Model.IsRemote,
-                                IsUrgent = Model.IsUrgent,
-                                SortBy = Model.SortBy,
-                                Page = i 
-                            })">@i</a>
+                            <a class="page-link rounded-circle border-0 shadow-sm px-3" href="@Url.Action("Index", new { Keyword = Model.Keyword, Category = Model.Category, MinBudget = Model.MinBudget, MaxBudget = Model.MaxBudget, Location = Model.Location, RadiusKm = Model.RadiusKm, IsRemote = Model.IsRemote, IsUrgent = Model.IsUrgent, SortBy = Model.SortBy, Page = i })">@i</a>
                         </li>
                     }
                     
-                    @if (Model.HasNextPage)
-                    {
-                        <li class="page-item">
-                            <a class="page-link" href="@Url.Action("Index", new { 
-                                Keyword = Model.Keyword, 
-                                Category = Model.Category, 
-                                MinBudget = Model.MinBudget,
-                                MaxBudget = Model.MaxBudget,
-                                Location = Model.Location,
-                                Latitude = Model.Latitude,
-                                Longitude = Model.Longitude,
-                                RadiusKm = Model.RadiusKm,
-                                IsRemote = Model.IsRemote,
-                                IsUrgent = Model.IsUrgent,
-                                SortBy = Model.SortBy,
-                                Page = Model.Page + 1 
-                            })">
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="page-item disabled">
-                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                        </li>
-                    }
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link rounded-circle border-0 bg-light shadow-sm" href="@Url.Action("Index", new { Keyword = Model.Keyword, Category = Model.Category, MinBudget = Model.MinBudget, MaxBudget = Model.MaxBudget, Location = Model.Location, RadiusKm = Model.RadiusKm, IsRemote = Model.IsRemote, IsUrgent = Model.IsUrgent, SortBy = Model.SortBy, Page = Model.Page + 1 })">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         }
     }
     else
     {
-        <div class="empty-state text-center py-5">
-            <div class="empty-state-icon mb-3">
-                <i class="bi bi-search" style="font-size: 4rem; color: var(--muted-text);"></i>
+        <div class="lm-card text-center py-5 shadow-sm fade-in">
+            <div class="bg-light-soft text-muted rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
+                <i class="bi bi-search glass-icon display-4 opacity-50"></i>
             </div>
-            <h4>No tasks found</h4>
-            <p class="text-muted">Try adjusting your search filters or check back later for new tasks.</p>
-            <a asp-action="Index" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-counterclockwise me-1"></i>Clear Filters
+            <h3 class="fw-bold mb-2">No matching tasks found</h3>
+            <p class="text-muted mx-auto mb-4" style="max-width: 400px;">Try adjusting your filters, clearing keywords, or searching in a wider radius to see more opportunities.</p>
+            <a asp-action="Index" class="btn btn-outline-primary px-4 fw-bold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset All Filters
             </a>
         </div>
     }
 </div>
+
+<style>
+    .lm-pagination .page-link { color: #6c757d; transition: all 0.2s; }
+    .lm-pagination .page-item.active .page-link { background-color: var(--lm-primary); color: white; }
+    .lm-pagination .page-link:hover { transform: translateY(-2px); }
+    
+    #advancedFilters.show ~ .text-center .show-text { display: none; }
+    #advancedFilters.show ~ .text-center .hide-text { display: inline !important; }
+    
+    .border-dashed { border-style: dashed !important; }
+    .lm-filter-check .form-check-input:checked { background-color: var(--lm-primary); border-color: var(--lm-primary); }
+</style>

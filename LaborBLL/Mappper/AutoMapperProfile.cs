@@ -23,7 +23,8 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.IDVerified, opt => opt.MapFrom(src => false));
 
-            CreateMap<AppUser, ProfileViewModel>()
+            // User Profile mappings
+            CreateMap<AppUser, UserProfileDisplayViewModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
@@ -41,22 +42,18 @@ namespace LaborBLL.Mapping
                 .ForMember(dest => dest.IsEmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed))
                 .ForMember(dest => dest.VerificationTier, opt => opt.MapFrom(src => src.VerificationTier))
                 .ForMember(dest => dest.AverageRating, opt => opt.MapFrom(src => src.AverageRating))
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.MemberSince, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role));
 
-            CreateMap<ProfileViewModel, AppUser>()
-                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
-                .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
-                .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Country))
+            CreateMap<AppUser, UserProfileUpdateModel>();
+            
+            CreateMap<UserProfileUpdateModel, AppUser>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.LocationUrl, opt => opt.MapFrom(src => src.LocationUrl))
                 .ForMember(dest => dest.Latitude, opt => opt.MapFrom(src => src.Latitude))
                 .ForMember(dest => dest.Longitude, opt => opt.MapFrom(src => src.Longitude))
-                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
-                .ForMember(dest => dest.Skills, opt => opt.MapFrom(src => src.Skills))
-                .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Booking mappings
             CreateMap<Booking, BookingDetailViewModel>()
@@ -126,6 +123,9 @@ namespace LaborBLL.Mapping
             CreateMap<Booking, BookingDashboardViewModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Worker.UserName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title))
+                .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src => src.Worker.FirstName + " " + src.Worker.LastName))
+                .ForMember(dest => dest.PosterName, opt => opt.MapFrom(src => src.Poster.FirstName + " " + src.Poster.LastName))
                 .ForMember(dest => dest.AgreedRate, opt => opt.MapFrom(src => src.AgreedRate))
                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime))
                 .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime))

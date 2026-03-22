@@ -521,10 +521,22 @@ namespace LaborBLL.Service.Implementation
                 WorkersNeeded = task.WorkersNeeded,
                 RequiredSkills = task.RequiredSkills,
                 AttachmentUrls = task.AttachmentUrls,
-                PosterId = task.PosterId,
-                PosterName = task.Poster != null ? $"{task.Poster.FirstName} {task.Poster.LastName}" : null,
-                PosterProfilePicture = task.Poster?.ProfilePictureUrl,
-                PosterRating = task.Poster?.AverageRating,
+                Poster = new UserSummaryViewModel
+                {
+                    Id = task.PosterId,
+                    Name = task.Poster != null ? $"{task.Poster.FirstName} {task.Poster.LastName}" : "Unknown",
+                    ProfilePicture = task.Poster?.ProfilePictureUrl,
+                    Rating = task.Poster?.AverageRating,
+                    IsVerified = task.Poster?.IDVerified ?? false
+                },
+                AssignedWorker = task.AssignedWorker != null && task.AssignedWorker.Count > 0 ? new UserSummaryViewModel
+                {
+                    Id = task.AssignedWorker.First().Id,
+                    Name = $"{task.AssignedWorker.First().FirstName} {task.AssignedWorker.First().LastName}",
+                    ProfilePicture = task.AssignedWorker.First().ProfilePictureUrl,
+                    Rating = task.AssignedWorker.First().AverageRating,
+                    IsVerified = task.AssignedWorker.First().IDVerified
+                } : null,
                 AssignedAt = task.AssignedAt,
                 CompletedAt = task.CompletedAt,
                 CancellationReason = task.CancellationReason,

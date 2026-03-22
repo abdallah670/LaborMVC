@@ -1,4 +1,4 @@
-﻿using Hangfire;
+using Hangfire;
 using LaborBLL.Common;
 using LaborBLL.Hubs;
 using LaborBLL.Mapping;
@@ -31,7 +31,11 @@ builder.Host.UseSerilog();
 builder.Services.AddSignalR();
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 builder.Services.Configure<StripeSettings>(
     builder.Configuration.GetSection("Stripe"));
