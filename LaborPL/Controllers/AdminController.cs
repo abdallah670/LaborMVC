@@ -571,7 +571,8 @@ namespace LaborPL.Controllers
             user.DeletedBy = currentUserId;
 
             await _userRepository.UpdateAsync(user);
-
+            await _unitOfWork .SaveAsync();
+            
             _logger.LogInformation("User {UserId} was soft-deleted by admin {AdminId}", id, currentUserId);
             TempData["SuccessMessage"] = "User deleted successfully.";
             return RedirectToAction(nameof(Users));
