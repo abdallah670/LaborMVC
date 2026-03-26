@@ -34,6 +34,7 @@ namespace LaborBLL.ModelVM
         public bool IsWorker => Role.HasFlag(ClientRole.Worker);
         public bool IsPoster => Role.HasFlag(ClientRole.Poster);
         public bool IsAdmin => Role.HasFlag(ClientRole.Admin);
+        public bool IsDeleted { get; set; }
 
         // Statistics
         public int CompletedJobsAsWorker { get; set; }

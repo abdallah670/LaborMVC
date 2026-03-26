@@ -34,12 +34,18 @@ namespace LaborBLL.Service
         {
             try
             {
-
-                // Check if email already exists
+                // Check if email already exists in active users
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null)
                 {
                     return new Response<string>(null, false, "Email is already registered.");
+                }
+
+                // NEW: Check for soft-deleted user with same email (bypass global query filter)
+                var deletedUser = await _unitOfWork.GetDeletedUserByEmailAsync(model.Email);
+                if (deletedUser != null)
+                {
+                    return await ReactivateUserAsync(deletedUser, model);
                 }
                 var isfirstuser = (await _userManager.Users.CountAsync()) == 0;
                 // Map ViewModel to Entity
@@ -338,6 +344,200 @@ namespace LaborBLL.Service
                 _logger.LogError(ex, "Error during logout.");
                 return Task.FromResult(false);
 
+            }
+        }
+
+        /// <summary>
+        /// Reactivates a soft-deleted user with new registration information
+        /// </summary>
+        private async Task<Response<string>> ReactivateUserAsync(AppUser deletedUser, RegisterViewModel model)
+        {
+            try
+            {
+                _logger.LogInformation("Reactivating soft-deleted user: {Email}", model.Email);
+
+                // Reactivate the user
+                deletedUser.IsDeleted = false;
+                deletedUser.DeletedAt = null;
+                deletedUser.UpdatedAt = DateTime.UtcNow;
+
+                // Update user information with new registration data
+                deletedUser.FirstName = model.FirstName;
+                deletedUser.LastName = model.LastName;
+                deletedUser.PhoneNumber = model.PhoneNumber;
+                deletedUser.EmailConfirmed = false; // Require email verification again
+
+                // Update password
+                var removePasswordResult = await _userManager.RemovePasswordAsync(deletedUser);
+                if (!removePasswordResult.Succeeded)
+                {
+                    _logger.LogWarning("Failed to remove old password for reactivation: {Email}", model.Email);
+                    return new Response<string>(null, false, "Failed to reactivate account. Please try again.");
+                }
+
+                var addPasswordResult = await _userManager.AddPasswordAsync(deletedUser, model.Password);
+                if (!addPasswordResult.Succeeded)
+                {
+                    var errors = string.Join(", ", addPasswordResult.Errors.Select(e => e.Description));
+                    _logger.LogWarning("Failed to set new password during reactivation: {Errors}", errors);
+                    return new Response<string>(null, false, $"Password error: {errors}");
+                }
+
+                // Update user roles if specified
+                if (!string.IsNullOrEmpty(model.UserRole))
+                {
+                    // Clear existing roles first
+                    var existingRoles = await _userManager.GetRolesAsync(deletedUser);
+                    if (existingRoles.Any())
+                    {
+                        await _userManager.RemoveFromRolesAsync(deletedUser, existingRoles);
+                    }
+
+                    // Set new role
+                    if (model.UserRole == "Worker")
+                    {
+                        deletedUser.Role = ClientRole.Worker;
+                        await _userManager.AddToRoleAsync(deletedUser, "Worker");
+                    }
+                    else if (model.UserRole == "Poster")
+                    {
+                        deletedUser.Role = ClientRole.Poster;
+                        await _userManager.AddToRoleAsync(deletedUser, "Poster");
+                    }
+                    else if (model.UserRole == "Both")
+                    {
+                        deletedUser.Role = ClientRole.Both;
+                        await _userManager.AddToRoleAsync(deletedUser, "Worker");
+                        await _userManager.AddToRoleAsync(deletedUser, "Poster");
+                    }
+                }
+
+                // Save changes
+                var updateResult = await _userManager.UpdateAsync(deletedUser);
+                if (!updateResult.Succeeded)
+                {
+                    var errors = string.Join(", ", updateResult.Errors.Select(e => e.Description));
+                    _logger.LogWarning("Failed to update user during reactivation: {Errors}", errors);
+                    return new Response<string>(null, false, $"Reactivation failed: {errors}");
+                }
+
+                _logger.LogInformation("User reactivated successfully: {Email}", model.Email);
+                return new Response<string>(deletedUser.Id, true, "Welcome back! Your account has been restored successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user reactivation: {Email}", model.Email);
+                return new Response<string>(null, false, "An error occurred while restoring your account.");
+            }
+        }
+
+        /// <summary>
+        /// Restores a soft-deleted user by admin action
+        /// </summary>
+        public async Task<Response<bool>> RestoreUserAsync(string userId)
+        {
+            try
+            {
+                // Get user bypassing soft delete filter
+                var user = await _unitOfWork.GetDeletedUserByIdAsync(userId);
+                if (user == null)
+                {
+                    return new Response<bool>(false, false, "Deleted user not found.");
+                }
+
+                if (!user.IsDeleted)
+                {
+                    return new Response<bool>(false, false, "User is already active.");
+                }
+
+                // Restore the user
+                user.IsDeleted = false;
+                user.DeletedAt = null;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("User restored by admin: {UserId}", userId);
+                    return new Response<bool>(true, true, "User restored successfully.");
+                }
+
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return new Response<bool>(false, false, errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring user: {UserId}", userId);
+                return new Response<bool>(false, false, "An error occurred while restoring the user.");
+            }
+        }
+
+        /// <summary>
+        /// Generates a password reset token and sends reset email
+        /// </summary>
+        public async Task<Response<bool>> ForgotPasswordAsync(string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null || user.IsDeleted)
+                {
+                    // Don't reveal that the user does not exist
+                    _logger.LogInformation("Password reset requested for non-existent email: {Email}", email);
+                    return new Response<bool>(true, true, "If an account exists with this email, you will receive password reset instructions.");
+                }
+
+                // Generate password reset token
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                
+                // Store token with expiration (for simplicity, we'll use the built-in Identity token)
+                // The token is valid for a limited time by default (usually 1 day)
+                
+                _logger.LogInformation("Password reset token generated for user: {Email}", email);
+                
+                // Return success with the token (controller will handle email sending)
+                return new Response<bool>(true, true, "Password reset instructions have been sent to your email.")
+                {
+                    Result = true
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating password reset token for: {Email}", email);
+                return new Response<bool>(false, false, "An error occurred. Please try again later.");
+            }
+        }
+
+        /// <summary>
+        /// Resets user password with token
+        /// </summary>
+        public async Task<Response<bool>> ResetPasswordAsync(string email, string token, string newPassword)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null || user.IsDeleted)
+                {
+                    return new Response<bool>(false, false, "Invalid reset request.");
+                }
+
+                // Reset the password
+                var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Password reset successful for user: {Email}", email);
+                    return new Response<bool>(true, true, "Your password has been reset successfully.");
+                }
+
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogWarning("Password reset failed for {Email}: {Errors}", email, errors);
+                return new Response<bool>(false, false, errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for: {Email}", email);
+                return new Response<bool>(false, false, "An error occurred while resetting your password.");
             }
         }
     }

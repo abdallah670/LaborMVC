@@ -4,6 +4,7 @@ using LaborBLL.Hubs;
 using LaborBLL.Mapping;
 using LaborBLL.Service;
 using LaborBLL.Service.Abstract;
+using LaborBLL.Service.Cancellation;
 using LaborBLL.Service.Implementation;
 using LaborDAL.Common;
 using LaborDAL.DB;
@@ -19,6 +20,9 @@ using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using Serilog;
 using Stripe;
+
+// Alias to disambiguate SystemClock
+using SystemClock = LaborDAL.Common.SystemClock;
 
 
 
@@ -203,6 +207,18 @@ builder.Services.AddScoped<IFileUploadAuditRepo, FileUploadAuditRepo>();
 builder.Services.AddScoped<IFileUploadAuditService, FileUploadAuditService>();
 builder.Services.AddScoped<IContentInspector, ContentInspector>();
 
+// Register Cancellation Service and Time Provider
+builder.Services.AddSingleton<IClock, SystemClock>();
+builder.Services.AddScoped<ICancellationService, CancellationService>();
+
+// Register No-Show Detection Job
+builder.Services.AddScoped<NoShowDetectionJob>();
+
+// Register Email Service (SMTP is default, can be switched to SendGrid)
+// Uncomment the line below to use SendGrid instead of SMTP
+// builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
 // Add Memory Cache for rate limiting
 builder.Services.AddMemoryCache();
 
@@ -257,6 +273,22 @@ app.UseAuthorization();
 
 app.UseHangfireDashboard();
 app.UseHangfireServer();
+
+// Schedule recurring jobs
+using (var scope = app.Services.CreateScope())
+{
+    var jobScheduler = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    
+    // Schedule no-show detection job to run every 5 minutes
+    jobScheduler.AddOrUpdate<NoShowDetectionJob>(
+        "no-show-detection",
+        job => job.ExecuteAsync(),
+        Cron.MinuteInterval(5),
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Utc
+        });
+}
 
 // Map endpoints
 app.MapStaticAssets();

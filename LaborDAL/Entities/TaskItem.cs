@@ -1,5 +1,6 @@
 using LaborDAL.Enums;
 using NetTopologySuite.Geometries;
+using System.ComponentModel.DataAnnotations;
 using TaskStatus = LaborDAL.Enums.TaskStatus;
 
 namespace LaborDAL.Entities
@@ -50,9 +51,79 @@ namespace LaborDAL.Entities
         public DateTime? DueDate { get; set; }
 
         /// <summary>
-        /// Date when the task needs to start
+        /// Date when the task needs to start (legacy - use StartTime)
         /// </summary>
         public DateTime? StartDate { get; set; }
+
+        #region Cancellation & Lifecycle Fields
+
+        /// <summary>
+        /// Exact scheduled start time (UTC) - used for cancellation windows
+        /// </summary>
+        public DateTimeOffset? StartTime { get; set; }
+
+        /// <summary>
+        /// When the task was actually started by the worker
+        /// </summary>
+        public DateTimeOffset? StartedAt { get; set; }
+
+        /// <summary>
+        /// When the task was cancelled
+        /// </summary>
+        public DateTimeOffset? CancelledAt { get; set; }
+
+        /// <summary>
+        /// Who cancelled the task (ClientId, WorkerId, or System)
+        /// </summary>
+        public string? CancelledBy { get; set; }
+
+        /// <summary>
+        /// Type of cancellation
+        /// </summary>
+        public CancellationType? CancellationType { get; set; }
+
+        /// <summary>
+        /// Reason for cancellation
+        /// </summary>
+        public CancellationReason CancellationReason { get; set; } = CancellationReason.NotSpecified;
+
+        /// <summary>
+        /// When the worker checked in
+        /// </summary>
+        public DateTimeOffset? WorkerCheckedInAt { get; set; }
+
+        /// <summary>
+        /// When the client confirmed presence
+        /// </summary>
+        public DateTimeOffset? ClientConfirmedAt { get; set; }
+
+        /// <summary>
+        /// No-show detection timestamp
+        /// </summary>
+        public DateTimeOffset? NoShowDetectedAt { get; set; }
+
+        /// <summary>
+        /// Which party was marked as no-show
+        /// </summary>
+        public string? NoShowParty { get; set; }
+
+        /// <summary>
+        /// Concurrency token for optimistic locking
+        /// </summary>
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
+        /// <summary>
+        /// Idempotency key for the last operation (prevents duplicate processing)
+        /// </summary>
+        public string? LastOperationIdempotencyKey { get; set; }
+
+        /// <summary>
+        /// Whether the cancellation has been fully processed (financial settlement complete)
+        /// </summary>
+        public bool IsCancellationProcessed { get; set; }
+
+        #endregion
 
         /// <summary>
         /// Task location address
@@ -124,11 +195,6 @@ namespace LaborDAL.Entities
         /// Date when the task was completed
         /// </summary>
         public DateTime? CompletedAt { get; set; }
-
-        /// <summary>
-        /// Reason for cancellation (if cancelled)
-        /// </summary>
-        public string? CancellationReason { get; set; }
 
         /// <summary>
         /// View count for the task

@@ -204,7 +204,7 @@
         return status switch
         {
             LaborDAL.Enums.TaskStatus.Open => "success",
-            LaborDAL.Enums.TaskStatus.Assigned => "info",
+            LaborDAL.Enums.TaskStatus.Accepted => "info",
             LaborDAL.Enums.TaskStatus.InProgress => "warning",
             LaborDAL.Enums.TaskStatus.Completed => "primary",
             _ => "secondary"

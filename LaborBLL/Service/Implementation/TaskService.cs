@@ -338,7 +338,7 @@ namespace LaborBLL.Service.Implementation
                 // Note: The worker needs to be fetched and added. For now, we'll use a different approach.
                 // This requires the worker entity to be loaded.
                 
-                task.Status = TaskStatus.Assigned;
+                task.Status = TaskStatus.Accepted;
                 task.AssignedAt = DateTime.UtcNow;
 
                 await _taskRepository.UpdateAsync(task);
@@ -368,7 +368,7 @@ namespace LaborBLL.Service.Implementation
                     return new Response<bool>(false, false, "Task not found.");
                 }
 
-                if (task.Status != TaskStatus.Assigned)
+                if (task.Status != TaskStatus.Accepted)
                 {
                     return new Response<bool>(false, false, "Task must be assigned before starting.");
                 }
@@ -444,7 +444,12 @@ namespace LaborBLL.Service.Implementation
                 }
 
                 task.Status = TaskStatus.Cancelled;
-                task.CancellationReason = reason;
+                // Parse the reason string to enum, default to NotSpecified if parsing fails
+                if (!Enum.TryParse<CancellationReason>(reason, out var cancellationReason))
+                {
+                    cancellationReason = CancellationReason.NotSpecified;
+                }
+                task.CancellationReason = cancellationReason;
                 task.UpdatedAt = DateTime.UtcNow;
 
                 await _taskRepository.UpdateAsync(task);
@@ -539,7 +544,7 @@ namespace LaborBLL.Service.Implementation
                 } : null,
                 AssignedAt = task.AssignedAt,
                 CompletedAt = task.CompletedAt,
-                CancellationReason = task.CancellationReason,
+                CancellationReason = task.CancellationReason.ToString(),
                 ViewCount = task.ViewCount,
                 IsFeatured = task.IsFeatured,
                 IsUrgent = task.IsUrgent,

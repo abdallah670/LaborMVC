@@ -263,7 +263,7 @@ namespace LaborBLL.Service.Implementation
                 application.RespondedAt = DateTime.UtcNow;
 
                 // Update task status
-                application.Task.Status = TaskStatus.Assigned;
+                application.Task.Status = TaskStatus.Accepted;
                 application.Task.AssignedAt = DateTime.UtcNow;
 
                 // Create booking

@@ -330,7 +330,7 @@
                             </a>
                         }
                         
-                        @if (Model.Status == TaskStatus.Assigned && Model.AssignedWorker != null)
+                        @if (Model.Status == TaskStatus.Accepted && Model.AssignedWorker != null)
                         {
                             <div class="p-3 bg-success-soft rounded-4 border border-success-subtle mb-3">
                                 <p class="smaller text-success-emphasis text-uppercase fw-bold mb-3 ls-1">Assigned Executive</p>
@@ -479,7 +479,7 @@
 @functions {
     string GetStatusBadgeClass(TaskStatus status) => status switch {
         TaskStatus.Open => "bg-success-soft text-success",
-        TaskStatus.Assigned => "bg-info-soft text-info",
+        TaskStatus.Accepted => "bg-info-soft text-info",
         TaskStatus.InProgress => "bg-warning-soft text-warning",
         TaskStatus.Completed => "bg-primary-soft text-primary",
         TaskStatus.Cancelled => "bg-secondary-soft text-secondary",

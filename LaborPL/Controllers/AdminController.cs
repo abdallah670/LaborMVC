@@ -1,12 +1,14 @@
 using AutoMapper;
 using LaborBLL.ModelVM;
 using LaborBLL.Service.Abstract;
+using LaborDAL.DB;
 using LaborDAL.Entities;
 using LaborDAL.Enums;
 using LaborDAL.Repo.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LaborPL.Controllers
 {
@@ -23,6 +25,7 @@ namespace LaborPL.Controllers
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRedesignService _redesignService;
+        private readonly ApplicationDbContext _context;
 
         public AdminController(
             IUserService userService,
@@ -34,7 +37,8 @@ namespace LaborPL.Controllers
             ILogger<AdminController> logger,
             IMapper mapper,
             IUnitOfWork unitOfWork,
-            IRedesignService redesignService)
+            IRedesignService redesignService,
+            ApplicationDbContext context)
         {
             _userService = userService;
             _verificationService = verificationService;
@@ -46,6 +50,7 @@ namespace LaborPL.Controllers
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _redesignService = redesignService;
+            _context = context;
         }
 
         // GET: /Admin/Index
@@ -67,7 +72,20 @@ namespace LaborPL.Controllers
             ViewBag.CurrentFilter = filter;
             ViewBag.SearchTerm = search;
 
-            var users = await _userRepository.GetAllAsync();
+            IEnumerable<AppUser> users;
+
+            // Handle deleted users filter separately (bypasses soft delete filter)
+            if (filter?.ToLower() == "deleted")
+            {
+                users = await _context.Users
+                    .IgnoreQueryFilters()
+                    .Where(u => u.IsDeleted)
+                    .ToListAsync();
+            }
+            else
+            {
+                users = await _userRepository.GetAllAsync();
+            }
 
             // Apply search
             if (!string.IsNullOrWhiteSpace(search))
@@ -81,21 +99,30 @@ namespace LaborPL.Controllers
                 );
             }
 
-            // Apply filters
-            users = filter?.ToLower() switch
+            // Apply role filters (only for non-deleted users)
+            if (filter?.ToLower() != "deleted")
             {
-                "workers" => users.Where(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker)),
-                "posters" => users.Where(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Poster)),
-                "verified" => users.Where(u => u.IDVerified),
-                _ => users
-            };
+                users = filter?.ToLower() switch
+                {
+                    "workers" => users.Where(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker)),
+                    "posters" => users.Where(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Poster)),
+                    "verified" => users.Where(u => u.IDVerified),
+                    _ => users
+                };
+            }
 
             // Statistics (always from full list)
             var allUsers = await _userRepository.GetAllAsync();
+            var deletedUsers = await _context.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.IsDeleted)
+                .CountAsync();
+
             ViewBag.TotalUsers = allUsers.Count();
             ViewBag.WorkersCount = allUsers.Count(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Worker));
             ViewBag.PostersCount = allUsers.Count(u => u.Role.HasFlag(LaborDAL.Enums.ClientRole.Poster));
             ViewBag.VerifiedUsers = allUsers.Count(u => u.IDVerified);
+            ViewBag.DeletedCount = deletedUsers;
 
             // Map AppUser entities to UserProfileDisplayViewModel
             var userViewModels = _mapper.Map<IEnumerable<UserProfileDisplayViewModel>>(users);
@@ -576,6 +603,40 @@ namespace LaborPL.Controllers
             _logger.LogInformation("User {UserId} was soft-deleted by admin {AdminId}", id, currentUserId);
             TempData["SuccessMessage"] = "User deleted successfully.";
             return RedirectToAction(nameof(Users));
+        }
+
+        // POST: /Admin/RestoreUser
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestoreUser(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("User ID is required.");
+            }
+
+            try
+            {
+                var result = await _userService.RestoreUserAsync(id);
+
+                if (result.Success)
+                {
+                    _logger.LogInformation("User {UserId} was restored by admin", id);
+                    TempData["SuccessMessage"] = "User restored successfully.";
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to restore user {UserId}: {Error}", id, result.ErrorMessage);
+                    TempData["ErrorMessage"] = result.ErrorMessage ?? "Failed to restore user.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring user {UserId}", id);
+                TempData["ErrorMessage"] = "An error occurred while restoring the user.";
+            }
+
+            return RedirectToAction(nameof(Users), new { filter = "deleted" });
         }
 
         #endregion

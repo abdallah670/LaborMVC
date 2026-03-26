@@ -31,5 +31,15 @@ namespace LaborDAL.Repo.Abstract
 
         // ID Verification (KYC)
         IIDVerificationRepo IDVerifications { get; }
+
+        /// <summary>
+        /// Gets a soft-deleted user by email (bypasses global query filter)
+        /// </summary>
+        Task<AppUser?> GetDeletedUserByEmailAsync(string email);
+
+        /// <summary>
+        /// Gets a soft-deleted user by ID (bypasses global query filter)
+        /// </summary>
+        Task<AppUser?> GetDeletedUserByIdAsync(string userId);
     }
 }

@@ -17,7 +17,7 @@
 
     <!-- Stats Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-md">
             <div class="card shadow-sm bg-primary text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">@ViewBag.TotalUsers</h3>
@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md">
             <div class="card shadow-sm bg-success text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">@ViewBag.WorkersCount</h3>
@@ -33,7 +33,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md">
             <div class="card shadow-sm bg-info text-white">
                 <div class="card-body text-center">
                     <h3 class="mb-0">@ViewBag.PostersCount</h3>
@@ -41,11 +41,19 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md">
             <div class="card shadow-sm bg-warning">
                 <div class="card-body text-center">
                     <h3 class="mb-0">@ViewBag.VerifiedUsers</h3>
                     <small>Verified Users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="card shadow-sm bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-0">@ViewBag.DeletedCount</h3>
+                    <small>Deleted Users</small>
                 </div>
             </div>
         </div>
@@ -95,6 +103,15 @@
                         <i class="bi bi-patch-check me-1"></i>Verified
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentFilter == "deleted" ? "active" : "")" asp-action="Users" asp-route-filter="deleted" asp-route-search="@ViewBag.SearchTerm">
+                        <i class="bi bi-trash me-1"></i>Deleted
+                        @if (ViewBag.DeletedCount > 0)
+                        {
+                            <span class="badge bg-danger ms-1">@ViewBag.DeletedCount</span>
+                        }
+                    </a>
+                </li>
             </ul>
         </div>
         <div class="card-body">
@@ -116,25 +133,29 @@
                         <tbody>
                             @foreach (var user in Model)
                             {
-                                <tr>
+                                <tr class="@(user.IsDeleted ? "table-danger" : "")">
                                     <td>
                                         <div class="d-flex align-items-center">
                                             @if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
                                             {
-                                                <img src="@user.ProfilePictureUrl" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                <img src="@user.ProfilePictureUrl" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover; @(user.IsDeleted ? "opacity-50" : "")">
                                             }
                                             else
                                             {
-                                                <div class="rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: 600;">
+                                                <div class="rounded-circle me-2 d-flex align-items-center justify-content-center @(user.IsDeleted ? "opacity-50" : "")" style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: 600;">
                                                     @(user.FirstName?.FirstOrDefault())@(user.LastName?.FirstOrDefault())
                                                 </div>
                                             }
                                             <div>
-                                                <span class="fw-bold">@user.FirstName @user.LastName</span>
+                                                <span class="fw-bold @(user.IsDeleted ? "text-decoration-line-through" : "")">@user.FirstName @user.LastName</span>
+                                                @if (user.IsDeleted)
+                                                {
+                                                    <span class="badge bg-danger ms-1"><i class="bi bi-trash-fill me-1"></i>DELETED</span>
+                                                }
                                             </div>
                                         </div>
                                     </td>
-                                    <td>@user.Email</td>
+                                    <td class="@(user.IsDeleted ? "text-decoration-line-through text-muted" : "")">@user.Email</td>
                                     <td>@user.PhoneNumber</td>
                                     <td>
                                         @if (user.IDVerified)
@@ -165,21 +186,35 @@
                                     <td>@user.MemberSince.ToString("MMM dd, yyyy")</td>
                                     <td>
                                         <div class="btn-group">
-                                            <a asp-action="UserDetails" asp-route-id="@user.Id" class="btn btn-sm btn-outline-info" title="User Details">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                           
-                                            @if (!user.IsAdmin)
+                                            @if (user.IsDeleted)
                                             {
-                                               
-                                                <a asp-action="EditRoles" asp-route-id="@user.Id" class="btn btn-sm btn-outline-warning" title="Edit Roles">
-                                                    <i class="bi bi-person-gear"></i>
+                                                <!-- Restore button for deleted users -->
+                                                <form asp-action="RestoreUser" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to restore this user?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Restore User">
+                                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <!-- Normal actions for active users -->
+                                                <a asp-action="UserDetails" asp-route-id="@user.Id" class="btn btn-sm btn-outline-info" title="User Details">
+                                                    <i class="bi bi-eye"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete User"
-                                                        data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                        data-user-id="@user.Id" data-user-name="@user.FirstName @user.LastName">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                               
+                                                @if (!user.IsAdmin)
+                                                {
+                                                    <a asp-action="EditRoles" asp-route-id="@user.Id" class="btn btn-sm btn-outline-warning" title="Edit Roles">
+                                                        <i class="bi bi-person-gear"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete User"
+                                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                            data-user-id="@user.Id" data-user-name="@user.FirstName @user.LastName">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                }
                                             }
                                         </div>
                                     </td>

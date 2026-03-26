@@ -136,5 +136,31 @@ namespace LaborDAL.Repo.Implementation
             _transaction?.Dispose();
             _context?.Dispose();
         }
+
+        /// <summary>
+        /// Gets a soft-deleted user by email (bypasses global query filter)
+        /// </summary>
+        public async Task<AppUser?> GetDeletedUserByEmailAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return null;
+
+            return await _context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Email == email && u.IsDeleted);
+        }
+
+        /// <summary>
+        /// Gets a soft-deleted user by ID (bypasses global query filter)
+        /// </summary>
+        public async Task<AppUser?> GetDeletedUserByIdAsync(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return null;
+
+            return await _context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == userId && u.IsDeleted);
+        }
     }
 }

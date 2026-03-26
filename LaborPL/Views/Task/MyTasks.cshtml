@@ -138,7 +138,7 @@
                                             <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-outline-primary" title="View">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            @if (task.Status == LaborDAL.Enums.TaskStatus.Open || task.Status == LaborDAL.Enums.TaskStatus.Assigned)
+                                            @if (task.Status == LaborDAL.Enums.TaskStatus.Open || task.Status == LaborDAL.Enums.TaskStatus.Accepted)
                                             {
                                                 <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
                                                     <i class="bi bi-pencil"></i>
@@ -206,7 +206,7 @@
         return status switch
         {
             LaborDAL.Enums.TaskStatus.Open => "bg-success",
-            LaborDAL.Enums.TaskStatus.Assigned => "bg-info",
+            LaborDAL.Enums.TaskStatus.Accepted => "bg-info",
             LaborDAL.Enums.TaskStatus.InProgress => "bg-warning",
             LaborDAL.Enums.TaskStatus.Completed => "bg-primary",
             LaborDAL.Enums.TaskStatus.Cancelled => "bg-secondary",

@@ -46,6 +46,22 @@ namespace LaborBLL.Service.Abstract
         /// Checks if an email is already registered
         /// </summary>
         Task<bool> EmailExistsAsync(string email);
+
+        /// <summary>
+        /// Restores a soft-deleted user by admin action
+        /// </summary>
+        Task<Response<bool>> RestoreUserAsync(string userId);
+
         Task<bool> LogoutAsync();
+
+        /// <summary>
+        /// Generates a password reset token and sends reset email
+        /// </summary>
+        Task<Response<bool>> ForgotPasswordAsync(string email);
+
+        /// <summary>
+        /// Resets user password with token
+        /// </summary>
+        Task<Response<bool>> ResetPasswordAsync(string email, string token, string newPassword);
     }
 }

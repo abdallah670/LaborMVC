@@ -283,7 +283,7 @@ namespace LaborPL.Controllers
             tasks = filter?.ToLower() switch
             {
                 "open" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Open),
-                "assigned" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Assigned),
+                "assigned" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Accepted),
                 "inprogress" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.InProgress),
                 "completed" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Completed),
                 "cancelled" => tasks.Where(t => t.Status == LaborDAL.Enums.TaskStatus.Cancelled),
@@ -296,7 +296,7 @@ namespace LaborPL.Controllers
             // Stats for tabs
             ViewBag.TotalCount = result.Result.Count();
             ViewBag.OpenCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Open);
-            ViewBag.AssignedCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Assigned);
+            ViewBag.AssignedCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Accepted);
             ViewBag.InProgressCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.InProgress);
             ViewBag.CompletedCount = result.Result.Count(t => t.Status == LaborDAL.Enums.TaskStatus.Completed);
 
