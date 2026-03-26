@@ -17,7 +17,7 @@ namespace LaborDAL.Repo.Implementation
                 .ThenInclude(t=>t.Poster)
                 .Include(b=> b.Worker)
                 .IgnoreQueryFilters()
-                                      .FirstOrDefaultAsync(b => b.Id == id);
+.FirstOrDefaultAsync(b => b.Id == id);
             return booking;
         }
 

@@ -39,6 +39,8 @@ namespace LaborDAL.Entities
         public byte[] RowVersion { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        public CancellationType? CancellationType { get; set; }
+        public PenaltyTier? PenaltyTier { get; set; }
         public AppUser Worker { get; set; }
         public AppUser Poster { get; set; }
         public TaskItem? Task { get; set; }

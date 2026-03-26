@@ -18,7 +18,7 @@ namespace LaborDAL.Entities
         public AppUser Rater { get; set; }
         public AppUser Rated { get; set; }
         public Booking Booking { get; set; }
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
 
     }
 }

@@ -10,7 +10,7 @@ namespace LaborBLL.Service.Abstract
         Task<Response<int>> CreateBookingAsync(CreateBookingViewModel model);
         Task<Response<bool>> DeleteBookingAsync(int BookingId);
         Task<Response<bool>> UpdateBookingAsync(UpdateBookingViewModel model);
-        Task<Response<bool>> CancelBookingAsync(int bookingId);
+        Task<Response<bool>> CancelBookingAsync(int bookingId, string cancelledByUserId); 
         Task<Response<bool>> StartWorkBookingAsync(int bookingId);
         Task<Response<bool>> CompleteBookingByWorkerAsync(int bookingId);
         Task<Response<bool>> CompleteBookingByPosterAsync(int bookingId);

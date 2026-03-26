@@ -103,6 +103,7 @@ namespace LaborPL.Controllers
             ViewBag.CompletedCount = list.Count(b => b.Status == BookingStatus.Completed);
             ViewBag.CancelCount = list.Count(b => b.Status == BookingStatus.Cancelled);
 
+
             var bookings = list.AsEnumerable();
 
             switch (filter.ToLower())
@@ -152,16 +153,164 @@ namespace LaborPL.Controllers
             ViewBag.OtherUserProfilePicture = otherUser?.ProfilePictureUrl;
 
             return View(response.Result);
-        }        
+        }
         #endregion
         #region Cancell
+
+
         [HttpPost]
-        
-       
+        [Authorize]
         public async Task<IActionResult> Cancel(int id)
         {
-            await bookingService.CancelBookingAsync(id);
-            return RedirectToAction("Details", new { id = id });
+            var userId = userManager.GetUserId(User);
+
+            var booking = await bookingService.GetBookingByIdAsync(id);
+            if (!booking.Success || booking.Result == null)
+                return NotFound();
+
+            if (booking.Result.PosterId != userId && booking.Result.WorkerId != userId)
+                return Forbid();
+
+            // حساب الوقت المتبقي
+            TimeSpan timeUntilStart;
+            if (booking.Result.StartTime.HasValue)
+            {
+                timeUntilStart = booking.Result.StartTime.Value - DateTime.Now;
+            }
+            else
+            {
+                timeUntilStart = TimeSpan.Zero;
+            }
+
+            bool isWorker = booking.Result.WorkerId == userId;
+            decimal penaltyPercentage = 0;
+            int ratingScore = 5;
+            string ratingComment = "";
+            bool applyRating = false;
+
+            // حساب نسبة الغرامة وتقييم العامل
+            if (isWorker) // العامل ألغى
+            {
+                if (timeUntilStart.TotalHours > 24)
+                {
+                    penaltyPercentage = 0;
+                }
+                else if (timeUntilStart.TotalHours > 12)
+                {
+                    penaltyPercentage = 0.05m;
+                    ratingScore = 2;
+                    ratingComment = "System auto-rating: Worker cancelled late";
+                    applyRating = true;
+                }
+                else if (timeUntilStart.TotalHours > 2)
+                {
+                    penaltyPercentage = 0.10m;
+                    ratingScore = 1;
+                    ratingComment = "System auto-rating: Worker cancelled very late";
+                    applyRating = true;
+                }
+                else
+                {
+                    penaltyPercentage = 0.20m;
+                    ratingScore = 1;
+                    ratingComment = "System auto-rating: Worker cancelled at last minute";
+                    applyRating = true;
+                }
+            }
+            else // العميل ألغى
+            {
+                if (timeUntilStart.TotalHours > 48)
+                {
+                    penaltyPercentage = 0;
+                }
+                else if (timeUntilStart.TotalHours > 24)
+                {
+                    penaltyPercentage = 0.10m;
+                    ratingScore = 5;
+                    ratingComment = "System auto-rating: Worker compensated for client cancellation";
+                    applyRating = true;
+                }
+                else if (timeUntilStart.TotalHours > 12)
+                {
+                    penaltyPercentage = 0.25m;
+                    ratingScore = 5;
+                    ratingComment = "System auto-rating: Worker compensated for client cancellation";
+                    applyRating = true;
+                }
+                else if (timeUntilStart.TotalHours > 2)
+                {
+                    penaltyPercentage = 0.50m;
+                    ratingScore = 5;
+                    ratingComment = "System auto-rating: Worker compensated for client cancellation";
+                    applyRating = true;
+                }
+                else
+                {
+                    penaltyPercentage = 0.75m;
+                    ratingScore = 5;
+                    ratingComment = "System auto-rating: Worker compensated for client last-minute cancellation";
+                    applyRating = true;
+                }
+            }
+
+            decimal totalAmount = booking.Result.AgreedRate;
+            var penaltyAmount = totalAmount * penaltyPercentage;
+            var refundAmount = totalAmount - penaltyAmount;
+
+            // تطبيق التقييم التلقائي باستخدام الـ Admin
+            if (applyRating)
+            {
+                try
+                {
+                    // ID حق System Admin من قاعدة البيانات
+                    string adminId = "166dcbba-3f40-4e1b-a760-278b03e4e938";
+
+                    var ratingModel = new RatingViewModel
+                    {
+                        RatedId = booking.Result.WorkerId,  // العامل اللي هيتقيم
+                        bookingId = id,
+                        Score = ratingScore,
+                        comment = ratingComment
+                    };
+
+                    await ratingService.SubmitOrUpdateRatingAsync(ratingModel, adminId);
+                }
+                catch (Exception ex)
+                {
+                    // لو فشل التقييم، سجل الخطأ ومتوقفش العملية
+                    Console.WriteLine($"Auto-rating failed: {ex.Message}");
+                }
+            }
+
+            // إلغاء الحجز
+            var result = await bookingService.CancelBookingAsync(id, userId);
+
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return RedirectToAction("Details", new { id });
+            }
+
+            // معالجة المبلغ
+            await escrowService.ProcessCancellationAsync(id, userId);
+
+            // الرسالة المناسبة للمستخدم
+            if (isWorker)
+            {
+                if (penaltyAmount > 0)
+                    TempData["Message"] = $"⚠️ Booking cancelled. Penalty: {penaltyAmount:C}. Rating reduced automatically.";
+                else
+                    TempData["Message"] = $"✅ Booking cancelled. No penalty. Rating not affected.";
+            }
+            else
+            {
+                if (penaltyAmount > 0)
+                    TempData["Message"] = $"⚠️ Booking cancelled. Refund: {refundAmount:C}, Penalty: {penaltyAmount:C}. Worker rating increased automatically.";
+                else
+                    TempData["Message"] = $"✅ Booking cancelled. Full refund: {refundAmount:C}. Rating not affected.";
+            }
+
+            return RedirectToAction("Details", new { id });
         }
         #endregion
         [HttpPost]

@@ -91,12 +91,24 @@ namespace LaborDAL.Repo.Implementation
             // Initialize ID verification repository
             IDVerifications = new IDVerificationRepo(_context);
         }
-
         public async Task<int> SaveAsync()
         {
-            return await _context.SaveChangesAsync();
-        }
+            try
+            {
+                return await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // جيب الخطأ الحقيقي
+                var innerException = ex.InnerException?.Message;
 
+                // اطبع الخطأ في الـ Output
+                Console.WriteLine($"ERROR: {innerException}");
+
+                // ارمي الخطأ عشان تشوفه
+                throw new Exception($"Database error: {innerException}", ex);
+            }
+        }
         public async Task BeginTransactionAsync()
         {
             _transaction = await _context.Database.BeginTransactionAsync();

@@ -210,24 +210,29 @@ namespace LaborBLL.Service.Implementation
 
         return new Response<List<BookingDashboardViewModel>>(mapped, true, null);
     }
-        public async Task<Response<bool>> CancelBookingAsync(int bookingId)
+        public async Task<Response<bool>> CancelBookingAsync(int bookingId, string cancelledByUserId)
         {
-            var booking=await unitOfWork.Bookings.GetByIdAsync(bookingId);
+            var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
+
             if (booking == null)
-            {
                 return new Response<bool>(false, false, "Booking not found");
-            }
+
             if (booking.Status == BookingStatus.Completed || booking.Status == BookingStatus.Cancelled)
-            {
-                return new Response<bool>(false, false, "Cannot cancel a completed or already cancelled booking");
-            }
+                return new Response<bool>(false, false, "Cannot cancel this booking");
+
+            bool cancelledByPoster = booking.Task.PosterId == cancelledByUserId;
+
             booking.Status = BookingStatus.Cancelled;
+            booking.CancellationType = cancelledByPoster
+                ? CancellationType.ClientCancellation
+                : CancellationType.WorkerCancellation;
+            booking.PenaltyTier = PenaltyTier.Moderate;
+
             await unitOfWork.Bookings.UpdateAsync(booking);
             await unitOfWork.SaveAsync();
 
             return new Response<bool>(true, true, null);
         }
-
         public async Task<Response<bool>> StartWorkBookingAsync(int bookingId)
         {
             var booking =await unitOfWork.Bookings.GetByIdAsync(bookingId);

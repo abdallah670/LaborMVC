@@ -33,7 +33,6 @@ namespace LaborDAL.DB.Configuration
             builder.Property(b => b.EndTime)
                  .IsRequired(false);
              builder.Property(b => b.Status)
-                 .HasConversion<string>()
                  .IsRequired();
              builder.Property(b => b.CreatedAt)
                  .HasDefaultValueSql("GETUTCDATE()");

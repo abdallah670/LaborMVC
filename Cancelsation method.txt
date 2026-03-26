@@ -1,0 +1,317 @@
+
+# Detailed Report: Booking Cancellation and Penalty System
+
+---
+
+## 1. Overview
+
+When a booking is cancelled, a penalty system is applied based on:
+- **Who cancelled?** (Client or Worker)
+- **When did they cancel?** (Time remaining before the booking starts)
+
+---
+
+## 2. Penalty Percentage Calculation
+
+### If **Worker** cancels:
+
+| Remaining Time | Penalty Percentage |
+|----------------|-------------------|
+| More than 24 hours | 0% |
+| 12 to 24 hours | 5% |
+| 2 to 12 hours | 10% |
+| Less than 2 hours | 20% |
+
+### If **Client** cancels:
+
+| Remaining Time | Penalty Percentage |
+|----------------|-------------------|
+| More than 48 hours | 0% |
+| 24 to 48 hours | 10% |
+| 12 to 24 hours | 25% |
+| 2 to 12 hours | 50% |
+| Less than 2 hours | 75% |
+
+---
+
+## 3. Applied Penalties
+
+### Financial Penalty:
+- **If Client cancels:** Refund = Total Amount - Penalty Amount
+- **If Worker cancels:** Full refund to client + Penalty deducted from worker's earnings
+
+### Rating Penalty (Automatic):
+- **If Worker cancels:** Rating reduced (1-2 stars) based on cancellation time
+- **If Client cancels:** Worker rating increased to 5 stars as compensation
+
+---
+
+## 4. Code Implementation
+
+### Cancel Action Controller:
+
+```csharp
+[HttpPost]
+[Authorize]
+public async Task<IActionResult> Cancel(int id)
+{
+    var userId = userManager.GetUserId(User);
+
+    var booking = await bookingService.GetBookingByIdAsync(id);
+    if (!booking.Success || booking.Result == null)
+        return NotFound();
+
+    if (booking.Result.PosterId != userId && booking.Result.WorkerId != userId)
+        return Forbid();
+
+    // Calculate remaining time
+    TimeSpan timeUntilStart;
+    if (booking.Result.StartTime.HasValue)
+    {
+        timeUntilStart = booking.Result.StartTime.Value - DateTime.Now;
+    }
+    else
+    {
+        timeUntilStart = TimeSpan.Zero;
+    }
+    
+    bool isWorker = booking.Result.WorkerId == userId;
+    decimal penaltyPercentage = 0;
+    int ratingScore = 5;
+    string ratingComment = "";
+    bool applyRating = false;
+    
+    // Calculate penalty and rating based on who cancelled
+    if (isWorker) // Worker cancelled
+    {
+        if (timeUntilStart.TotalHours > 24)
+        {
+            penaltyPercentage = 0;
+        }
+        else if (timeUntilStart.TotalHours > 12)
+        {
+            penaltyPercentage = 0.05m;
+            ratingScore = 2;
+            ratingComment = "System auto-rating: Worker cancelled late";
+            applyRating = true;
+        }
+        else if (timeUntilStart.TotalHours > 2)
+        {
+            penaltyPercentage = 0.10m;
+            ratingScore = 1;
+            ratingComment = "System auto-rating: Worker cancelled very late";
+            applyRating = true;
+        }
+        else
+        {
+            penaltyPercentage = 0.20m;
+            ratingScore = 1;
+            ratingComment = "System auto-rating: Worker cancelled at last minute";
+            applyRating = true;
+        }
+    }
+    else // Client cancelled
+    {
+        if (timeUntilStart.TotalHours > 48)
+        {
+            penaltyPercentage = 0;
+        }
+        else if (timeUntilStart.TotalHours > 24)
+        {
+            penaltyPercentage = 0.10m;
+            ratingScore = 5;
+            ratingComment = "System auto-rating: Worker compensated for client cancellation";
+            applyRating = true;
+        }
+        else if (timeUntilStart.TotalHours > 12)
+        {
+            penaltyPercentage = 0.25m;
+            ratingScore = 5;
+            ratingComment = "System auto-rating: Worker compensated for client cancellation";
+            applyRating = true;
+        }
+        else if (timeUntilStart.TotalHours > 2)
+        {
+            penaltyPercentage = 0.50m;
+            ratingScore = 5;
+            ratingComment = "System auto-rating: Worker compensated for client cancellation";
+            applyRating = true;
+        }
+        else
+        {
+            penaltyPercentage = 0.75m;
+            ratingScore = 5;
+            ratingComment = "System auto-rating: Worker compensated for client last-minute cancellation";
+            applyRating = true;
+        }
+    }
+    
+    decimal totalAmount = booking.Result.AgreedRate;
+    var penaltyAmount = totalAmount * penaltyPercentage;
+    var refundAmount = totalAmount - penaltyAmount;
+
+    // Apply automatic rating using System Admin
+    if (applyRating)
+    {
+        try
+        {
+            // System Admin ID from database
+            string adminId = "166dcbba-3f40-4e1b-a760-278b03e4e938";
+            
+            var ratingModel = new RatingViewModel
+            {
+                RatedId = booking.Result.WorkerId,
+                bookingId = id,
+                Score = ratingScore,
+                comment = ratingComment
+            };
+            
+            await ratingService.SubmitOrUpdateRatingAsync(ratingModel, adminId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Auto-rating failed: {ex.Message}");
+        }
+    }
+
+    // Cancel the booking
+    var result = await bookingService.CancelBookingAsync(id, userId);
+
+    if (!result.Success)
+    {
+        TempData["ErrorMessage"] = result.ErrorMessage;
+        return RedirectToAction("Details", new { id });
+    }
+
+    // Process payment
+    await escrowService.ProcessCancellationAsync(id, userId);
+
+    // Display message to user
+    if (isWorker)
+    {
+        if (penaltyAmount > 0)
+            TempData["Message"] = $"⚠️ Booking cancelled. Penalty: {penaltyAmount:C}. Rating reduced automatically.";
+        else
+            TempData["Message"] = $"✅ Booking cancelled. No penalty. Rating not affected.";
+    }
+    else
+    {
+        if (penaltyAmount > 0)
+            TempData["Message"] = $"⚠️ Booking cancelled. Refund: {refundAmount:C}, Penalty: {penaltyAmount:C}. Worker rating increased automatically.";
+        else
+            TempData["Message"] = $"✅ Booking cancelled. Full refund: {refundAmount:C}. Rating not affected.";
+    }
+
+    return RedirectToAction("Details", new { id });
+}
+```
+
+---
+
+## 5. Rating Service (Modified)
+
+To handle automatic ratings properly:
+
+```csharp
+public async Task<Response<bool>> SubmitOrUpdateRatingAsync(RatingViewModel model, string raterId)
+{
+    // Handle empty comment
+    string commentValue = string.IsNullOrEmpty(model.comment) 
+        ? "No comment provided" 
+        : model.comment;
+
+    var rating = await unitOfWork.Ratings.FirstOrDefaultAsync(
+        r => r.RateeId == model.RatedId && r.RaterId == raterId && r.bookingId == model.bookingId);
+
+    if (rating != null)
+    {
+        rating.Score = model.Score;
+        rating.Comment = commentValue;
+        rating.UpdatedAt = DateTime.UtcNow;
+        await unitOfWork.Ratings.UpdateAsync(rating);
+    }
+    else
+    {
+        var newRating = new LaborDAL.Entities.Rating
+        {
+            RaterId = raterId,
+            RateeId = model.RatedId,
+            bookingId = model.bookingId,
+            Score = model.Score,
+            Comment = commentValue,
+            CreatedAt = DateTime.UtcNow
+        };
+        await unitOfWork.Ratings.AddAsync(newRating);
+    }
+
+    await unitOfWork.SaveAsync();
+
+    // Update user's average rating
+    var allRatings = await unitOfWork.Ratings.FindAsync(r => r.RateeId == model.RatedId);
+    var ratingsList = allRatings.ToList();
+
+    decimal average = ratingsList.Any()
+        ? (decimal)ratingsList.Average(r => r.Score)
+        : model.Score;
+
+    await unitOfWork.AppUsers.UpdateUserRatingAsync(model.RatedId, average);
+
+    return new Response<bool>(true, true, null);
+}
+```
+
+---
+
+## 6. System Admin User
+
+A system admin user must exist in the database for automatic ratings:
+
+```sql
+-- System Admin User
+INSERT INTO AspNetUsers (
+    Id, 
+    UserName, 
+    NormalizedUserName, 
+    Email, 
+    NormalizedEmail, 
+    EmailConfirmed
+)
+VALUES (
+    '166dcbba-3f40-4e1b-a760-278b03e4e938',
+    'System Admin',
+    'SYSTEM ADMIN',
+    'system@labor.com',
+    'SYSTEM@LABOR.COM',
+    1
+);
+```
+
+---
+
+## 7. Summary Table
+
+| Scenario | Financial Penalty | Rating Effect |
+|----------|------------------|---------------|
+| Worker cancels >24h | 0% | No change |
+| Worker cancels 12-24h | 5% deducted from worker | Reduced to 2 stars |
+| Worker cancels 2-12h | 10% deducted from worker | Reduced to 1 star |
+| Worker cancels <2h | 20% deducted from worker | Reduced to 1 star |
+| Client cancels >48h | 0% | No change |
+| Client cancels 24-48h | 10% to worker | Worker gets 5 stars |
+| Client cancels 12-24h | 25% to worker | Worker gets 5 stars |
+| Client cancels 2-12h | 50% to worker | Worker gets 5 stars |
+| Client cancels <2h | 75% to worker | Worker gets 5 stars |
+
+---
+
+## 8. Key Points
+
+1. **Penalty Percentage** calculated based on who cancelled and remaining time
+2. **Financial Penalty** applied through Stripe refund/transfer
+3. **Automatic Rating** recorded by System Admin user
+4. **Clear Messages** shown to users with penalty and refund amounts
+5. **Error Handling** ensures booking cancellation continues even if rating fails
+
+---
+
+This system ensures fair compensation and accountability for both clients and workers when cancellations occur.
