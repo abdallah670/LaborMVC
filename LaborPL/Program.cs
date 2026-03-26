@@ -211,7 +211,7 @@ var app = builder.Build();
 // أول حاجة - Stripe webhook
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api/StripeWebhook"))
+    if (context.Request.Path.StartsWithSegments("/api/stripe/webhook"))
     {
         context.Request.EnableBuffering();
     }

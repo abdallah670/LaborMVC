@@ -12,11 +12,13 @@ namespace LaborPL.Controllers
     {
         private readonly IchatService _chatService;
         private readonly IHubContext<DirectChatHub> _hubContext;
+        private readonly UserManager<AppUser> userManager;
 
-        public ChatController(IchatService chatService, IHubContext<DirectChatHub> hubContext)
+        public ChatController(IchatService chatService, IHubContext<DirectChatHub> hubContext, UserManager<AppUser> userManager)
         {
             _chatService = chatService;
             _hubContext = hubContext;
+            this.userManager = userManager;
         }
 
         [HttpGet]
@@ -56,6 +58,8 @@ namespace LaborPL.Controllers
             {
                 return RedirectToAction("Index");
             }
+            var otherUser = await userManager.FindByIdAsync(otherUserId);
+            ViewBag.OtherUserProfilePicture = otherUser?.ProfilePictureUrl;
             ViewBag.Contacts = await _chatService.GetContactAsync(userId);
             return View(conversation.Result);
         }

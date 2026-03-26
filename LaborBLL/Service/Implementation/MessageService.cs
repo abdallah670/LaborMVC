@@ -68,20 +68,26 @@ namespace LaborBLL.Service.Implementation
         public async Task<Response<IEnumerable<MessageViewMode>>> GetMessagesByBookingIdAsync(int bookingId, string userId)
         {
             var booking = await unitOfWork.Bookings.GetByIdAsync(bookingId);
-            if(booking == null)
-            {
-                return new Response<IEnumerable<MessageViewMode>>(null,false,"Booking NotFound");
-            }
-            if(booking.WorkerId!=userId && booking.PosterId!=userId)
-            {
+            if (booking == null)
+                return new Response<IEnumerable<MessageViewMode>>(null, false, "Booking NotFound");
+
+            if (booking.WorkerId != userId && booking.PosterId != userId)
                 return new Response<IEnumerable<MessageViewMode>>(null, false, "You are not part of this booking");
+
+            var messages = await unitOfWork.Messages.GetMessagesByBookingIdAsync(bookingId);
+            var messagesList = messages.ToList();
+            var mes = mapper.Map<IEnumerable<MessageViewMode>>(messagesList).ToList();
+
+            // ✅ امليها يدوياً
+            for (int i = 0; i < mes.Count; i++)
+            {
+                mes[i].SenderAvatar = messagesList[i].Sender?.ProfilePictureUrl ?? "/images/default-avatar.png";
             }
-            var message = await unitOfWork.Messages.GetMessagesByBookingIdAsync(bookingId);
-            var mes=mapper.Map<IEnumerable<MessageViewMode>>(message);
+
             return new Response<IEnumerable<MessageViewMode>>(mes, true, null);
         }
 
-     
+
 
         public async Task<Response<int>> GetUnreadCountAsync(string userId)
         {

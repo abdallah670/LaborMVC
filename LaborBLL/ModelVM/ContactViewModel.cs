@@ -13,6 +13,7 @@ namespace LaborBLL.ModelVM
         public int UnreadCount { get; set; }
         public bool IsOnline { get; set; }
         public bool IsAdmin { get; set; } // ✅ أضف ده
+        public string? ProfilePictureUrl { get; set; } // ✅ أضف ده
 
         public DateTime? LastSeen { get; set; }
         public string FullName { get; set; }

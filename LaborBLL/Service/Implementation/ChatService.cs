@@ -77,7 +77,9 @@ namespace LaborBLL.Service
                             LastMessage = lastMessage.Content ?? "",
                             LastMessageAt = lastMessage.CreatedAt,
                             UnreadCount = g.Count(m => m.SenderId != userId && m.isread != true),
-                            IsAdmin = adminIds.Contains(g.Key) // ✅
+                            IsAdmin = adminIds.Contains(g.Key) ,// ✅
+                                ProfilePictureUrl = otherUser?.ProfilePictureUrl // ✅ أضف ده
+
                         };
                     })
                     .Where(c => c != null)
@@ -115,6 +117,7 @@ namespace LaborBLL.Service
                             LastMessage = "",
                             LastMessageAt = DateTime.Now,
                             UnreadCount = 0,
+
                             IsAdmin = adminIds.Contains(u.Id) // ✅
                         })
                         .ToList();

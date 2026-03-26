@@ -8,6 +8,7 @@ namespace LaborBLL.ModelVM
 {
     public class ChatViewModel
     {
+        public int BookingId { get; set; }      // ✅ أضف ده
         public string OtherUserId { get; set; }
         public string OtherUserName { get; set; }
         public List<MessageViewMode> Messages { get; set; }

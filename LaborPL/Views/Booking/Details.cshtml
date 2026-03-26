@@ -68,7 +68,7 @@
                                 <i class="bi bi-person text-primary"></i>
                             </div>
                             <div>
-                                <h6 class="mb-0 fw-bold">@(isPoster ? Model.WorkerName : Model.PosterName)</h6>
+                                <h6 class="mb-0 fw-bold">@(isPoster? Model.WorkerName: Model.PosterName)</h6>
                                 <small class="text-muted">@(isPoster ? "Assigned Workforce" : "Project Commissioner")</small>
                             </div>
                         </div>
@@ -228,13 +228,24 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-3">
                             <div class="position-relative">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-weight: 700;">
-                                    @((isPoster ? Model.WorkerName : Model.PosterName)?.FirstOrDefault().ToString().ToUpper() ?? "U")
-                                </div>
+                                <!-- بعد -->
+                                @if (!string.IsNullOrEmpty(ViewBag.OtherUserProfilePicture as string))
+                                {
+                                    <img src="@ViewBag.OtherUserProfilePicture"
+                                         class="rounded-circle object-fit-cover shadow-sm"
+                                         style="width: 48px; height: 48px;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width: 48px; height: 48px; font-weight: 700;">
+                                        @((isPoster ? Model.WorkerName : Model.PosterName)?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                                    </div>
+                                }
                                 <span class="position-absolute bottom-0 end-0 p-1 bg-secondary border border-2 border-white rounded-circle" id="onlineStatusIndicator" style="width: 12px; height: 12px;"></span>
                             </div>
                             <div>
-                                <h6 class="mb-0 fw-bold">@(isPoster ? Model.WorkerName : Model.PosterName)</h6>
+                                <h6 class="mb-0 fw-bold">@(isPoster? Model.WorkerName: Model.PosterName)</h6>
                                 <small class="text-muted" id="onlineStatusText">Status Synchronizing...</small>
                             </div>
                         </div>
@@ -279,7 +290,7 @@
                 <div class="p-4 p-md-5">
                     <h4 class="fw-bold mb-2">Realignment of Funds</h4>
                     <p class="text-muted mb-4">Adjust the agreed executive compensation for this engagement.</p>
-                    
+
                     <form asp-action="UpdatePrice" method="post">
                         <input type="hidden" asp-for="Id" />
                         <input type="hidden" asp-for="StartTime" />
@@ -317,7 +328,7 @@
                 </div>
                 <h3 class="fw-bold mb-2">Revoke Engagement?</h3>
                 <p class="text-muted mb-5">Revoking this mission may impact your platform reputation score. This action is definitive.</p>
-                
+
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-light-soft flex-fill py-3 rounded-pill fw-bold" data-bs-dismiss="modal">Keep Active</button>
                     <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="flex-fill">
@@ -331,18 +342,65 @@
 </div>
 
 <style>
-    .experience-rating label { cursor: pointer; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .experience-rating label:hover { transform: scale(1.3); color: #ffc107 !important; }
-    .experience-rating input:checked ~ label { color: #ffc107 !important; }
-    
-    .chat-bubble { max-width: 85%; padding: 12px 20px; border-radius: 20px; margin-bottom: 4px; font-size: 0.95rem; line-height: 1.5; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-    .chat-bubble.outgoing { background: var(--lm-primary); color: white; border-bottom-right-radius: 4px; border-top-right-radius: 4px; margin-left: auto; }
-    .chat-bubble.incoming { background: white; color: var(--lm-dark); border-bottom-left-radius: 4px; border-top-left-radius: 4px; margin-right: auto; }
-    .chat-meta { font-size: 0.75rem; color: #94a3b8; margin-bottom: 20px; display: block; }
-    .chat-meta.outgoing { text-align: right; }
-    
-    #chatChannel::-webkit-scrollbar { width: 5px; }
-    #chatChannel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .experience-rating label {
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+        .experience-rating label:hover {
+            transform: scale(1.3);
+            color: #ffc107 !important;
+        }
+
+    .experience-rating input:checked ~ label {
+        color: #ffc107 !important;
+    }
+
+    .chat-bubble {
+        max-width: 85%;
+        padding: 12px 20px;
+        border-radius: 20px;
+        margin-bottom: 4px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+        .chat-bubble.outgoing {
+            background: #0d6efd;
+            color: #ffffff !important;
+            border-bottom-right-radius: 4px;
+            border-top-right-radius: 4px;
+            margin-left: auto;
+        }
+
+        .chat-bubble.incoming {
+            background: #ffffff;
+            color: #212529 !important;
+            border-bottom-left-radius: 4px;
+            border-top-left-radius: 4px;
+            margin-right: auto;
+        }
+
+    .chat-meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+        .chat-meta.outgoing {
+            text-align: right;
+        }
+
+    #chatChannel::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #chatChannel::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
 </style>
 
 @section Scripts {
@@ -362,7 +420,7 @@
 
                 const isAuth = payload.senderId === currentUserId;
                 const clock = new Date(payload.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
+
                 const segment = document.createElement('div');
                 segment.className = `chat-frame ${isAuth ? 'outgoing text-end' : 'incoming'}`;
                 segment.innerHTML = `
@@ -383,13 +441,33 @@
                 if (d.success && d.messages?.length) { channel.innerHTML = ''; d.messages.forEach(syncDisplay); }
             });
 
-            const transmit = () => {
-                const val = relayInput.value.trim();
-                if (!val) return;
-                syncDisplay({ senderId: currentUserId, content: val, sentAt: new Date().toISOString(), senderName: 'You' });
-                relayInput.value = '';
-                fetch('/Message/SendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId: bookingId, content: val }) });
-            };
+                    const transmit = async () => {
+            const val = relayInput.value.trim();
+            if (!val) return;
+            relayInput.value = '';
+
+            const response = await fetch('/Message/SendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId: bookingId,
+                    otherUserId: targetId,   // ✅ أضف ده
+                    content: val
+                })
+            });
+            const data = await response.json();
+            console.log('Send result:', data); // ✅ للتشخيص
+            if (data.success) {
+                syncDisplay({
+                    senderId: currentUserId,
+                    content: val,
+                    sentAt: new Date().toISOString(),
+                    senderName: 'You'
+                });
+            } else {
+                console.error('Failed:', data.message); // ✅ للتشخيص
+            }
+        };
 
             broadcastBtn.onclick = transmit;
             relayInput.onkeypress = e => { if (e.key === 'Enter') transmit(); };
@@ -404,13 +482,14 @@
                     t.textContent = d.isOnline ? 'Online - Responding' : 'Offline - Awaiting Return';
                 } catch {}
             };
-            monitorStatus(); setInterval(monitorStatus, 8000);
+            monitorStatus(); setInterval(monitorStatus, 5000);
         });
     </script>
 }
 
 @functions {
-    string GetStatusBadgeClass(BookingStatus s) => s switch {
+    string GetStatusBadgeClass(BookingStatus s) => s switch
+    {
         BookingStatus.Scheduled => "bg-warning-soft text-warning",
         BookingStatus.InProgress => "bg-info-soft text-info",
         BookingStatus.CompletedfromWorker => "bg-primary-soft text-primary",
@@ -420,7 +499,5 @@
         _ => "bg-light text-muted"
     };
 }
-    setInterval(checkUserStatus, 5000);
-        });
-    </script>
-}
+
+

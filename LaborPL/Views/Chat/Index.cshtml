@@ -347,13 +347,24 @@
                 {
                     <a asp-action="Conversation" asp-route-otherUserId="@contact.OtherUserId" class="contact-item">
                         <div class="contact-avatar">
-                            @if (!string.IsNullOrEmpty(contact.FullName))
+                            @if (!string.IsNullOrEmpty(contact.ProfilePictureUrl))
                             {
-                                @contact.FullName.Substring(0, 1).ToUpper()
+                                <img src="@contact.ProfilePictureUrl"
+                                     class="rounded-circle object-fit-cover"
+                                     style="width: 48px; height: 48px; flex-shrink: 0;" />
                             }
                             else
                             {
-                                <i class="fas fa-user"></i>
+                                <div class="contact-avatar" style="background: @GetGradientColor(contact.FullName);">
+                                    @if (!string.IsNullOrEmpty(contact.FullName))
+                                    {
+                                        @contact.FullName.Substring(0, 1).ToUpper()
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person"></i>
+                                    }
+                                </div>
                             }
                         </div>
                         <div class="contact-info">
@@ -412,13 +423,24 @@
                 {
                     <a asp-action="Conversation" asp-route-otherUserId="@contact.OtherUserId" class="contact-item">
                         <div class="contact-avatar" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
-                            @if (!string.IsNullOrEmpty(contact.FullName))
+                            @if (!string.IsNullOrEmpty(contact.ProfilePictureUrl))
                             {
-                                @contact.FullName.Substring(0, 1).ToUpper()
+                                <img src="@contact.ProfilePictureUrl"
+                                     class="rounded-circle object-fit-cover"
+                                     style="width: 48px; height: 48px; flex-shrink: 0;" />
                             }
                             else
                             {
-                                <i class="fas fa-user"></i>
+                                <div class="contact-avatar" style="background: @GetGradientColor(contact.FullName);">
+                                    @if (!string.IsNullOrEmpty(contact.FullName))
+                                    {
+                                        @contact.FullName.Substring(0, 1).ToUpper()
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person"></i>
+                                    }
+                                </div>
                             }
                         </div>
                         <div class="contact-info">
@@ -485,3 +507,25 @@
         });
     });
 </script>
+@functions {
+    string GetGradientColor(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+
+        var colors = new[]
+        {
+            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+            "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+            "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+            "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+            "linear-gradient(135deg, #fda085 0%, #f6d365 100%)",
+            "linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)"
+        };
+
+        int index = Math.Abs(name[0]) % colors.Length;
+        return colors[index];
+    }
+}

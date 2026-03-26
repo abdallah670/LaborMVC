@@ -80,7 +80,8 @@ namespace LaborPL.Controllers
                     senderId = m.SenderId,
                     senderName = m.SenderName ?? "مستخدم",
                     sentAt = m.SentAt,
-                    isRead = m.IsRead
+                    isRead = m.IsRead,
+                    senderAvatar = m.SenderAvatar ?? "/images/default-avatar.png"
                 });
 
                 return Json(new { success = true, messages = messages });
@@ -140,6 +141,7 @@ namespace LaborPL.Controllers
 
             var viewModel = new ChatViewModel
             {
+
                 OtherUserId = otherUserId,
                 OtherUserName = $"{otheruser?.FirstName}{otheruser?.LastName}",
                 Messages = messagesList

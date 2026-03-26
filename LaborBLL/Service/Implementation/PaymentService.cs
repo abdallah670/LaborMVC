@@ -49,6 +49,19 @@ namespace LaborBLL.Service.Implementation
         {
             try
             {
+                if (!string.IsNullOrEmpty(model.TransactionId))
+                {
+                    var newPaymentEntity = Mapper.Map<Payment>(model);
+                    newPaymentEntity.PaymentDate = DateTime.UtcNow;
+                    newPaymentEntity.Status = PaymentStatus.Pending;
+                    newPaymentEntity.PaymentType = model.PaymentType ?? "Booking";
+                    newPaymentEntity.ClientSecret = model.ClientSecret;
+                    await UnitOfWork.Payments.AddAsync(newPaymentEntity);
+                    await UnitOfWork.SaveAsync();
+                    var savedVM = Mapper.Map<PaymentVM>(newPaymentEntity);
+                    savedVM.ClientSecret = model.ClientSecret;
+                    return new Response<PaymentVM>(savedVM, true, null);
+                }
                 // مش هنعمل Check على TransactionId، هنروح نعمل دفع جديد فوراً
                 string idempotencyKey = $"{model.BookingId}_{model.UserId}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}";
 

@@ -15,6 +15,7 @@ namespace LaborBLL.ModelVM
         public string SenderName { get; set; } = string.Empty;
         public string ReceiverName { get; set; } = string.Empty;
         public DateTime SentAt { get; set; }
+        public string? SenderAvatar { get; set; }
         public bool IsRead { get; set; }
     }
 }

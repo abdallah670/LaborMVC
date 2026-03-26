@@ -622,13 +622,24 @@
                    class="contact-item @(contact.OtherUserId == Model.OtherUserId ? "active" : "")"
                    data-user-id="@contact.OtherUserId">
                     <div class="contact-avatar" style="background: @GetGradientColor(contact.FullName);">
-                        @if (!string.IsNullOrEmpty(contact.FullName))
+                        @if (!string.IsNullOrEmpty(contact.ProfilePictureUrl))
                         {
-                            @contact.FullName.Substring(0, 1).ToUpper()
+                            <img src="@contact.ProfilePictureUrl"
+                                 class="rounded-circle object-fit-cover"
+                                 style="width: 48px; height: 48px; flex-shrink: 0;" />
                         }
                         else
                         {
-                            <i class="bi bi-person"></i>
+                            <div class="contact-avatar" style="background: @GetGradientColor(contact.FullName);">
+                                @if (!string.IsNullOrEmpty(contact.FullName))
+                                {
+                                    @contact.FullName.Substring(0, 1).ToUpper()
+                                }
+                                else
+                                {
+                                    <i class="bi bi-person"></i>
+                                }
+                            </div>
                         }
                     </div>
                     <div class="contact-info">
@@ -671,9 +682,19 @@
                     <i class="bi bi-arrow-right"></i>
                 </button>
                 <div class="chat-user-info">
-                    <div class="chat-avatar" style="background: @GetGradientColor(Model.OtherUserName);">
-                        @Model.OtherUserName?.Substring(0, 1).ToUpper()
-                    </div>
+                    <!-- بعد -->
+                    @if (!string.IsNullOrEmpty(ViewBag.OtherUserProfilePicture as string))
+                    {
+                        <img src="@ViewBag.OtherUserProfilePicture"
+                             class="rounded-circle object-fit-cover shadow-sm"
+                             style="width: 48px; height: 48px;" />
+                    }
+                    else
+                    {
+                        <div class="chat-avatar" style="background: @GetGradientColor(Model.OtherUserName);">
+                            @Model.OtherUserName?.Substring(0, 1).ToUpper()
+                        </div>
+                    }
                     <div class="chat-user-details">
                         <h4>@Model.OtherUserName</h4>
                         <div class="chat-user-status">

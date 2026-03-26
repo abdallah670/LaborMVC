@@ -10,7 +10,7 @@ using System.Linq;  // 👈 أضف ده
 
 namespace LaborPL.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/stripe/webhook")]
     [ApiController]
     public class StripeWebhookController : ControllerBase
     {

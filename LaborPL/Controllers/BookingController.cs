@@ -137,7 +137,6 @@ namespace LaborPL.Controllers
             if (!response.Success || response.Result == null)
                 return NotFound();
 
-
             decimal penalty = response.Result.AgreedRate * 0.10m;
             ViewBag.Penalty = penalty;
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -148,9 +147,12 @@ namespace LaborPL.Controllers
             ViewBag.ExistingScore = existingRating?.Score ?? 0;
             ViewBag.RatedId = rateeId;
 
+            // ✅ أضف السطرين دول بس
+            var otherUser = await userManager.FindByIdAsync(rateeId);
+            ViewBag.OtherUserProfilePicture = otherUser?.ProfilePictureUrl;
 
             return View(response.Result);
-        }
+        }        
         #endregion
         #region Cancell
         [HttpPost]
