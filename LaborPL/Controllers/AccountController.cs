@@ -1,9 +1,11 @@
 using LaborBLL.ModelVM;
 using LaborBLL.Response;
 using LaborBLL.Service.Abstract;
+using LaborDAL.Entities;
 using LaborDAL.Repo.Abstract;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using AutoMapper;
@@ -18,6 +20,8 @@ namespace LaborPL.Controllers
         private readonly IVerificationService _verificationService;
         private readonly IMapper _mapper;
         private readonly ILogger<AccountController> _logger;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailService _emailService;
 
         public AccountController(
             IUserService userService,
@@ -25,7 +29,9 @@ namespace LaborPL.Controllers
             IUnitOfWork unitOfWork,
             IVerificationService verificationService,
             IMapper mapper,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            UserManager<AppUser> userManager,
+            IEmailService emailService)
         {
             _userService = userService;
             _stripeService = stripeService;
@@ -33,6 +39,8 @@ namespace LaborPL.Controllers
             _verificationService = verificationService;
             _mapper = mapper;
             _logger = logger;
+            _userManager = userManager;
+            _emailService = emailService;
         }
 
         #region Register
@@ -841,6 +849,142 @@ namespace LaborPL.Controllers
 
             var isEnabled = await _stripeService.IsAccountEnabledAsync(user.StripeAccountId);
             return Json(new { connected = true, enabled = isEnabled, accountId = user.StripeAccountId });
+        }
+
+        #endregion
+
+        #region Forgot Password
+
+        /// <summary>
+        /// Display forgot password page
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Handle forgot password form submission
+        /// </summary>
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Generate reset token
+            var result = await _userService.ForgotPasswordAsync(model.Email);
+
+            if (result.Success)
+            {
+                // Get user to generate the reset link
+                var user = await _unitOfWork.AppUsers.GetByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    // Generate the actual token
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var encodedToken = System.Web.HttpUtility.UrlEncode(token);
+                    
+                    // Create reset link
+                    var resetLink = Url.Action("ResetPassword", "Account", 
+                        new { email = model.Email, token = encodedToken }, 
+                        Request.Scheme);
+
+                    // Send password reset email
+                    var userName = $"{user.FirstName} {user.LastName}";
+                    var emailSent = await _emailService.SendPasswordResetAsync(model.Email, userName, resetLink);
+                    
+                    if (emailSent)
+                    {
+                        _logger.LogInformation("Password reset email sent successfully to {Email}", model.Email);
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to send password reset email to {Email}", model.Email);
+                        // Store the reset link in TempData for display if email fails
+                        TempData["ResetLink"] = resetLink;
+                    }
+                }
+
+                // Always show success message (don't reveal if email exists)
+                TempData["SuccessMessage"] = "If an account exists with this email, you will receive password reset instructions.";
+                return RedirectToAction("ForgotPasswordConfirmation");
+            }
+
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "An error occurred. Please try again.");
+            return View(model);
+        }
+
+        /// <summary>
+        /// Display forgot password confirmation page
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        #endregion
+
+        #region Reset Password
+
+        /// <summary>
+        /// Display reset password page
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Invalid password reset link.";
+                return RedirectToAction("Login");
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Handle reset password form submission
+        /// </summary>
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Decode the token
+            var decodedToken = System.Web.HttpUtility.UrlDecode(model.Token);
+
+            // Reset the password
+            var result = await _userService.ResetPasswordAsync(model.Email, decodedToken, model.NewPassword);
+
+            if (result.Success)
+            {
+                _logger.LogInformation("Password reset successful for {Email}", model.Email);
+                TempData["SuccessMessage"] = "Your password has been reset successfully. Please log in with your new password.";
+                return RedirectToAction("Login");
+            }
+
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Failed to reset password. The link may have expired.");
+            return View(model);
         }
 
         #endregion

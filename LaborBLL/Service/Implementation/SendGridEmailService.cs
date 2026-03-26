@@ -198,10 +198,9 @@ namespace LaborBLL.Service.Implementation
         /// <summary>
         /// Send password reset email
         /// </summary>
-        public async Task<bool> SendPasswordResetAsync(string toEmail, string userName, string resetToken)
+        public async Task<bool> SendPasswordResetAsync(string toEmail, string userName, string resetLink)
         {
             var subject = "Password Reset Request - Labor Marketplace";
-            var resetLink = $"https://yourdomain.com/account/reset-password?token={resetToken}&email={Uri.EscapeDataString(toEmail)}";
             
             var htmlContent = $@"
                 <h2>Password Reset Request</h2>

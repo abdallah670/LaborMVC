@@ -43,6 +43,6 @@ namespace LaborBLL.Service.Abstract
         /// <summary>
         /// Send password reset email
         /// </summary>
-        Task<bool> SendPasswordResetAsync(string toEmail, string userName, string resetToken);
+        Task<bool> SendPasswordResetAsync(string toEmail, string userName, string resetLink);
     }
 }
