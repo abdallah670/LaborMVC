@@ -9,6 +9,7 @@ namespace LaborPL.Controllers
     public class BookingController : Controller
     {
         private readonly IBookingService bookingService;
+        private readonly IConfiguration configuration;
         private readonly IDisputeService disputeService;
         private readonly UserManager<AppUser> userManager;
         private readonly IRatingService ratingService;
@@ -16,9 +17,10 @@ namespace LaborPL.Controllers
         private readonly IPaymentService paymentService;
         private readonly IUserService userService;
 
-        public BookingController(IBookingService bookingService, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService,IPaymentService paymentService, IUserService userService)
+        public BookingController(IBookingService bookingService, IConfiguration configuration, IDisputeService disputeService, UserManager<AppUser> userManager ,IRatingService ratingService,IEscrowService escrowService,IPaymentService paymentService, IUserService userService)
         {
             this.bookingService = bookingService;
+            this.configuration = configuration;
             this.disputeService = disputeService;
             this.userManager = userManager;
             this.ratingService = ratingService;
@@ -451,9 +453,94 @@ namespace LaborPL.Controllers
             }
             TempData["SuccessMessage"] = "Your rating has been submitted successfully.";
             return RedirectToAction(nameof(Details), new { id = model.bookingId });
-        } 
+        }
         #endregion
+        #region Stripe Connect
 
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> ConnectStripe()
+        {
+            var userId = userManager.GetUserId(User);
+            var user = await userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            if (!string.IsNullOrEmpty(user.StripeAccountId))
+            {
+                TempData["Message"] = "✅ Your Stripe account is already connected.";
+                return RedirectToAction("Dashboard");
+            }
+
+            try
+            {
+                var stripeService = new StripeService(configuration);
+
+                var accountId = await stripeService.CreateConnectAccountAsync(
+                    user.Email,
+                    user.FirstName ?? user.UserName,
+                    user.LastName ?? ""
+                );
+
+                user.StripeAccountId = accountId;
+                await userManager.UpdateAsync(user);
+
+                var accountLink = await stripeService.CreateAccountLinkAsync(
+                    accountId,
+                    Url.Action("StripeOnboardingFailed", "Booking", null, Request.Scheme),
+                    Url.Action("StripeOnboardingCompleted", "Booking", null, Request.Scheme)
+                );
+
+                return Redirect(accountLink);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error: {ex.Message}";
+                return RedirectToAction("Dashboard");
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> StripeOnboardingCompleted()
+        {
+            TempData["Message"] = "✅ Stripe account connected successfully! You can now receive payments.";
+            return RedirectToAction("Dashboard");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public IActionResult StripeOnboardingFailed()
+        {
+            TempData["ErrorMessage"] = "❌ Failed to connect Stripe account. Please try again.";
+            return RedirectToAction("Dashboard");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Worker")]
+        public async Task<IActionResult> CheckStripeStatus()
+        {
+            var userId = userManager.GetUserId(User);
+            var user = await userManager.FindByIdAsync(userId);
+
+            if (string.IsNullOrEmpty(user?.StripeAccountId))
+            {
+                return Json(new { hasAccount = false, message = "No Stripe account connected" });
+            }
+
+            var stripeService = new StripeService(configuration);
+            var isEnabled = await stripeService.IsAccountEnabledAsync(user.StripeAccountId);
+
+            return Json(new
+            {
+                hasAccount = true,
+                isEnabled = isEnabled,
+                message = isEnabled ? "Account is active" : "Account needs verification"
+            });
+        }
+
+        #endregion
         public IActionResult Index()
         {
             return View();

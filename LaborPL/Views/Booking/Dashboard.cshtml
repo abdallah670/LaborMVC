@@ -1,5 +1,7 @@
 @model IEnumerable<LaborBLL.ModelVM.BookingDashboardViewModel>
 @using LaborDAL.Enums
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> UserManager
 @{
     ViewData["Title"] = "Executive Dashboard";
     var currentFilter = ViewBag.CurrentFilter as string ?? "all";
@@ -7,9 +9,28 @@
 
     bool isWorker = User.IsInRole("Worker");
     bool isPoster = User.IsInRole("Poster");
-}
 
+    // ✅ أضف هذه الأسطر للتحقق من Stripe
+    var currentUser = await UserManager.GetUserAsync(User);
+    var hasStripe = !string.IsNullOrEmpty(currentUser?.StripeAccountId);
+}
 <div class="dashboard-container fade-in py-4">
+    @if (isWorker && !hasStripe)
+    {
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                <div>
+                    <strong>⚠️ Action Required!</strong><br />
+                    You need to connect your Stripe account to receive payments for completed work.
+                </div>
+                <a href="@Url.Action("ConnectStripe", "Booking")" class="btn btn-warning btn-sm ms-auto px-4 rounded-pill">
+                    <i class="bi bi-link-45deg me-1"></i> Connect Stripe Account
+                </a>
+                <button type="button" class="btn-close ms-3" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
     <!-- Page Header -->
     <div class="lm-dashboard-header mb-5">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-4">
