@@ -126,7 +126,7 @@
             <div class="lm-card p-0 overflow-hidden">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light-soft">
                     <h5 class="fw-bold mb-0">New Registrations</h5>
-                    <a asp-action="Users" class="text-primary smaller fw-bold text-decoration-none">Review All</a>
+                    <a asp-controller="Admin" asp-action="Users" class="text-primary smaller fw-bold text-decoration-none">Review All</a>
                 </div>
                 <div class="list-group list-group-flush">
                     @if (recentUsers.Any())
