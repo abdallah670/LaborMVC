@@ -320,7 +320,7 @@ namespace LaborDAL.Repo.Implementation
             pageSize = Math.Clamp(pageSize, 1, 100);
 
             var query = _dbSet
-                .Include(t => t.Poster)
+                .Include(t => t.Poster).Include(t => t.Applications)
                 .Where(t => !t.IsDeleted);
 
             // Apply filters

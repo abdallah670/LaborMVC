@@ -1,29 +1,37 @@
-﻿
-using LaborDAL.Entities;
-using Microsoft.Extensions.Configuration;
-using Stripe;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace LaborBLL.Service.Implementation
 {
+    using LaborBLL.Service.Abstract;
+    using LaborDAL.DB;
+    using LaborDAL.Entities;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Stripe;
+
+    /// <summary>
+    /// Service for handling Stripe payment operations
+    /// </summary>
     public class StripeService : IStripeService
     {
         private readonly IConfiguration _config;
+        private readonly ApplicationDbContext? _context;
 
-        public StripeService(IConfiguration config)
+        public StripeService(IConfiguration config, ApplicationDbContext? context = null)
         {
             _config = config;
-            StripeConfiguration.ApiKey = _config["Stripe:SecretKey"];
+            _context = context;
+            StripeConfiguration.ApiKey = _config["Stripe:SecretKey"]!;
         }
 
+        /// <inheritdoc />
         public async Task CapturePaymentIntentAsync(string? transactionId)
         {
             if (string.IsNullOrEmpty(transactionId))
             {
                 throw new ArgumentException("Transaction ID is required", nameof(transactionId));
             }
-            
+
             try
             {
                 var service = new PaymentIntentService();
@@ -35,6 +43,7 @@ namespace LaborBLL.Service.Implementation
             }
         }
 
+        /// <inheritdoc />
         public async Task<StripePaymentIntentResult> CreatePaymentIntentAsync(
            double amount,
            string currency,
@@ -73,8 +82,108 @@ namespace LaborBLL.Service.Implementation
             };
         }
 
+        /// <inheritdoc />
+        public async Task<RefundResult> RefundPaymentAsync(string paymentIntentId, decimal? amount = null, string? reason = null)
+        {
+            try
+            {
+                var options = new RefundCreateOptions
+                {
+                    PaymentIntent = paymentIntentId,
+                    Reason = reason switch
+                    {
+                        "requested_by_customer" => "requested_by_customer",
+                        "duplicate" => "duplicate",
+                        "fraudulent" => "fraudulent",
+                        _ => null
+                    }
+                };
+
+                if (amount.HasValue)
+                {
+                    options.Amount = (long)(amount.Value * 100); // Convert to cents
+                }
+
+                var service = new RefundService();
+                var refund = await service.CreateAsync(options);
+
+                return new RefundResult
+                {
+                    Success = refund.Status == "succeeded" || refund.Status == "pending",
+                    RefundId = refund.Id,
+                    Status = refund.Status,
+                    AmountRefunded = (decimal)refund.Amount / 100, // Convert from cents
+                    ErrorMessage = null
+                };
+            }
+            catch (StripeException ex)
+            {
+                return new RefundResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Refund failed: {ex.Message}"
+                };
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<TransferResult> TransferToWorkerAsync(string stripeAccountId, decimal amount, string description, string? idempotencyKey = null)
+        {
+            try
+            {
+                var options = new TransferCreateOptions
+                {
+                    Amount = (long)(amount * 100), // Convert to cents
+                    Currency = "usd", // TODO: Make configurable
+                    Destination = stripeAccountId,
+                    Description = description
+                };
+
+                var requestOptions = new RequestOptions();
+                if (!string.IsNullOrEmpty(idempotencyKey))
+                {
+                    requestOptions.IdempotencyKey = idempotencyKey;
+                }
+
+                var service = new TransferService();
+                var transfer = await service.CreateAsync(options, requestOptions);
+
+                return new TransferResult
+                {
+                    Success = true,
+                    TransferId = transfer.Id,
+                    Status = transfer.Reversed ? "reversed" : "transferred",
+                    AmountTransferred = amount,
+                    ErrorMessage = null
+                };
+            }
+            catch (StripeException ex)
+            {
+                return new TransferResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Transfer failed: {ex.Message}"
+                };
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<string?> GetPaymentIntentForBookingAsync(int bookingId)
+        {
+            if (_context == null)
+            {
+                return null;
+            }
+
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.BookingId == bookingId);
+
+            return payment?.TransactionId;
+        }
+
         #region Stripe Connect
 
+        /// <inheritdoc />
         public async Task<string> CreateConnectAccountAsync(string email, string firstName, string lastName)
         {
             var options = new AccountCreateOptions
@@ -108,6 +217,7 @@ namespace LaborBLL.Service.Implementation
             return account.Id;
         }
 
+        /// <inheritdoc />
         public async Task<string> CreateAccountLinkAsync(string accountId, string refreshUrl, string returnUrl)
         {
             var options = new AccountLinkCreateOptions
@@ -123,6 +233,7 @@ namespace LaborBLL.Service.Implementation
             return link.Url;
         }
 
+        /// <inheritdoc />
         public async Task<bool> IsAccountEnabledAsync(string accountId)
         {
             try

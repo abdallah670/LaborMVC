@@ -1,4 +1,4 @@
-﻿@model LaborBLL.ModelVM.ChatViewModel
+@model LaborBLL.ModelVM.ChatViewModel
 @using System.Security.Claims
 @using LaborBLL.ModelVM
 @{
@@ -823,8 +823,6 @@
 
             // استقبال الرسائل
                    connection.on("ReceiveMessage", function(senderId, content, sentAt) {
-            console.log('📩 رسالة جديدة:', { senderId, content, sentAt });
-
             hideLoading();
 
             if (senderId === currentUserId) return;
@@ -880,22 +878,16 @@
             // بدء الاتصال
             connection.start()
                 .then(function() {
-                    console.log('✅ Connected to SignalR');
-
                     // الانضمام للغرفة
                     return connection.invoke("JoinDirectRoom", currentUserId, otherUserId);
                 })
                 .then(function() {
-                    console.log('✅ Joined room:', currentUserId, otherUserId);
-
                     // جلب الرسائل السابقة
         return fetch(`/Chat/GetConversationMessages?otherUserId=${otherUserId}`);                })
                 .then(function(response) {
                     return response.json();
                 })
                 .then(function(data) {
-                    console.log('📜 Previous messages:', data);
-
                     if (data && data.messages && data.messages.length > 0) {
                         // عرض الرسائل السابقة
                         messagesArea.innerHTML = ''; // مسح مؤشر التحميل
@@ -915,7 +907,6 @@
                     }
                 })
                 .catch(function(err) {
-                    console.error('❌ Connection failed:', err);
                     hideLoading();
 
                     // عرض رسالة خطأ
@@ -985,8 +976,7 @@
                             }
                         }
                     }
-                } catch (error) {
-                    console.error('❌ Send error:', error);
+            } catch (error) {
                 } finally {
                     sendBtn.disabled = false;
                 }
@@ -1011,7 +1001,6 @@
 
             // مراقبة حالة الاتصال
             connection.onreconnecting(error => {
-                console.log('🔄 Reconnecting...', error);
                 messagesArea.innerHTML = `
                     <div class="text-center my-5 text-muted">
                         <div class="spinner-border spinner-border-sm" role="status"></div>
@@ -1021,7 +1010,6 @@
             });
 
             connection.onreconnected(connectionId => {
-                console.log('✅ Reconnected:', connectionId);
                 location.reload(); // Refresh after reconnect
             });
             // جلب حالة المستخدم

@@ -71,7 +71,7 @@
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; color: var(--lm-primary);">
-                                                @(app.WorkerName?[0] ?? '?')
+                                                @(string.IsNullOrEmpty(app.WorkerName) ? '?' : app.WorkerName[0])
                                             </div>
                                             <div>
                                                 <h6 class="mb-0 fw-bold fs-sm">@app.WorkerName</h6>
@@ -144,7 +144,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-@(GetTaskStatusColor(task.Status))-soft text-@(GetTaskStatusColor(task.Status))">@task.Status</span>
+                                            <span class="badge bg-@(GetTaskStatusColor(task.Status))-soft text-@(GetTaskStatusColor(task.Status))">@task.Status.ToString()</span>
                                         </td>
                                         <td class="text-end pe-3">
                                             <a asp-controller="Task" asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-light border-0"><i class="bi bi-eye"></i></a>
@@ -194,14 +194,14 @@
                                     <tr>
                                         <td class="ps-3">
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-light-soft rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 10px;">@((booking.UserName ?? "U")[0])</div>
+                                                <div class="bg-light-soft rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 10px;">@(string.IsNullOrEmpty(booking.UserName) ? 'U' : booking.UserName[0])</div>
                                                 <div class="fw-bold">@(booking.UserName ?? "Unknown User")</div>
                                             </div>
                                         </td>
                                         <td class="text-muted">@(booking.StartTime?.ToString("MMM dd, yyyy") ?? "Awaiting schedule")</td>
                                         <td class="text-primary fw-bold">@booking.AgreedRate.ToString("C")</td>
                                         <td>
-                                            <span class="badge bg-@(GetBookingStatusColor(booking.Status))-soft text-@(GetBookingStatusColor(booking.Status))">@booking.Status</span>
+                                            <span class="badge bg-@(GetBookingStatusColor(booking.Status))-soft text-@(GetBookingStatusColor(booking.Status))">@booking.Status.ToString()</span>
                                         </td>
                                         <td class="text-end pe-3">
                                             <a asp-controller="Booking" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-sm btn-outline-primary fw-bold py-1 px-3 fs-xxs">View Status</a>

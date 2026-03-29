@@ -158,4 +158,45 @@ namespace LaborDAL.Enums
         /// </summary>
         Severe = 3
     }
+
+    /// <summary>
+    /// Defines the type of penalty applied to a user
+    /// </summary>
+    public enum PenaltyType
+    {
+        /// <summary>
+        /// A warning/note added to the user's record
+        /// </summary>
+        Warning = 0,
+
+        /// <summary>
+        /// A strike against the user's account
+        /// </summary>
+        Strike = 1,
+
+        /// <summary>
+        /// Decrease in the user's rating score
+        /// </summary>
+        RatingDecrease = 2,
+
+        /// <summary>
+        /// Temporary account suspension
+        /// </summary>
+        Suspension = 3,
+
+        /// <summary>
+        /// Permanent account ban
+        /// </summary>
+        Ban = 4,
+
+        /// <summary>
+        /// Restriction from posting tasks
+        /// </summary>
+        PostingRestriction = 5,
+
+        /// <summary>
+        /// Restriction from accepting tasks
+        /// </summary>
+        AcceptanceRestriction = 6
+    }
 }

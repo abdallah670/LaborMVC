@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LaborDAL.Entities
 {
+    
     public class Rating
     {
         public int Id { get; set; }

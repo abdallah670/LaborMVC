@@ -12,6 +12,7 @@ using AutoMapper;
 
 namespace LaborPL.Controllers
 {
+    
     public class AccountController : Controller
     {
         private readonly IUserService _userService;
@@ -198,8 +199,11 @@ namespace LaborPL.Controllers
         public async Task<IActionResult> MyProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _logger.LogInformation("MyProfile accessed. UserId from claims: '{UserId}'", userId ?? "NULL/EMPTY");
+            
             if (string.IsNullOrEmpty(userId))
             {
+                _logger.LogWarning("MyProfile: UserId is null or empty, redirecting to login");
                 return RedirectToAction("Login");
             }
 
@@ -207,7 +211,11 @@ namespace LaborPL.Controllers
             var profile = await _userService.GetProfileWithDetailsAsync(userId);
             if (profile == null)
             {
-                return NotFound();
+                _logger.LogError("MyProfile: Profile not found for UserId '{UserId}'. Signing out and redirecting to login.", userId);
+                // Sign out to clear invalid cookie
+                await HttpContext.SignOutAsync();
+                TempData["Error"] = "Your session has expired or is invalid. Please log in again.";
+                return RedirectToAction("Login");
             }
 
             return View(profile);
@@ -722,7 +730,7 @@ namespace LaborPL.Controllers
                 return NotFound("User not found.");
             }
 
-            return View(profile);
+            return View("Profile", profile);
         }
 
         #endregion

@@ -44,6 +44,37 @@ namespace LaborBLL.ModelVM
         public int TasksPosted { get; set; }
 
         public List<AllRatingViewModel> RecentRatings { get; set; } = new();
+
+        // Account Health (Penalty & Tracking) - Private info
+        public int StrikeCount { get; set; }
+        public int ActiveStrikes { get; set; }
+        public int NoShowCount { get; set; }
+        public int CancellationCount { get; set; }
+        public int RecentCancellations { get; set; }
+        public bool IsSuspended { get; set; }
+        public DateTime? SuspensionEndDate { get; set; }
+        public bool IsPostingRestricted { get; set; }
+        public bool IsAcceptanceRestricted { get; set; }
+        public string AccountHealthStatus { get; set; } = "Good";
+        public int UnacknowledgedPenalties { get; set; }
+        public decimal CompletionRate { get; set; }
+        public decimal CancellationRate { get; set; }
+
+        // Penalty History (for Admin)
+        public List<PenaltyDisplayViewModel> PenaltyHistory { get; set; } = new();
+    }
+
+    public class PenaltyDisplayViewModel
+    {
+        public int Id { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public DateTime AppliedAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsAcknowledged { get; set; }
+        public int? RelatedTaskId { get; set; }
     }
 
     public class UserProfileUpdateModel

@@ -1,6 +1,6 @@
-﻿@model ChatViewModel
+@model ChatViewModel
 @{
-    ViewData["Title"] = "المحادثة";
+    ViewData["Title"] = "????????";
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
@@ -19,12 +19,12 @@
             <div class="card-header bg-primary text-white d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center p-3 p-md-4">
                 <h5 class="mb-2 mb-sm-0 d-flex align-items-center fs-6 fs-sm-5">
                     <i class="bi bi-chat-dots-fill me-2"></i>
-                    <span class="text-truncate" style="max-width: 200px;">محادثة #@Model.OtherUserName</span>
+                    <span class="text-truncate" style="max-width: 200px;">?????? #@Model.OtherUserName</span>
                 </h5>Contacts
                 <a href="@Url.Action("")" class="btn btn-sm btn-light w-100 w-sm-auto">
                     <i class="bi bi-arrow-right me-1"></i>
-                    <span class="d-inline d-sm-none">رجوع</span>
-                    <span class="d-none d-sm-inline">الرجوع للقائمة</span>
+                    <span class="d-inline d-sm-none">????</span>
+                    <span class="d-none d-sm-inline">?????? ???????</span>
                 </a>
             </div>
 
@@ -37,7 +37,7 @@
                         {
                             <div class="message-wrapper @(msg.SenderId == currentUserId ? "message-sent" : "message-received")">
                                 <div class="message-bubble">
-                                    <div class="message-sender">@(msg.SenderName ?? "مستخدم")</div>
+                                    <div class="message-sender">@(msg.SenderName ?? "??????")</div>
                                     <div class="message-content">@msg.Content</div>
                                     <div class="message-time">@msg.SentAt.ToString("hh:mm tt")</div>
                                 </div>
@@ -58,13 +58,13 @@
             <div class="card-footer bg-white p-2 p-sm-3">
                 <div class="d-flex gap-2">
                     <input type="text" id="messageInput" class="form-control form-control-sm form-control-md"
-                           placeholder="اكتب رسالتك..."
+                           placeholder="???? ??????..."
                            onkeypress="if(event.key === 'Enter') sendMessage()"
-                           style="font-size: 16px;"> <!-- لمنع التكبير التلقائي على iOS -->
+                           style="font-size: 16px;"> <!-- ???? ??????? ???????? ??? iOS -->
                     <button class="btn btn-primary d-flex align-items-center gap-1 gap-sm-2 px-3 px-sm-4"
                             onclick="sendMessage()" id="sendButton">
                         <i class="bi bi-send"></i>
-                        <span class="d-none d-sm-inline">إرسال</span>
+                        <span class="d-none d-sm-inline">?????</span>
                     </button>
                 </div>
             </div>
@@ -107,7 +107,7 @@
 
         /* Message Bubble Responsive */
         .message-bubble {
-            max-width: 85%; /* للشاشات الصغيرة */
+            max-width: 85%; /* ??????? ??????? */
             padding: 8px 12px;
             border-radius: 15px;
             position: relative;
@@ -115,7 +115,7 @@
             word-break: break-word;
         }
 
-        /* تحسينات للشاشات الأكبر */
+        /* ??????? ??????? ?????? */
         @@media (min-width: 576px) {
             .message-bubble {
                 max-width: 70%;
@@ -249,7 +249,7 @@
             }
         }
 
-        /* تحسين للشاشات الصغيرة جداً */
+        /* ????? ??????? ??????? ???? */
         @@media (max-width: 360px) {
             .message-bubble {
                 max-width: 90%;
@@ -269,12 +269,12 @@
             }
         }
 
-        /* منع التكبير التلقائي على iOS */
+        /* ??? ??????? ???????? ??? iOS */
         input, textarea, button {
             font-size: 16px !important;
         }
 
-        /* تحسين المسافات */
+        /* ????? ???????? */
         .card {
             border-radius: 15px 15px 12px 12px;
         }
@@ -283,7 +283,7 @@
             border-radius: 15px 15px 0 0 !important;
         }
 
-        /* تحسين ظهور الأزرار */
+        /* ????? ???? ??????? */
         .btn-light {
             white-space: nowrap;
         }
@@ -302,7 +302,7 @@
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
-        // استقبال الرسائل
+        // ??????? ???????
         connection.on("ReceiveMessage", function(message) {
             if (message.bookingId === bookingId) {
                 addMessageToChat(message);
@@ -311,12 +311,12 @@
             }
         });
 
-        // إضافة رسالة للشات
+        // ????? ????? ?????
         function addMessageToChat(message) {
             const chatBox = document.getElementById("chatBox");
             const isMyMessage = message.senderId === currentUserId;
 
-            // إزالة رسالة "لا توجد رسائل" إذا موجودة
+            // ????? ????? "?? ???? ?????" ??? ??????
             const emptyState = chatBox.querySelector('.empty-state');
             if (emptyState) {
                 emptyState.remove();
@@ -332,7 +332,7 @@
 
             div.innerHTML = `
                 <div class="message-bubble">
-                    <div class="message-sender">${message.senderName || 'مستخدم'}</div>
+                    <div class="message-sender">${message.senderName || '??????'}</div>
                     <div class="message-content">${escapeHtml(message.content)}</div>
                     <div class="message-time">${time}</div>
                 </div>
@@ -341,7 +341,7 @@
             chatBox.appendChild(div);
         }
 
-        // دالة للهروب من HTML لتجنب XSS
+        // ???? ?????? ?? HTML ????? XSS
         function escapeHtml(unsafe) {
             return unsafe
                 .replace(/&/g, "&amp;")
@@ -351,21 +351,20 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // التمرير لأسفل
+        // ??????? ?????
         function scrollToBottom() {
             const chatBox = document.getElementById("chatBox");
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // بدء الاتصال
+        // ??? ???????
         async function startConnection() {
             try {
                 await connection.start();
-                console.log("✅ Connected to SignalR");
                 await connection.invoke("JoinBookingGroup", bookingId);
                 reconnectAttempts = 0;
             } catch (err) {
-                console.error("❌ Connection failed: ", err);
+                console.error("? Connection failed: ", err);
                 reconnectAttempts++;
                 if (reconnectAttempts < maxReconnectAttempts) {
                     setTimeout(startConnection, 2000 * reconnectAttempts);
@@ -375,7 +374,7 @@
 
         startConnection();
 
-        // إرسال رسالة
+        // ????? ?????
         async function sendMessage() {
             const input = document.getElementById("messageInput");
             const content = input.value.trim();
@@ -398,27 +397,27 @@
                 const data = await response.json();
                 if (data.success) {
                     input.value = '';
-                    // إضافة الرسالة محلياً لسرعة الظهور
+                    // ????? ??????? ?????? ????? ??????
                     addMessageToChat({
                         senderId: currentUserId,
-                        senderName: 'أنت',
+                        senderName: '???',
                         content: content,
                         sentAt: new Date()
                     });
                     scrollToBottom();
                 } else {
-                    alert(data.message || 'حدث خطأ في الإرسال');
+                    alert(data.message || '??? ??? ?? ???????');
                 }
             } catch (error) {
                 console.error('Error sending message:', error);
-                alert('فشل إرسال الرسالة. تأكد من اتصالك بالإنترنت.');
+                alert('??? ????? ???????. ???? ?? ?????? ?????????.');
             } finally {
                 sendButton.disabled = false;
                 input.focus();
             }
         }
 
-        // تحميل الرسائل
+        // ????? ???????
         async function loadMessages() {
             try {
                 const response = await fetch(`/Message/GetConversation?otherUserId=@Model.OtherUserId`);
@@ -431,7 +430,7 @@
                     if (data.messages.length === 0) {
                         chatBox.innerHTML = `<div class="empty-state text-center text-muted mt-5">
                             <i class="bi bi-chat fs-1"></i>
-                            <p class="mt-3 px-3">لا توجد رسائل بعد، ابدأ المحادثة الآن!</p>
+                            <p class="mt-3 px-3">?? ???? ????? ???? ???? ???????? ????!</p>
                         </div>`;
                     } else {
                         data.messages.forEach(msg => addMessageToChat(msg));
@@ -443,7 +442,7 @@
             }
         }
 
-        // تحديث عداد الرسائل غير المقروءة
+        // ????? ???? ??????? ??? ????????
         async function updateUnreadCount() {
             try {
                 const response = await fetch('/Message/UnReadCount');
@@ -458,18 +457,18 @@
             }
         }
 
-        // تحميل الرسائل عند فتح الصفحة
+        // ????? ??????? ??? ??? ??????
         document.addEventListener('DOMContentLoaded', () => {
             loadMessages();
 
-            // التمرير لأسفل بعد تحميل الصفحة
+            // ??????? ????? ??? ????? ??????
             setTimeout(scrollToBottom, 100);
         });
 
-        // تحديث كل 30 ثانية (بدلاً من 10 لتقليل التحميل)
+        // ????? ?? 30 ????? (????? ?? 10 ?????? ???????)
         setInterval(loadMessages, 30000);
 
-        // عند مغادرة الصفحة
+        // ??? ?????? ??????
         window.addEventListener("beforeunload", function() {
             if (connection.state === signalR.HubConnectionState.Connected) {
                 connection.invoke("LeaveBookingGroup", bookingId);
@@ -477,7 +476,7 @@
             }
         });
 
-        // إرسال بالضغط على Enter
+        // ????? ?????? ??? Enter
         document.getElementById("messageInput").addEventListener("keypress", function(e) {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -485,14 +484,14 @@
             }
         });
 
-        // تحسين لتجربة المستخدم على الموبايل
+        // ????? ?????? ???????? ??? ????????
         document.getElementById("messageInput").addEventListener("focus", function() {
             setTimeout(scrollToBottom, 300);
         });
 
-        // كشف تغيير حجم الشاشة
+        // ??? ????? ??? ??????
         window.addEventListener('resize', function() {
-            // إعادة حساب الارتفاعات إذا لزم الأمر
+            // ????? ???? ?????????? ??? ??? ?????
             scrollToBottom();
         });
     </script>

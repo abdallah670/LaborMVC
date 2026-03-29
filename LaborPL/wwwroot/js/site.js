@@ -20,6 +20,5 @@ $(document).ready(function () {
         revealObserver.observe(el);
     });
 
-    console.log("Modern Design System: Scripts Loaded");
 });
 // Write your JavaScript code.

@@ -3,13 +3,13 @@ namespace LaborDAL.Enums
 {
     public enum BookingStatus
     {
-            Scheduled,
-            InProgress,
-            CompletedfromWorker,
+            Scheduled = 0,
+            InProgress = 1,
+            CompletedfromWorker = 2,
 
-            Completed,
-            Cancelled,
-            Disputed
+            Completed = 3,
+            Cancelled = 4,
+            Disputed = 5
 
     }
     public enum PaymentStatus

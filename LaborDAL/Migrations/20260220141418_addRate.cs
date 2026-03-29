@@ -28,7 +28,7 @@ namespace LaborDAL.Migrations
                 table: "Bookings");
 
             migrationBuilder.CreateTable(
-                name: "Rating",
+                name: "Ratings",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -65,17 +65,17 @@ namespace LaborDAL.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rating_bookingId",
-                table: "Rating",
+                table: "Ratings",
                 column: "bookingId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rating_RateeId",
-                table: "Rating",
+                table: "Ratings",
                 column: "RateeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rating_RaterId_RateeId_bookingId",
-                table: "Rating",
+                table: "Ratings",
                 columns: new[] { "RaterId", "RateeId", "bookingId" },
                 unique: true);
         }
@@ -84,7 +84,7 @@ namespace LaborDAL.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Rating");
+                name: "Ratings");
 
             migrationBuilder.AddColumn<string>(
                 name: "PosterComment",

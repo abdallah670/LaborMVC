@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace LaborPL.Controllers
 {
     [Authorize(Roles = "Admin")]
+   
     public class AdminController : Controller
     {
         private readonly IUserService _userService;
@@ -20,6 +21,7 @@ namespace LaborPL.Controllers
         private readonly IAppUserRepository _userRepository;
         private readonly IRoleService _roleService;
         private readonly IDisputeService _disputeService;
+        private readonly IPenaltyService _penaltyService;
         private readonly UserManager<AppUser> _userManager;
         private readonly ILogger<AdminController> _logger;
         private readonly IMapper _mapper;
@@ -33,6 +35,7 @@ namespace LaborPL.Controllers
             IAppUserRepository userRepository,
             IRoleService roleService,
             IDisputeService disputeService,
+            IPenaltyService penaltyService,
             UserManager<AppUser> userManager,
             ILogger<AdminController> logger,
             IMapper mapper,
@@ -45,6 +48,7 @@ namespace LaborPL.Controllers
             _userRepository = userRepository;
             _roleService = roleService;
             _disputeService = disputeService;
+            _penaltyService = penaltyService;
             _userManager = userManager;
             _logger = logger;
             _mapper = mapper;
@@ -66,7 +70,6 @@ namespace LaborPL.Controllers
             return View();
         }
 
-        // GET: /Admin/Users
         public async Task<IActionResult> Users(string filter = "all", string search = "")
         {
             ViewBag.CurrentFilter = filter;
@@ -474,7 +477,6 @@ namespace LaborPL.Controllers
 
         #region User Management Actions
 
-        // GET: /Admin/UserDetails/{id}
         public async Task<IActionResult> UserDetails(string id)
         {
 
@@ -647,5 +649,95 @@ namespace LaborPL.Controllers
             var model = await _redesignService.GetProgressAsync();
             return View(model);
         }
+
+        #region Penalty Management
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStrike(string userId, string reason, int? taskId)
+        {
+            try
+            {
+                var taskIdValue = taskId ?? 0;
+                await _penaltyService.AddStrikeAsync(userId, reason, taskIdValue);
+                TempData["SuccessMessage"] = "Strike added successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding strike for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Failed to add strike.";
+            }
+            return RedirectToAction(nameof(UserDetails), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AcknowledgePenalty(int penaltyId, string userId)
+        {
+            try
+            {
+                await _penaltyService.AcknowledgePenaltyAsync(penaltyId);
+                TempData["SuccessMessage"] = "Penalty acknowledged.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error acknowledging penalty {PenaltyId}", penaltyId);
+                TempData["ErrorMessage"] = "Failed to acknowledge penalty.";
+            }
+            return RedirectToAction(nameof(UserDetails), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SuspendUser(string userId, int days, string reason)
+        {
+            try
+            {
+                await _penaltyService.SuspendUserAsync(userId, TimeSpan.FromDays(days), reason, 0);
+                TempData["SuccessMessage"] = $"User suspended for {days} days.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error suspending user {UserId}", userId);
+                TempData["ErrorMessage"] = "Failed to suspend user.";
+            }
+            return RedirectToAction(nameof(UserDetails), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestrictPosting(string userId, int days, string reason)
+        {
+            try
+            {
+                await _penaltyService.RestrictPostingAsync(userId, TimeSpan.FromDays(days), reason);
+                TempData["SuccessMessage"] = $"Posting restricted for {days} days.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restricting posting for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Failed to restrict posting.";
+            }
+            return RedirectToAction(nameof(UserDetails), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestrictAcceptance(string userId, int days, string reason)
+        {
+            try
+            {
+                await _penaltyService.RestrictAcceptanceAsync(userId, TimeSpan.FromDays(days), reason);
+                TempData["SuccessMessage"] = $"Task acceptance restricted for {days} days.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restricting acceptance for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Failed to restrict acceptance.";
+            }
+            return RedirectToAction(nameof(UserDetails), new { id = userId });
+        }
+
+        #endregion
     }
 }

@@ -150,9 +150,9 @@
         <!-- Poster View Tab -->
         <div class="tab-pane fade" id="poster-view" role="tabpanel">
             <div class="lm-stat-grid mb-4">
-                @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Posted Tasks", ViewBag.PosterTotalTasks.ToString(), "bi-clipboard-check", "primary"))
-                @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Active Bookings", ViewBag.TotalActiveBookings.ToString(), "bi-calendar-check", "success"))
-                @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Received Apps", ViewBag.PosterPendingApplications.ToString(), "bi-person-plus", "info"))
+                @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Posted Tasks", ViewBag.PosterTotalTasks?.ToString() ?? "0", "bi-clipboard-check", "primary"))
+                @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Active Bookings", ViewBag.TotalActiveBookings?.ToString() ?? "0", "bi-calendar-check", "success"))
+                @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Received Apps", ViewBag.PosterPendingApplications?.ToString() ?? "0", "bi-person-plus", "info"))
                 @await Html.PartialAsync("_StatCard", new LaborPL.Models.StatCardViewModel("Total Spend", posterBookings.Sum(b => b.AgreedRate).ToString("C0"), "bi-wallet2", "danger"))
             </div>
 

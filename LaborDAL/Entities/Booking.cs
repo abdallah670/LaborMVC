@@ -29,7 +29,7 @@ namespace LaborDAL.Entities
        
         public int Id { get; private set; }
         public decimal AgreedRate { get; private set; }
-        public DateTime LastUpdateRate { get; private set; }
+        public DateTime LastUpdateRate { get; set; }
         public DateTime? StartTime { get; private set; }
         public DateTime? EndTime { get; private set; }
         public BookingStatus Status { get;  set; }

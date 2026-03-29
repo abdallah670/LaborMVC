@@ -4,6 +4,7 @@ using LaborDAL.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
@@ -12,9 +13,11 @@ using NetTopologySuite.Geometries;
 namespace LaborDAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328162216_ConvertTaskStatusToInt")]
+    partial class ConvertTaskStatusToInt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,7 +38,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("AssignedWorkerId");
 
-                    b.ToTable("AppUserTaskItem", (string)null);
+                    b.ToTable("AppUserTaskItem");
                 });
 
             modelBuilder.Entity("LaborDAL.DB.Message", b =>
@@ -75,7 +78,7 @@ namespace LaborDAL.Migrations
                     b.HasIndex("bookingId", "SentAt")
                         .HasDatabaseName("IX_Messages_BookingId_SentAt");
 
-                    b.ToTable("Message", (string)null);
+                    b.ToTable("Message");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.AppUser", b =>
@@ -86,9 +89,6 @@ namespace LaborDAL.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<int>("ActivePenaltyCount")
-                        .HasColumnType("int");
-
                     b.Property<decimal?>("AverageRating")
                         .HasPrecision(3, 2)
                         .HasColumnType("decimal(3,2)");
@@ -96,9 +96,6 @@ namespace LaborDAL.Migrations
                     b.Property<string>("Bio")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int>("CancellationCount")
-                        .HasColumnType("int");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -149,9 +146,6 @@ namespace LaborDAL.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool>("HasUnacknowledgedPenalties")
-                        .HasColumnType("bit");
-
                     b.Property<bool?>("HasVisa")
                         .HasColumnType("bit");
 
@@ -166,19 +160,10 @@ namespace LaborDAL.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsAcceptanceRestricted")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<bool>("IsPostingRestricted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSuspended")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastEmailVerificationAttempt")
                         .HasColumnType("datetime2");
@@ -188,9 +173,6 @@ namespace LaborDAL.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("LastPhoneVerificationAttempt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("LastStrikeDate")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal?>("Latitude")
@@ -214,9 +196,6 @@ namespace LaborDAL.Migrations
                     b.Property<decimal?>("Longitude")
                         .HasPrecision(11, 8)
                         .HasColumnType("decimal(11,8)");
-
-                    b.Property<int>("NoShowCount")
-                        .HasColumnType("int");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -248,15 +227,6 @@ namespace LaborDAL.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("RecentCancellationCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("RestrictionEndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RestrictionReason")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
@@ -267,14 +237,8 @@ namespace LaborDAL.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int>("StrikeCount")
-                        .HasColumnType("int");
-
                     b.Property<string>("StripeAccountId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("SuspensionEndDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -386,106 +350,6 @@ namespace LaborDAL.Migrations
                     b.ToTable("Bookings", (string)null);
                 });
 
-            modelBuilder.Entity("LaborDAL.Entities.CancellationRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AppUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CancelledByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("ClientHadConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("ClientRefundAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("FinancialSettlementComplete")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("FinancialSettlementCompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("IdempotencyKey")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OutcomeDescription")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PenaltyApplied")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("PenaltyId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PenaltyTier")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("PlatformFee")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Reason")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan?>("TimeBeforeStart")
-                        .HasColumnType("time");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("WorkerHadCheckedIn")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("WorkerPaymentAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
-
-                    b.HasIndex("PenaltyId");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("CancellationRecords", (string)null);
-                });
-
             modelBuilder.Entity("LaborDAL.Entities.ChatUsers", b =>
                 {
                     b.Property<int>("Id")
@@ -523,7 +387,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatUsers", (string)null);
+                    b.ToTable("ChatUsers");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Dispute", b =>
@@ -577,7 +441,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("ResolvedBy");
 
-                    b.ToTable("Disputes", (string)null);
+                    b.ToTable("Disputes");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.FileUploadAuditLog", b =>
@@ -682,7 +546,7 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FileUploadAuditLogs", (string)null);
+                    b.ToTable("FileUploadAuditLogs");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.IDVerification", b =>
@@ -764,7 +628,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("IDVerifications", (string)null);
+                    b.ToTable("IDVerifications");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Notification", b =>
@@ -848,7 +712,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.OutboxMessage", b =>
@@ -918,7 +782,7 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OutboxMessages", (string)null);
+                    b.ToTable("OutboxMessages");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Payment", b =>
@@ -1030,7 +894,7 @@ namespace LaborDAL.Migrations
                     b.HasIndex("Status", "CreatedAt")
                         .HasDatabaseName("IX_Payments_Status_CreatedAt");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.PaymentAuditLog", b =>
@@ -1077,7 +941,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("PaymentAuditLogs", (string)null);
+                    b.ToTable("PaymentAuditLogs");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.PendingTransfer", b =>
@@ -1157,7 +1021,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("PendingTransfers", (string)null);
+                    b.ToTable("PendingTransfers");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Rating", b =>
@@ -1201,7 +1065,7 @@ namespace LaborDAL.Migrations
                     b.HasIndex("RaterId", "RateeId", "bookingId")
                         .IsUnique();
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Rating");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.SagaInstance", b =>
@@ -1267,7 +1131,7 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SagaInstances", (string)null);
+                    b.ToTable("SagaInstances");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.SagaStep", b =>
@@ -1316,7 +1180,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("SagaInstanceId");
 
-                    b.ToTable("SagaSteps", (string)null);
+                    b.ToTable("SagaSteps");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
@@ -1361,8 +1225,10 @@ namespace LaborDAL.Migrations
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("TaskItemId")
                         .HasColumnType("int");
@@ -1548,8 +1414,10 @@ namespace LaborDAL.Migrations
                     b.Property<DateTimeOffset?>("StartedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1598,86 +1466,6 @@ namespace LaborDAL.Migrations
                         .HasDatabaseName("IX_Tasks_Status_CreatedAt");
 
                     b.ToTable("Tasks", (string)null);
-                });
-
-            modelBuilder.Entity("LaborDAL.Entities.UserPenalty", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("AcknowledgedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsAcknowledged")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Metadata")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("NewRating")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PreviousRating")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("RatingDecreaseAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("RelatedTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Severity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserPenalties", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1872,28 +1660,6 @@ namespace LaborDAL.Migrations
                     b.Navigation("Worker");
                 });
 
-            modelBuilder.Entity("LaborDAL.Entities.CancellationRecord", b =>
-                {
-                    b.HasOne("LaborDAL.Entities.AppUser", null)
-                        .WithMany("CancellationRecords")
-                        .HasForeignKey("AppUserId");
-
-                    b.HasOne("LaborDAL.Entities.UserPenalty", "Penalty")
-                        .WithMany()
-                        .HasForeignKey("PenaltyId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("LaborDAL.Entities.TaskItem", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Penalty");
-
-                    b.Navigation("Task");
-                });
-
             modelBuilder.Entity("LaborDAL.Entities.ChatUsers", b =>
                 {
                     b.HasOne("LaborDAL.Entities.Booking", "Booking")
@@ -2075,17 +1841,6 @@ namespace LaborDAL.Migrations
                     b.Navigation("Poster");
                 });
 
-            modelBuilder.Entity("LaborDAL.Entities.UserPenalty", b =>
-                {
-                    b.HasOne("LaborDAL.Entities.AppUser", "User")
-                        .WithMany("Penalties")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -2140,10 +1895,6 @@ namespace LaborDAL.Migrations
             modelBuilder.Entity("LaborDAL.Entities.AppUser", b =>
                 {
                     b.Navigation("Applications");
-
-                    b.Navigation("CancellationRecords");
-
-                    b.Navigation("Penalties");
 
                     b.Navigation("PostedBookings");
 

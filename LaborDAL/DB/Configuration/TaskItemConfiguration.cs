@@ -44,14 +44,13 @@ namespace LaborDAL.DB.Configuration
             builder.Property(t => t.CancellationReason)
                 .HasMaxLength(500);
 
-            // Enum conversions
+            // Enum conversions - Status stored as INT (not string)
             builder.Property(t => t.Category)
                 .HasConversion<string>()
                 .HasMaxLength(50);
 
-            builder.Property(t => t.Status)
-                .HasConversion<string>()
-                .HasMaxLength(50);
+            // Status is stored as INT to match the ConvertTaskStatusToInt migration
+            // No HasConversion<string>() here - defaults to int storage
 
             builder.Property(t => t.BudgetType)
                 .HasConversion<string>()
@@ -62,8 +61,6 @@ namespace LaborDAL.DB.Configuration
                 .WithMany(u => u.PostedTasks)
                 .HasForeignKey(t => t.PosterId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-          
 
             // Indexes
             builder.HasIndex(t => t.PosterId);

@@ -159,6 +159,15 @@ a:hover {
 .form-check-input:checked {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 1em;
+}
+
+.form-check-input:checked + .form-check-label {
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
 }
 
 /* ============================================
@@ -459,6 +468,12 @@ a:hover {
     background-color: #fef2f2 !important;
     color: #991b1b;
 }
+.lm-card .badge.bg-danger,
+.badge.bg-danger.text-white {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
 
 /* ============================================
    Navbar Customization

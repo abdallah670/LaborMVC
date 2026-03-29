@@ -46,16 +46,17 @@ builder.Services.Configure<StripeSettings>(
 
 // Configure DbContext with resilience
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions =>
         {
             sqlOptions.UseNetTopologySuite();
-            // Enable retry on failure for transient faults
             sqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
-        }));
+        });
+});
 
 // Configure Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
@@ -211,8 +212,14 @@ builder.Services.AddScoped<IContentInspector, ContentInspector>();
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddScoped<ICancellationService, CancellationService>();
 
+// Register Penalty Service for handling strikes, suspensions, and restrictions
+builder.Services.AddScoped<IPenaltyService, PenaltyService>();
+
 // Register No-Show Detection Job
 builder.Services.AddScoped<NoShowDetectionJob>();
+
+// Register Penalty Expiration Job (frees restricted users daily)
+builder.Services.AddScoped<PenaltyExpirationJob>();
 
 // Register Email Service (SMTP is default, can be switched to SendGrid)
 // Uncomment the line below to use SendGrid instead of SMTP
@@ -284,6 +291,16 @@ using (var scope = app.Services.CreateScope())
         "no-show-detection",
         job => job.ExecuteAsync(),
         Cron.MinuteInterval(5),
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Utc
+        });
+
+    // Schedule penalty expiration job to run daily at midnight
+    jobScheduler.AddOrUpdate<PenaltyExpirationJob>(
+        "penalty-expiration",
+        job => job.ExecuteAsync(),
+        Cron.Daily(0, 0), // Midnight UTC
         new RecurringJobOptions
         {
             TimeZone = TimeZoneInfo.Utc

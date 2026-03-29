@@ -228,6 +228,165 @@
                 </div>
             </div>
 
+            <!-- Account Health Panel -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-shield-exclamation me-2"></i>Account Health</h5>
+                    @{
+                        var healthBadgeClass = Model.AccountHealthStatus switch
+                        {
+                            "Critical" => "bg-danger",
+                            "Warning" => "bg-warning",
+                            "Suspended" => "bg-dark",
+                            _ => "bg-success"
+                        };
+                    }
+                    <span class="badge @healthBadgeClass">@Model.AccountHealthStatus</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h4 class="@(Model.ActiveStrikes > 0 ? "text-danger" : "text-success") mb-1">@Model.ActiveStrikes</h4>
+                                <small class="text-muted">Active Strikes</small>
+                                @if (Model.ActiveStrikes >= 2)
+                                {
+                                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-triangle"></i> Near suspension</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h4 class="@(Model.NoShowCount > 0 ? "text-warning" : "text-success") mb-1">@Model.NoShowCount</h4>
+                                <small class="text-muted">No-Shows</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h4 class="@(Model.RecentCancellations > 2 ? "text-warning" : "text-muted") mb-1">@Model.RecentCancellations</h4>
+                                <small class="text-muted">Cancellations (30d)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h4 class="@(Model.UnacknowledgedPenalties > 0 ? "text-warning" : "text-success") mb-1">@Model.UnacknowledgedPenalties</h4>
+                                <small class="text-muted">Unacknowledged</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Suspended</span>
+                                <span class="@(Model.IsSuspended ? "text-danger fw-bold" : "text-muted")">
+                                    @(Model.IsSuspended ? "Yes" : "No")
+                                    @if (Model.SuspensionEndDate.HasValue)
+                                    {
+                                        <span class="small"> (until @Model.SuspensionEndDate.Value.ToString("MMM dd"))</span>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Posting Restricted</span>
+                                <span class="@(Model.IsPostingRestricted ? "text-warning fw-bold" : "text-success")">
+                                    @(Model.IsPostingRestricted ? "Yes" : "No")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Acceptance Restricted</span>
+                                <span class="@(Model.IsAcceptanceRestricted ? "text-warning fw-bold" : "text-success")">
+                                    @(Model.IsAcceptanceRestricted ? "Yes" : "No")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Actions -->
+                    <div class="mt-3 pt-3 border-top">
+                        <h6 class="mb-2"><i class="bi bi-gear me-1"></i>Admin Actions</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#strikeModal">
+                                <i class="bi bi-exclamation-circle me-1"></i>Add Strike
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#suspendModal">
+                                <i class="bi bi-pause-circle me-1"></i>Suspend
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#restrictPostingModal">
+                                <i class="bi bi-slash-circle me-1"></i>Restrict Posting
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#restrictAcceptanceModal">
+                                <i class="bi bi-x-circle me-1"></i>Restrict Acceptance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Penalty History -->
+            @if (Model.PenaltyHistory != null && Model.PenaltyHistory.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Penalty History</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Severity</th>
+                                        <th>Reason</th>
+                                        <th>Expires</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var penalty in Model.PenaltyHistory.OrderByDescending(p => p.AppliedAt))
+                                    {
+                                        <tr>
+                                            <td class="small">@penalty.AppliedAt.ToString("MMM dd, yyyy")</td>
+                                            <td><span class="badge bg-secondary">@penalty.Type</span></td>
+                                            <td><span class="badge bg-@(penalty.Severity == "Severe" ? "danger" : penalty.Severity == "Moderate" ? "warning" : "info")">@penalty.Severity</span></td>
+                                            <td class="small">@penalty.Reason</td>
+                                            <td class="small">@(penalty.ExpiresAt?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                            <td>
+                                                @if (penalty.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Expired</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!penalty.IsAcknowledged)
+                                                {
+                                                    <form asp-action="AcknowledgePenalty" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="penaltyId" value="@penalty.Id" />
+                                                        <input type="hidden" name="userId" value="@Model.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-success">Acknowledge</button>
+                                                    </form>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <!-- Worker Statistics -->
             @if (Model.IsWorker)
             {
@@ -364,6 +523,142 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Strike Modal -->
+<div class="modal fade" id="strikeModal" tabindex="-1" aria-labelledby="strikeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="strikeModalLabel"><i class="bi bi-exclamation-circle me-2"></i>Add Strike</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="AddStrike" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="userId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Reason for strike</label>
+                        <input type="text" name="reason" class="form-control" required placeholder="e.g., No-show, Late cancellation" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Related Task ID (optional)</label>
+                        <input type="number" name="taskId" class="form-control" placeholder="Task ID" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Add Strike</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Suspend Modal -->
+<div class="modal fade" id="suspendModal" tabindex="-1" aria-labelledby="suspendModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title" id="suspendModalLabel"><i class="bi bi-pause-circle me-2"></i>Suspend User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="SuspendUser" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="userId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Suspension Duration (days)</label>
+                        <select name="days" class="form-select">
+                            <option value="1">1 day</option>
+                            <option value="3">3 days</option>
+                            <option value="7" selected>7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30">30 days</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for suspension</label>
+                        <input type="text" name="reason" class="form-control" required placeholder="Reason for suspension" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">Suspend User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Restrict Posting Modal -->
+<div class="modal fade" id="restrictPostingModal" tabindex="-1" aria-labelledby="restrictPostingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title" id="restrictPostingModalLabel"><i class="bi bi-slash-circle me-2"></i>Restrict Posting</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="RestrictPosting" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="userId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Restriction Duration (days)</label>
+                        <select name="days" class="form-select">
+                            <option value="7" selected>7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for restriction</label>
+                        <input type="text" name="reason" class="form-control" required placeholder="Reason for restriction" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Restrict Posting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Restrict Acceptance Modal -->
+<div class="modal fade" id="restrictAcceptanceModal" tabindex="-1" aria-labelledby="restrictAcceptanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="restrictAcceptanceModalLabel"><i class="bi bi-x-circle me-2"></i>Restrict Task Acceptance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="RestrictAcceptance" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="userId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Restriction Duration (days)</label>
+                        <select name="days" class="form-select">
+                            <option value="7" selected>7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for restriction</label>
+                        <input type="text" name="reason" class="form-control" required placeholder="Reason for restriction" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Restrict Acceptance</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -181,8 +181,8 @@ namespace LaborPL.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading poster dashboard for user {UserId}", userId);
-                TempData["ErrorMessage"] = "Failed to load dashboard. Please try again.";
+                _logger.LogError(ex, "Error loading poster dashboard for user {UserId}. Exception: {Message}\nStackTrace: {StackTrace}", userId, ex.Message, ex.StackTrace);
+                TempData["ErrorMessage"] = $"Failed to load dashboard: {ex.Message}";
                 return View();
             }
         }
@@ -308,8 +308,8 @@ namespace LaborPL.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading combined dashboard for user {UserId}", userId);
-                TempData["ErrorMessage"] = "Failed to load dashboard. Please try again.";
+                _logger.LogError(ex, "Error loading combined dashboard for user {UserId}. Exception: {Message}\nStackTrace: {StackTrace}", userId, ex.Message, ex.StackTrace);
+                TempData["ErrorMessage"] = $"Failed to load dashboard: {ex.Message}";
                 return View();
             }
         }

@@ -45,6 +45,17 @@ namespace LaborDAL.DB
         /// </summary>
         public DbSet<IDVerification> IDVerifications { get; set; }
 
+        /// <summary>
+        /// User Penalties DbSet for tracking strikes, suspensions, and restrictions
+        /// </summary>
+        public DbSet<UserPenalty> UserPenalties { get; set; }
+
+        /// <summary>
+        /// Cancellation Records DbSet for audit trail of cancellations
+        /// </summary>
+        public DbSet<CancellationRecord> CancellationRecords { get; set; }
+
+        public DbSet<Rating> Ratings { get; set; }
 
         /// <summary>
         /// Override SaveChanges to implement soft delete and audit functionality
@@ -201,6 +212,26 @@ namespace LaborDAL.DB
                 .WithMany()
                 .HasForeignKey(i => i.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure UserPenalty relationships
+            modelBuilder.Entity<UserPenalty>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Penalties)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure CancellationRecord relationships
+            modelBuilder.Entity<CancellationRecord>()
+                .HasOne(c => c.Task)
+                .WithMany()
+                .HasForeignKey(c => c.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CancellationRecord>()
+                .HasOne(c => c.Penalty)
+                .WithMany()
+                .HasForeignKey(c => c.PenaltyId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Additional Identity configurations can be added here
         }

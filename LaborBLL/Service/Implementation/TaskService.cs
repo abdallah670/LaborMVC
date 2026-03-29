@@ -18,16 +18,19 @@ namespace LaborBLL.Service.Implementation
         private readonly ITaskRepository _taskRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<TaskService> _logger;
+        private readonly IPenaltyService? _penaltyService;
 
         public TaskService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<TaskService> logger)
+            ILogger<TaskService> logger,
+            IPenaltyService? penaltyService = null)
         {
             _unitOfWork = unitOfWork;
             _taskRepository = unitOfWork.Tasks;
             _mapper = mapper;
             _logger = logger;
+            _penaltyService = penaltyService;
         }
 
         /// <summary>
@@ -110,6 +113,22 @@ namespace LaborBLL.Service.Implementation
                 if (model.StartDate.HasValue && model.DueDate.HasValue && model.StartDate.Value > model.DueDate.Value)
                 {
                     return new Response<int>(0, false, "Start date must be before due date.");
+                }
+
+                // Check for posting restrictions/suspension
+                if (_penaltyService != null)
+                {
+                    var isSuspended = await _penaltyService.IsSuspendedAsync(posterId);
+                    if (isSuspended)
+                    {
+                        return new Response<int>(0, false, "Your account is suspended. You cannot post tasks.");
+                    }
+
+                    var isPostingRestricted = await _penaltyService.IsPostingRestrictedAsync(posterId);
+                    if (isPostingRestricted)
+                    {
+                        return new Response<int>(0, false, "You are temporarily restricted from posting tasks.");
+                    }
                 }
 
                 var task = _mapper.Map<TaskItem>(model);
@@ -286,6 +305,22 @@ namespace LaborBLL.Service.Implementation
                 if (alreadyApplied)
                 {
                     return new Response<bool>(false, false, "You have already applied to this task.");
+                }
+
+                // Check for acceptance restrictions/suspension
+                if (_penaltyService != null)
+                {
+                    var isSuspended = await _penaltyService.IsSuspendedAsync(userId);
+                    if (isSuspended)
+                    {
+                        return new Response<bool>(false, false, "Your account is suspended. You cannot apply to tasks.");
+                    }
+
+                    var isAcceptanceRestricted = await _penaltyService.IsAcceptanceRestrictedAsync(userId);
+                    if (isAcceptanceRestricted)
+                    {
+                        return new Response<bool>(false, false, "You are temporarily restricted from accepting tasks.");
+                    }
                 }
 
                 return new Response<bool>(true, true, null);

@@ -174,5 +174,18 @@ namespace LaborDAL.Repo.Implementation
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(u => u.Id == userId && u.IsDeleted);
         }
+
+        /// <summary>
+        /// Gets any user by ID bypassing global query filter
+        /// </summary>
+        public async Task<AppUser?> GetUserByIdBypassFilterAsync(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return null;
+
+            return await _context.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        }
     }
 }

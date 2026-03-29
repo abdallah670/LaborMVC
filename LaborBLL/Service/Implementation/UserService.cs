@@ -1,5 +1,13 @@
 
 
+using LaborBLL.Service.Abstract;
+using LaborDAL.Entities;
+using LaborDAL.Enums;
+using LaborDAL.Repo.Abstract;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
 namespace LaborBLL.Service
 {
     /// <summary>
@@ -12,19 +20,22 @@ namespace LaborBLL.Service
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IMapper _mapper;
         private readonly ILogger<UserService> _logger;
+        private readonly IPenaltyService? _penaltyService;
 
         public UserService(
             IUnitOfWork unitOfWork,
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             IMapper mapper,
-            ILogger<UserService> logger)
+            ILogger<UserService> logger,
+            IPenaltyService? penaltyService = null)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _signInManager = signInManager;
             _mapper = mapper;
             _logger = logger;
+            _penaltyService = penaltyService;
         }
 
         /// <summary>
@@ -189,7 +200,8 @@ namespace LaborBLL.Service
         {
             try
             {
-                var user = await _userManager.FindByIdAsync(userId);
+                // Use UnitOfWork bypass to get user (bypasses global query filter)
+                var user = await _unitOfWork.GetUserByIdBypassFilterAsync(userId);
                 if (user == null || user.IsDeleted)
                 {
                     return null;
@@ -255,6 +267,47 @@ namespace LaborBLL.Service
                     // Get tasks posted by this poster
                     var tasks = await _unitOfWork.Tasks.FindAsync(t => t.PosterId == userId);
                     profile.TasksPosted = tasks?.Count() ?? 0;
+                }
+
+                // Get penalty statistics if service is available
+                if (_penaltyService != null)
+                {
+                    var penaltyStats = await _penaltyService.GetPenaltyStatsAsync(userId);
+                    profile.StrikeCount = penaltyStats.TotalStrikes;
+                    profile.ActiveStrikes = penaltyStats.ActiveStrikes;
+                    profile.NoShowCount = penaltyStats.NoShowCount;
+                    profile.CancellationCount = penaltyStats.CancellationCount;
+                    profile.RecentCancellations = penaltyStats.RecentCancellations;
+                    profile.IsSuspended = penaltyStats.IsSuspended;
+                    profile.SuspensionEndDate = penaltyStats.SuspensionEndDate;
+                    profile.IsPostingRestricted = penaltyStats.IsPostingRestricted;
+                    profile.IsAcceptanceRestricted = penaltyStats.IsAcceptanceRestricted;
+                    profile.UnacknowledgedPenalties = penaltyStats.UnacknowledgedPenalties;
+
+                    // Calculate account health status
+                    if (penaltyStats.IsSuspended)
+                        profile.AccountHealthStatus = "Suspended";
+                    else if (penaltyStats.ActiveStrikes >= 2)
+                        profile.AccountHealthStatus = "Critical";
+                    else if (penaltyStats.ActiveStrikes >= 1 || penaltyStats.RecentCancellations > 2)
+                        profile.AccountHealthStatus = "Warning";
+                    else
+                        profile.AccountHealthStatus = "Good";
+
+                    // Get penalty history for admin
+                    var activePenalties = await _penaltyService.GetActivePenaltiesAsync(userId);
+                    profile.PenaltyHistory = activePenalties.Select(p => new PenaltyDisplayViewModel
+                    {
+                        Id = p.Id,
+                        Type = p.Type.ToString(),
+                        Severity = p.Severity.ToString(),
+                        Reason = p.Reason,
+                        AppliedAt = p.AppliedAt,
+                        ExpiresAt = p.ExpiresAt,
+                        IsActive = p.IsActive,
+                        IsAcknowledged = p.IsAcknowledged,
+                        RelatedTaskId = p.RelatedTaskId
+                    }).ToList();
                 }
 
                 return profile;

@@ -183,6 +183,75 @@ namespace LaborDAL.Entities
         /// </summary>
         public string? StripeAccountId { get; set; }
 
+        #region Penalty Tracking Fields
+
+        /// <summary>
+        /// Number of strikes against the user's account
+        /// </summary>
+        public int StrikeCount { get; set; } = 0;
+
+        /// <summary>
+        /// Date of the most recent strike
+        /// </summary>
+        public DateTime? LastStrikeDate { get; set; }
+
+        /// <summary>
+        /// Whether the user account is currently suspended
+        /// </summary>
+        public bool IsSuspended { get; set; } = false;
+
+        /// <summary>
+        /// When the suspension ends (null if not suspended or permanent)
+        /// </summary>
+        public DateTime? SuspensionEndDate { get; set; }
+
+        /// <summary>
+        /// Number of no-shows recorded for this user
+        /// </summary>
+        public int NoShowCount { get; set; } = 0;
+
+        /// <summary>
+        /// Number of cancellations made by this user
+        /// </summary>
+        public int CancellationCount { get; set; } = 0;
+
+        /// <summary>
+        /// Number of cancellations in the last 30 days
+        /// </summary>
+        public int RecentCancellationCount { get; set; } = 0;
+
+        /// <summary>
+        /// Whether the user is restricted from posting new tasks
+        /// </summary>
+        public bool IsPostingRestricted { get; set; } = false;
+
+        /// <summary>
+        /// Whether the user is restricted from accepting tasks
+        /// </summary>
+        public bool IsAcceptanceRestricted { get; set; } = false;
+
+        /// <summary>
+        /// Reason for current restriction (if any)
+        /// </summary>
+        public string? RestrictionReason { get; set; }
+
+        /// <summary>
+        /// When the restriction ends (null if permanent)
+        /// </summary>
+        public DateTime? RestrictionEndDate { get; set; }
+
+        /// <summary>
+        /// Whether the user has unacknowledged penalties
+        /// </summary>
+        public bool HasUnacknowledgedPenalties { get; set; } = false;
+
+        /// <summary>
+        /// Number of active penalties
+        /// </summary>
+        public int ActivePenaltyCount { get; set; } = 0;
+
+        #endregion
+
         public virtual ICollection<Booking> PostedBookings { get; set; } = new List<Booking>();
 
 
@@ -202,5 +271,15 @@ namespace LaborDAL.Entities
         /// Task applications submitted by this user
         /// </summary>
         public virtual ICollection<TaskApplication> Applications { get; set; } = new List<TaskApplication>();
+
+        /// <summary>
+        /// Penalties applied to this user
+        /// </summary>
+        public virtual ICollection<UserPenalty> Penalties { get; set; } = new List<UserPenalty>();
+
+        /// <summary>
+        /// Cancellation records for this user
+        /// </summary>
+        public virtual ICollection<CancellationRecord> CancellationRecords { get; set; } = new List<CancellationRecord>();
     }
 }

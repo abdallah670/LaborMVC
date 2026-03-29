@@ -41,5 +41,10 @@ namespace LaborDAL.Repo.Abstract
         /// Gets a soft-deleted user by ID (bypasses global query filter)
         /// </summary>
         Task<AppUser?> GetDeletedUserByIdAsync(string userId);
+
+        /// <summary>
+        /// Gets any user by ID bypassing global query filter
+        /// </summary>
+        Task<AppUser?> GetUserByIdBypassFilterAsync(string userId);
     }
 }

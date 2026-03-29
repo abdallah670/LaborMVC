@@ -4,6 +4,7 @@ using LaborDAL.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
@@ -12,9 +13,11 @@ using NetTopologySuite.Geometries;
 namespace LaborDAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328164925_ConvertApplicationStatusToInt")]
+    partial class ConvertApplicationStatusToInt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,7 +38,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("AssignedWorkerId");
 
-                    b.ToTable("AppUserTaskItem", (string)null);
+                    b.ToTable("AppUserTaskItem");
                 });
 
             modelBuilder.Entity("LaborDAL.DB.Message", b =>
@@ -75,7 +78,7 @@ namespace LaborDAL.Migrations
                     b.HasIndex("bookingId", "SentAt")
                         .HasDatabaseName("IX_Messages_BookingId_SentAt");
 
-                    b.ToTable("Message", (string)null);
+                    b.ToTable("Message");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.AppUser", b =>
@@ -483,7 +486,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("CancellationRecords", (string)null);
+                    b.ToTable("CancellationRecords");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.ChatUsers", b =>
@@ -523,7 +526,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("ChatUsers", (string)null);
+                    b.ToTable("ChatUsers");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Dispute", b =>
@@ -577,7 +580,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("ResolvedBy");
 
-                    b.ToTable("Disputes", (string)null);
+                    b.ToTable("Disputes");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.FileUploadAuditLog", b =>
@@ -682,7 +685,7 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FileUploadAuditLogs", (string)null);
+                    b.ToTable("FileUploadAuditLogs");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.IDVerification", b =>
@@ -764,7 +767,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("IDVerifications", (string)null);
+                    b.ToTable("IDVerifications");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Notification", b =>
@@ -848,7 +851,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.OutboxMessage", b =>
@@ -918,7 +921,7 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OutboxMessages", (string)null);
+                    b.ToTable("OutboxMessages");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Payment", b =>
@@ -1030,7 +1033,7 @@ namespace LaborDAL.Migrations
                     b.HasIndex("Status", "CreatedAt")
                         .HasDatabaseName("IX_Payments_Status_CreatedAt");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.PaymentAuditLog", b =>
@@ -1077,7 +1080,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("PaymentAuditLogs", (string)null);
+                    b.ToTable("PaymentAuditLogs");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.PendingTransfer", b =>
@@ -1157,7 +1160,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("PaymentId");
 
-                    b.ToTable("PendingTransfers", (string)null);
+                    b.ToTable("PendingTransfers");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.Rating", b =>
@@ -1201,7 +1204,7 @@ namespace LaborDAL.Migrations
                     b.HasIndex("RaterId", "RateeId", "bookingId")
                         .IsUnique();
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Rating");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.SagaInstance", b =>
@@ -1267,7 +1270,7 @@ namespace LaborDAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SagaInstances", (string)null);
+                    b.ToTable("SagaInstances");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.SagaStep", b =>
@@ -1316,7 +1319,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("SagaInstanceId");
 
-                    b.ToTable("SagaSteps", (string)null);
+                    b.ToTable("SagaSteps");
                 });
 
             modelBuilder.Entity("LaborDAL.Entities.TaskApplication", b =>
@@ -1361,8 +1364,10 @@ namespace LaborDAL.Migrations
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("TaskItemId")
                         .HasColumnType("int");
@@ -1548,8 +1553,10 @@ namespace LaborDAL.Migrations
                     b.Property<DateTimeOffset?>("StartedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1677,7 +1684,7 @@ namespace LaborDAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserPenalties", (string)null);
+                    b.ToTable("UserPenalties");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

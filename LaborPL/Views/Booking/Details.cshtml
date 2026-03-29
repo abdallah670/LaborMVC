@@ -456,7 +456,6 @@
                 })
             });
             const data = await response.json();
-            console.log('Send result:', data); // ✅ للتشخيص
             if (data.success) {
                 syncDisplay({
                     senderId: currentUserId,

@@ -10,13 +10,16 @@ using TaskStatus = LaborDAL.Enums.TaskStatus;
 namespace LaborBLL.Service
 {
     /// <summary>
-    /// Implementation of cancellation service with business rules, concurrency control, and financial settlement
+    /// Implementation of cancellation service with business rules, concurrency control, financial settlement, and notifications
     /// </summary>
     public class CancellationService : ICancellationService
     {
         private readonly ApplicationDbContext _context;
         private readonly IClock _clock;
         private readonly ILogger<CancellationService> _logger;
+        private readonly IPenaltyService _penaltyService;
+        private readonly IStripeService _stripeService;
+        private readonly IEmailService _emailService;
 
         // Business rule constants
         private static readonly TimeSpan FreeCancellationWindow = TimeSpan.FromHours(2);
@@ -27,11 +30,17 @@ namespace LaborBLL.Service
         public CancellationService(
             ApplicationDbContext context,
             IClock clock,
-            ILogger<CancellationService> logger)
+            ILogger<CancellationService> logger,
+            IPenaltyService penaltyService,
+            IStripeService stripeService,
+            IEmailService emailService)
         {
             _context = context;
             _clock = clock;
             _logger = logger;
+            _penaltyService = penaltyService;
+            _stripeService = stripeService;
+            _emailService = emailService;
         }
 
         #region Public API Methods
@@ -82,6 +91,22 @@ namespace LaborBLL.Service
             try
             {
                 await ExecuteCancellationAsync(task, request, outcome, idempotencyKey);
+
+                // Apply penalty if applicable
+                if (outcome.PenaltyTier != PenaltyTier.None && outcome.NewStatus == TaskStatus.NoShow)
+                {
+                    await _penaltyService.ApplyClientPenaltyAsync(
+                        task.PosterId,
+                        task.Id,
+                        outcome.PenaltyTier,
+                        "Client no-show after start time");
+
+                    // Send penalty notification
+                    await SendPenaltyNotificationAsync(task.PosterId, "Client No-Show", "You have been flagged for a no-show.");
+                }
+
+                // Send cancellation notification
+                await SendCancellationNotificationAsync(task, request.RequestedByUserId, outcome);
 
                 _logger.LogInformation(
                     "Client cancellation successful - TaskId: {TaskId}, Refund: {Refund:C}, WorkerPay: {WorkerPay:C}",
@@ -143,6 +168,22 @@ namespace LaborBLL.Service
             try
             {
                 await ExecuteCancellationAsync(task, request, outcome, idempotencyKey);
+
+                // Apply penalty if applicable
+                if (outcome.PenaltyTier != PenaltyTier.None && outcome.WorkerPenalized)
+                {
+                    await _penaltyService.ApplyWorkerPenaltyAsync(
+                        request.RequestedByUserId,
+                        task.Id,
+                        outcome.PenaltyTier,
+                        "Worker cancellation less than 2 hours before start");
+
+                    // Send penalty notification
+                    await SendPenaltyNotificationAsync(request.RequestedByUserId, "Cancellation Penalty", "You have received a strike for late cancellation.");
+                }
+
+                // Send cancellation notification
+                await SendCancellationNotificationAsync(task, request.RequestedByUserId, outcome);
 
                 _logger.LogInformation(
                     "Worker cancellation successful - TaskId: {TaskId}, PenaltyTier: {PenaltyTier}",
@@ -213,6 +254,13 @@ namespace LaborBLL.Service
                 return existingOperation;
             }
 
+            // Get assigned worker
+            var worker = task.AssignedWorker?.FirstOrDefault();
+            if (worker == null)
+            {
+                return FailureResult("No worker assigned to task");
+            }
+
             // Full refund to client
             var outcome = new CancellationResult
             {
@@ -237,8 +285,15 @@ namespace LaborBLL.Service
             {
                 await ExecuteNoShowAsync(task, request, outcome, idempotencyKey, "Worker");
 
-                // Apply worker penalties
-                await ApplyWorkerPenaltyAsync(task, PenaltyTier.Moderate);
+                // Apply worker penalties via PenaltyService
+                await _penaltyService.ApplyWorkerPenaltyAsync(
+                    worker.Id,
+                    taskId,
+                    PenaltyTier.Moderate,
+                    "Worker no-show - did not check in within 30 minutes of start time");
+
+                // Send penalty notification to worker
+                await SendPenaltyNotificationAsync(worker.Id, "No-Show Penalty", "You have been penalized for not showing up to an assigned task.");
 
                 _logger.LogInformation(
                     "Worker no-show processed - TaskId: {TaskId}, ClientRefund: {Refund:C}",
@@ -298,8 +353,15 @@ namespace LaborBLL.Service
             {
                 await ExecuteNoShowAsync(task, request, outcome, idempotencyKey, "Client");
 
-                // Apply client penalties
-                await ApplyClientPenaltyAsync(task, PenaltyTier.Moderate);
+                // Apply client penalties via PenaltyService
+                await _penaltyService.ApplyClientPenaltyAsync(
+                    task.PosterId,
+                    taskId,
+                    PenaltyTier.Moderate,
+                    "Client no-show - did not confirm presence after worker check-in");
+
+                // Send penalty notification to client
+                await SendPenaltyNotificationAsync(task.PosterId, "No-Show Penalty", "You have been flagged for not showing up to your scheduled task.");
 
                 _logger.LogInformation(
                     "Client no-show processed - TaskId: {TaskId}, WorkerPay: {Pay:C}",
@@ -333,9 +395,8 @@ namespace LaborBLL.Service
                 if (_clock.UtcNow > noShowThreshold)
                 {
                     _logger.LogWarning(
-                        "Late worker check-in ignored - TaskId: {TaskId}, CheckInTime: {CheckInTime}, Threshold: {Threshold}",
+                        "Late worker check-in - TaskId: {TaskId}, CheckInTime: {CheckInTime}, Threshold: {Threshold}",
                         taskId, _clock.UtcNow, noShowThreshold);
-                    // Still record but mark as late
                 }
             }
 
@@ -370,14 +431,10 @@ namespace LaborBLL.Service
             var tasks = await _context.Tasks
                 .AsNoTracking()
                 .Where(t =>
-                    // Task is scheduled and has a start time
                     t.Status == TaskStatus.Scheduled &&
                     t.StartTime.HasValue &&
-                    // Start time has passed (current time >= start time + threshold)
                     t.StartTime <= threshold &&
-                    // Task hasn't started yet
                     !t.StartedAt.HasValue &&
-                    // No-show hasn't been detected yet
                     !t.NoShowDetectedAt.HasValue)
                 .Select(t => t.Id)
                 .ToListAsync();
@@ -406,7 +463,6 @@ namespace LaborBLL.Service
 
         private async Task<TaskItem?> GetTaskWithConcurrencyCheckAsync(int taskId)
         {
-            // Use a transaction with optimistic concurrency
             return await _context.Tasks
                 .Include(t => t.AssignedWorker)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
@@ -420,7 +476,6 @@ namespace LaborBLL.Service
 
             if (task?.LastOperationIdempotencyKey == idempotencyKey)
             {
-                // Return a result indicating this was already processed
                 return new CancellationResult
                 {
                     Success = true,
@@ -435,7 +490,6 @@ namespace LaborBLL.Service
 
         private async Task<(bool CanCancel, string? Reason)> CanCancelAsync(TaskItem task, CancellationType type)
         {
-            // Terminal states cannot be cancelled
             if (task.Status == TaskStatus.Cancelled ||
                 task.Status == TaskStatus.Completed ||
                 task.Status == TaskStatus.NoShow)
@@ -443,13 +497,11 @@ namespace LaborBLL.Service
                 return (false, "Task is already in a terminal state");
             }
 
-            // Task already started cannot be cancelled
             if (task.StartedAt.HasValue)
             {
                 return (false, "Task has already started and cannot be cancelled");
             }
 
-            // Worker cancellation after start time is severe violation
             if (type == CancellationType.WorkerCancellation &&
                 task.StartTime.HasValue &&
                 _clock.UtcNow >= task.StartTime.Value)
@@ -464,7 +516,6 @@ namespace LaborBLL.Service
         {
             if (!task.StartTime.HasValue)
             {
-                // No scheduled start time - full refund
                 return new CancellationResult
                 {
                     Success = true,
@@ -480,10 +531,8 @@ namespace LaborBLL.Service
             var now = _clock.UtcNow;
             var timeUntilStart = task.StartTime.Value - now;
 
-            // Edge case: Exactly at 2 hours - treated as free cancellation
             if (timeUntilStart >= FreeCancellationWindow)
             {
-                // More than 2 hours before start - full refund
                 return new CancellationResult
                 {
                     Success = true,
@@ -497,7 +546,6 @@ namespace LaborBLL.Service
             }
             else if (timeUntilStart > TimeSpan.Zero)
             {
-                // Less than 2 hours before start - 50/50 split
                 var clientRefund = task.Budget * LateCancellationClientRefundPercent;
                 var workerPay = task.Budget * LateCancellationWorkerPayPercent;
 
@@ -514,7 +562,6 @@ namespace LaborBLL.Service
             }
             else
             {
-                // After start time - treat as no-show
                 return new CancellationResult
                 {
                     Success = true,
@@ -533,7 +580,6 @@ namespace LaborBLL.Service
         {
             if (!task.StartTime.HasValue)
             {
-                // No scheduled start time - allowed, no penalty
                 return new CancellationResult
                 {
                     Success = true,
@@ -549,10 +595,8 @@ namespace LaborBLL.Service
             var now = _clock.UtcNow;
             var timeUntilStart = task.StartTime.Value - now;
 
-            // Edge case: Exactly at 2 hours - treated as allowed
             if (timeUntilStart >= FreeCancellationWindow)
             {
-                // More than 2 hours before start - allowed, no penalty
                 return new CancellationResult
                 {
                     Success = true,
@@ -566,7 +610,6 @@ namespace LaborBLL.Service
             }
             else if (timeUntilStart > TimeSpan.Zero)
             {
-                // Less than 2 hours before start - allowed but with penalty
                 return new CancellationResult
                 {
                     Success = true,
@@ -581,7 +624,6 @@ namespace LaborBLL.Service
             }
             else
             {
-                // After start time - severe violation
                 return new CancellationResult
                 {
                     Success = false,
@@ -669,22 +711,18 @@ namespace LaborBLL.Service
 
             try
             {
-                // Update task state
                 task.Status = outcome.NewStatus ?? TaskStatus.Cancelled;
                 task.CancelledAt = _clock.UtcNow;
                 task.CancelledBy = request.RequestedByUserId;
                 task.CancellationType = request.CancellationType;
                 task.CancellationReason = request.Reason;
                 task.LastOperationIdempotencyKey = idempotencyKey;
-                task.IsCancellationProcessed = false; // Will be set after financial processing
+                task.IsCancellationProcessed = false;
 
-                // Save changes (with optimistic concurrency)
                 await _context.SaveChangesAsync();
 
-                // Process financial settlement
                 await ProcessFinancialSettlementAsync(task, outcome);
 
-                // Mark as fully processed
                 task.IsCancellationProcessed = true;
                 await _context.SaveChangesAsync();
 
@@ -715,7 +753,6 @@ namespace LaborBLL.Service
 
             try
             {
-                // Update task state
                 task.Status = TaskStatus.NoShow;
                 task.NoShowDetectedAt = _clock.UtcNow;
                 task.NoShowParty = noShowParty;
@@ -728,7 +765,6 @@ namespace LaborBLL.Service
 
                 await _context.SaveChangesAsync();
 
-                // Process financial settlement
                 await ProcessFinancialSettlementAsync(task, outcome);
 
                 task.IsCancellationProcessed = true;
@@ -752,51 +788,127 @@ namespace LaborBLL.Service
 
         private async Task ProcessFinancialSettlementAsync(TaskItem task, CancellationResult outcome)
         {
-            // This is a placeholder for financial settlement logic
-            // In a real implementation, this would:
-            // 1. Process refunds to client payment method
-            // 2. Transfer payment to worker
-            // 3. Handle platform fees
-            // 4. Record transactions in Payment table
+            try
+            {
+                // Process client refund if applicable
+                if (outcome.ClientRefundAmount > 0)
+                {
+                    // Get payment intent for this task's booking
+                    var booking = await _context.Bookings
+                        .FirstOrDefaultAsync(b => b.TaskItemId == task.Id);
 
-            _logger.LogInformation(
-                "Financial settlement - TaskId: {TaskId}, ClientRefund: {Refund:C}, WorkerPay: {Pay:C}",
-                task.Id, outcome.ClientRefundAmount, outcome.WorkerPaymentAmount);
+                    if (booking != null)
+                    {
+                        var paymentIntentId = await _stripeService.GetPaymentIntentForBookingAsync(booking.Id);
+                        if (!string.IsNullOrEmpty(paymentIntentId))
+                        {
+                            var refundResult = await _stripeService.RefundPaymentAsync(
+                                paymentIntentId,
+                                outcome.ClientRefundAmount,
+                                "requested_by_customer");
 
-            // TODO: Implement actual payment processing via IPaymentService
-            await Task.CompletedTask;
+                            if (refundResult.Success)
+                            {
+                                _logger.LogInformation(
+                                    "Refund processed - TaskId: {TaskId}, Amount: {Amount:C}, RefundId: {RefundId}",
+                                    task.Id, outcome.ClientRefundAmount, refundResult.RefundId);
+                            }
+                            else
+                            {
+                                _logger.LogError(
+                                    "Refund failed - TaskId: {TaskId}, Error: {Error}",
+                                    task.Id, refundResult.ErrorMessage);
+                            }
+                        }
+                    }
+                }
+
+                // Process worker payment if applicable
+                if (outcome.WorkerPaymentAmount > 0)
+                {
+                    var worker = task.AssignedWorker?.FirstOrDefault();
+                    if (worker != null && !string.IsNullOrEmpty(worker.StripeAccountId))
+                    {
+                        var transferResult = await _stripeService.TransferToWorkerAsync(
+                            worker.StripeAccountId,
+                            outcome.WorkerPaymentAmount,
+                            $"Payment for task {task.Id} - {task.Title}");
+
+                        if (transferResult.Success)
+                        {
+                            _logger.LogInformation(
+                                "Worker payment transferred - TaskId: {TaskId}, Amount: {Amount:C}, TransferId: {TransferId}",
+                                task.Id, outcome.WorkerPaymentAmount, transferResult.TransferId);
+                        }
+                        else
+                        {
+                            _logger.LogError(
+                                "Worker payment failed - TaskId: {TaskId}, Error: {Error}",
+                                task.Id, transferResult.ErrorMessage);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Worker payment pending - TaskId: {TaskId}, Worker has no Stripe account",
+                            task.Id);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Financial settlement failed - TaskId: {TaskId}", task.Id);
+                throw;
+            }
         }
 
-        private async Task ApplyWorkerPenaltyAsync(TaskItem task, PenaltyTier tier)
+        private async Task SendCancellationNotificationAsync(TaskItem task, string userId, CancellationResult outcome)
         {
-            // Get the assigned worker
-            var worker = task.AssignedWorker?.FirstOrDefault();
-            if (worker == null) return;
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null || string.IsNullOrEmpty(user.Email)) return;
 
-            _logger.LogInformation(
-                "Applying worker penalty - WorkerId: {WorkerId}, Tier: {Tier}",
-                worker.Id, tier);
+                var subject = $"Task Cancelled - {task.Title}";
+                var body = $@"
+                    <h2>Task Cancellation Notification</h2>
+                    <p>Your task <strong>{task.Title}</strong> has been cancelled.</p>
+                    <p><strong>Outcome:</strong> {outcome.OutcomeDescription}</p>
+                    <p><strong>Client Refund:</strong> {outcome.ClientRefundAmount:C}</p>
+                    <p><strong>Worker Payment:</strong> {outcome.WorkerPaymentAmount:C}</p>
+                    <p>If you have any questions, please contact support.</p>
+                ";
 
-            // TODO: Implement penalty logic
-            // - Decrease rating
-            // - Add strike
-            // - Check for suspension threshold
-
-            await Task.CompletedTask;
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send cancellation notification - TaskId: {TaskId}", task.Id);
+            }
         }
 
-        private async Task ApplyClientPenaltyAsync(TaskItem task, PenaltyTier tier)
+        private async Task SendPenaltyNotificationAsync(string userId, string penaltyType, string message)
         {
-            _logger.LogInformation(
-                "Applying client penalty - ClientId: {ClientId}, Tier: {Tier}",
-                task.PosterId, tier);
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null || string.IsNullOrEmpty(user.Email)) return;
 
-            // TODO: Implement penalty logic
-            // - Flag account
-            // - Track no-show count
-            // - Potential restrictions
+                var subject = $"Account Notice - {penaltyType}";
+                var body = $@"
+                    <h2>Account Penalty Notification</h2>
+                    <p>Dear {user.FirstName ?? "User"},</p>
+                    <p>{message}</p>
+                    <p>This may affect your ability to post or accept tasks. Please review our terms of service.</p>
+                    <p>If you believe this is an error, please contact support.</p>
+                ";
 
-            await Task.CompletedTask;
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send penalty notification - UserId: {UserId}", userId);
+            }
         }
 
         private CancellationResult FailureResult(string errorMessage)
