@@ -136,21 +136,27 @@ namespace LaborBLL.Service
             try
             {
                 var messages = await unitOfWork.chatrepo.GetConversationAsync(userId, otherUserId);
-
-                // تحويل الرسائل من ChatUsers إلى MessageViewMode
                 var messageViewModels = messages.Select(m => MapToMessageViewModel(m)).ToList();
 
-                var otherUser = messages.FirstOrDefault()?.Receiver;
+                // ✅ لو مفيش رسايل، جيب الاسم من الـ UserManager
+                AppUser? otherUser = messages.FirstOrDefault(m => m.SenderId == otherUserId)?.Sender
+                                  ?? messages.FirstOrDefault(m => m.ReceiverId == otherUserId)?.Receiver;
+
+                // ✅ لو لسه null (مفيش رسايل خالص)، جيبه من الـ DB
                 if (otherUser == null)
                 {
-                    otherUser = messages.FirstOrDefault()?.Sender;
+                    otherUser = await _userManager.FindByIdAsync(otherUserId);
                 }
+
+                string otherUserName = otherUser != null
+                    ? $"{otherUser.FirstName} {otherUser.LastName}".Trim()
+                    : "مستخدم";
 
                 var chatViewModel = new ChatViewModel
                 {
                     OtherUserId = otherUserId,
-                    OtherUserName = otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}" : "مستخدم",
-                    Messages = messageViewModels // هنا بقينا نستخدم MessageViewMode
+                    OtherUserName = otherUserName, // ✅ دلوقتي هيجيب الاسم حتى لو مفيش رسايل
+                    Messages = messageViewModels
                 };
 
                 return new Response<ChatViewModel>(chatViewModel, true, null);
